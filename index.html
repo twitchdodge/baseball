@@ -1,0 +1,1324 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Baseball</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+:root{--bg:#0a0c1a;--fg:#e8e4d4;--gold:#ffd642;--accent:#ff4433;color-scheme:dark}
+html{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:'Press Start 2P',monospace;margin:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;box-sizing:border-box;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0;gap:0;overflow:hidden;user-select:none;-webkit-user-select:none}
+/* #wrap fills whatever space there is (and is what goes fullscreen); #stage is the
+   largest 1:2 box that fits inside it, sized by fitStage() so the 180×360 canvas is
+   never stretched — a flex-grown box with width:100% ignores aspect-ratio. */
+#wrap{position:relative;width:100%;flex:1;min-height:0;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#stage{position:relative;width:180px;height:360px;border:2px solid #181830;border-radius:6px;
+  overflow:hidden;box-shadow:0 0 40px rgba(60,80,200,.12)}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+/* HUD */
+/* zones: an SVG overlay sharing the canvas's 180×360 coordinate space.
+   Each zone is an annular sector of the wall arc; --r is its tilt, so pops and
+   flips scale along the sector's own radial axis (rotate · scaleY · unrotate). */
+#zones{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
+#zones text{font-family:'Press Start 2P',monospace;font-size:6px;fill:#fff}
+#zones path{stroke:#0a0c1a;stroke-width:1}
+.zn{transform-box:fill-box;transform-origin:center;transition:transform .15s,filter .15s,opacity .15s}
+.zn.pop{transform:rotate(var(--r)) scaleY(1.25) rotate(calc(-1*var(--r)));filter:brightness(1.7)}
+.zn.enter{animation:zIn .25s ease-out}
+@keyframes zIn{from{transform:rotate(var(--r)) scaleY(0) rotate(calc(-1*var(--r)));opacity:0}
+  to{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1*var(--r)));opacity:1}}
+.zHR path{fill:#e8b830}.zHR text{fill:#1a0e00}.z3B path{fill:#1a2d77}
+.z2B path{fill:#2952a3}.z1B path{fill:#4477cc}
+.zBB path{fill:#6699dd}.zOUT path{fill:#bb3333}.zOUT text{fill:#fdd}
+.zSF path{fill:#ee7766}.zBNT path{fill:#ee7766}
+.zDP path{fill:#661111}.zDP text{fill:#fcc}.zCS path{fill:#bb3333}.zCS text{fill:#fdd}
+.zSB path{fill:#7899aa}
+.zn.zFlip{animation:zFlip .5s ease-in-out 3}
+@keyframes zFlip{0%{filter:brightness(1)}
+  50%{filter:brightness(2.5);transform:rotate(var(--r)) scaleY(1.4) rotate(calc(-1*var(--r)))}
+  100%{filter:brightness(1)}}
+/* overlays */
+.ol{position:absolute;left:0;right:0;text-align:center;pointer-events:none;
+  opacity:0;transition:opacity .15s;z-index:5}
+.ol.show{opacity:1}
+/* overlay labels: soft drop shadow */
+.ol{text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#resLbl{top:30%;font-size:clamp(14px,4.5vw,28px)}
+#innLbl{top:44%;font-size:clamp(14px,4.5vw,28px);color:#fff}
+#scorLbl{top:58.37%;font-size:clamp(10px,3vw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
+#streakLbl{top:25%;font-size:clamp(14px,4.4vw,27px)}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;background:rgba(10,10,30,.82);gap:clamp(8px,2.5vw,16px);
+  pointer-events:none;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;z-index:6}
+.scr.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .25s}
+.sT{font-size:clamp(17px,5.5vw,34px);color:var(--gold);
+  text-shadow:2px 2px 0 #7a4e00,0 0 20px rgba(255,214,66,.3);line-height:1.4}
+.sS{font-size:clamp(11px,3vw,18px);color:var(--fg);opacity:.8}
+.sG{font-size:clamp(20px,6vw,40px);text-shadow:2px 2px 0 rgba(0,0,0,.5)}
+.sX{font-size:clamp(14px,3.5vw,22px)}.sX.g{color:var(--gold)}
+.blink{animation:bl 1s step-end infinite}@keyframes bl{50%{opacity:0}}
+/* title-screen music toggle */
+#musicBtn{width:clamp(54px,16vw,88px);height:clamp(50px,14.5vw,80px);margin-bottom:3%;cursor:pointer;pointer-events:auto}
+#musicBtn svg{width:100%;height:100%;display:block;fill:#6a6a80;transition:fill .15s}
+#musicBtn.on svg{fill:var(--gold);filter:drop-shadow(0 0 10px rgba(255,214,66,.45));animation:bob .5s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-1px)}}
+</style>
+
+<div id="wrap"><div id="stage">
+<canvas id="c" width="180" height="360"></canvas>
+<svg id="zones" viewBox="0 0 180 360" preserveAspectRatio="none">
+  <defs><clipPath id="zclip"><rect id="zclipR" x="0" y="0" width="180" height="360"/></clipPath></defs>
+  <g id="zg" clip-path="url(#zclip)"></g><g id="poles"></g></svg>
+<!-- guide commented out
+<div id="guideBtn" style="position:absolute;bottom:2%;left:2%;font-size:clamp(7px,1.8vw,11px);
+  padding:3px 8px;border:1px solid #444;border-radius:3px;cursor:pointer;z-index:4;
+  color:#555;background:rgba(255,255,255,.05);pointer-events:auto">GUIDE</div> -->
+<div id="guideBtn" style="display:none"></div>
+<div id="fsBtn" style="position:absolute;bottom:2%;left:2%;font-size:clamp(7px,1.8vw,11px);
+  padding:8px 8px;border:1px solid #444;border-radius:3px;cursor:pointer;z-index:4;
+  color:#555;background:rgba(255,255,255,.05);pointer-events:auto">[ ]</div>
+<div id="pauseBtn" style="position:absolute;bottom:2%;left:16%;font-size:clamp(9px,2.4vw,14px);
+  padding:8px 12px;border:1px solid #667;border-radius:3px;cursor:pointer;z-index:4;
+  color:#99a;background:rgba(255,255,255,.07);pointer-events:auto">PAUSE</div>
+<div id="pauseScr" class="scr"><div class="sT" style="opacity:.6">PAUSED</div>
+  <div class="sS blink">TAP TO RESUME</div>
+  <div id="resetBtn" style="position:absolute;bottom:10%;font-size:clamp(9px,2.4vw,14px);
+    padding:8px 14px;border:1px solid #844;border-radius:3px;cursor:pointer;color:#c88;
+    background:rgba(255,80,80,.08);pointer-events:auto">RESET GAME</div></div>
+<div id="skipBtn" style="position:absolute;bottom:2%;right:2%;font-size:clamp(13px,3.6vw,22px);
+  padding:7px 16px;border:1px solid #888;border-radius:3px;cursor:pointer;z-index:4;
+  color:#bbb;background:rgba(255,255,255,.07);pointer-events:auto;display:none">SKIP</div>
+<div class="ol" id="resLbl"></div>
+<div class="ol" id="innLbl"></div>
+<div class="ol" id="scorLbl"></div>
+<div class="ol" id="streakLbl"></div>
+<div class="scr show" id="titleScr">
+  <div id="musicBtn" title="Play 'Take Me Out to the Ball Game'">
+    <svg viewBox="0 0 11 10" shape-rendering="crispEdges" aria-hidden="true">
+      <rect x="4" y="0" width="7" height="2"/><rect x="4" y="2" width="1" height="4"/><rect x="10" y="2" width="1" height="4"/>
+      <rect x="2" y="6" width="3" height="1"/><rect x="1" y="7" width="4" height="2"/><rect x="2" y="9" width="2" height="1"/>
+      <rect x="8" y="6" width="3" height="1"/><rect x="7" y="7" width="4" height="2"/><rect x="8" y="9" width="2" height="1"/>
+    </svg></div>
+  <div class="sT">BASEBALL</div>
+  <div class="sS" style="color:var(--gold)">Score 5+ runs in 3 innings</div>
+  <div class="sS blink">TAP TO PLAY</div>
+  <div id="exhBtn" style="margin-top:20%;font-size:clamp(10px,2.7vw,16px);color:#777;
+    cursor:pointer;pointer-events:auto;text-decoration:underline">EXHIBITION MODE</div>
+</div>
+<div class="scr" id="exhScr">
+  <div class="sS" style="color:var(--gold);margin-bottom:12px">EXHIBITION</div>
+  <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
+  <div id="exhBack" style="margin-top:16px;font-size:clamp(8px,2vw,12px);color:#666;
+    cursor:pointer;pointer-events:auto;text-decoration:underline">BACK</div>
+</div>
+<div class="scr" id="goScr">
+  <div class="sG" id="goT"></div>
+  <div class="sX g" id="goR"></div>
+  <div class="sX" id="goTgt"></div>
+  <div class="sX" style="opacity:.5" id="goH"></div>
+  <div class="sX" style="opacity:.5" id="goB"></div>
+  <div class="sX" style="opacity:.5" id="goStrk"></div>
+  <div class="sX g" id="goN" style="margin-top:4px"></div>
+  <div class="sX g blink" id="goHi" style="margin-top:4px;display:none"></div>
+  <div class="sS blink" style="margin-top:8px" id="goPlay">TAP TO PLAY AGAIN</div>
+</div>
+</div></div>
+
+<script>
+const cv=document.getElementById('c'),cx=cv.getContext('2d'),W=180,H=360;
+
+/* ===== layout ===== */
+const HOME={x:90,y:305};
+const MOUND={x:90,y:195};
+const PITCH_Y=MOUND.y-5; // release height: belt level (he stands on the rubber at MOUND.y)
+const GLOVE='#a06a2a';   // pitcher's mitt — lighter than it was so it reads against grass
+const PITCH_HAND=5;      // release is this far to the throwing-hand side of the mound centre
+let pitchLefty=false;    // ~30% of pitchers; mirrors the sprite, the release side and the curveball break
+function releaseX(){return MOUND.x+(pitchLefty?PITCH_HAND:-PITCH_HAND)}
+// where the ball crosses the plate: mid arm-side. The plate is columns 87..93; a righty's 3px
+// ball lands on 88..90, a lefty's on 90..92 — one column in from the edge, never the middle.
+function plateX(){return pitchLefty?HOME.x+1.5:HOME.x-.5}
+/* --- outfield wall: a circular arc, deepest in centre field ---
+   The wall-bottom arc has its apex at (HOME.x, WALL_B) and passes through the two
+   foul-pole bases at (POLE_X, POLE_Y) / (W-POLE_X, POLE_Y). WALL_SAG is the only
+   knob: how many px the wall drops from centre field to the poles. Everything else
+   (radius, centre, sweep) is derived. The wall band is WALL_H deep radially. */
+const STANDS_EXTRA=16;                             // FORK: extra stand height vs v200 (wall apex was y=64)
+const WALL_B=64+STANDS_EXTRA,WALL_H=16,WALL_T=WALL_B-WALL_H;   // apex of the band (centre field)
+const WALL_SAG=10;
+const POLE_X=2,POLE_Y=WALL_B+WALL_SAG;
+const WALL_R=((W/2-POLE_X)**2+WALL_SAG**2)/(2*WALL_SAG); // radius of the wall-bottom arc
+const ARC={x:HOME.x,y:WALL_B+WALL_R};                     // arc centre (far below home plate)
+const ALPHA=Math.asin((W/2-POLE_X)/WALL_R);               // half-sweep; poles sit at ±ALPHA
+const TRACK_W=8;                                          // warning track depth (radial)
+const DIRT='#dc9440',DIRT_DK='#c27e30',DIRT_LT='#e6a655';   // infield/track/paths; mound rim; mound crown
+const WALL_COL='#1c2a5a';                                 // bare wall behind the zone panels
+const NUM_ZONES=7;
+const B1={x:132,y:193},B2={x:90,y:142},B3={x:47,y:193};  // 1B/3B: diamond's bottom corner sits just inside the foul line (left line is drawn 1px further out than the mirror of the right, hence 47 not 48)
+// infield dirt ellipse: centred midway between 2B and the mound, top 17px above 2B
+const DIRT_ARC={cy:(B2.y+MOUND.y)/2,rx:56,ry:(B2.y+MOUND.y)/2-(B2.y-17)}; // wide enough to cross the foul lines and be clipped just foul of them
+const BASE_CUT_R=10.5; // base cutout radius: 1.5 × the bag's 7px diagonal
+const FOUL_DIRT=2; // dirt extends this far past the foul line (the foul-side half of the base path, and the ellipse's clip)
+const GRASS_LO=5;   // inner grass inset from home→1B / 3B→home path centrelines (horizontal px)
+const GRASS_UP=2.5; // inner grass inset from 1B→2B / 2B→3B path centrelines (perpendicular px)
+
+/* Wall "units" u∈[0,W] run pole to pole along the arc — the same 0..180 scale the
+   old flat wall used for x, so ZWIDTHS/ZEDGES and the swing→zone mapping are
+   untouched. wallAngle(u) is the angle from straight-up at ARC; wallPoint(u,depth)
+   is the canvas point at that angle, `depth` px into the band. */
+function wallAngle(u){return(u/W*2-1)*ALPHA}
+function wallPoint(u,depth){const a=wallAngle(u),r=WALL_R+(depth||0);
+  return{x:ARC.x+r*Math.sin(a),y:ARC.y-r*Math.cos(a)}}
+function arcHW(y){const dy=ARC.y-y;return dy>=WALL_R?0:Math.sqrt(WALL_R*WALL_R-dy*dy)} // half-width under the arc at row y
+// fair-territory half-width at row y: inside the foul lines AND under the wall arc
+function fieldHW(y){
+  if(y>=HOME.y||y<=WALL_B)return 0;
+  return Math.min((HOME.y-y)/(HOME.y-POLE_Y)*(W/2-POLE_X),arcHW(y))}
+// The canvas is 180 wide, so the true centre (x=90.0) is a pixel *boundary*. fLeft is the exact
+// mirror of fRight about it (column c ↔ column 179−c), so both edges round the same way.
+function fRight(y){return Math.round(HOME.x+fieldHW(y))}
+function fLeft(y){return 2*HOME.x-1-fRight(y)}
+
+/* ===== audio ===== */
+let ac;function aud(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)()}
+function tn(f,d,t='square',v=.1){try{aud();const o=ac.createOscillator(),g=ac.createGain();
+  o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);
+  o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+const sfx={
+  pitch(){tn(260,.06,'square',.05)},swing(){tn(130,.04,'sawtooth',.06)},
+  crack(){tn(880,.04,'sawtooth',.15);tn(440,.08,'square',.08)},
+  hr(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tn(f,.14,'square',.12),i*70))},
+  hit1B(){tn(600,.08,'square',.1)},
+  hit2B(){tn(500,.08,'square',.1);setTimeout(()=>tn(700,.12,'square',.11),110)},
+  hit3B(){tn(440,.07,'square',.1);setTimeout(()=>tn(587,.07,'square',.11),100);setTimeout(()=>tn(740,.14,'square',.12),200)},
+  bb(){tn(330,.12,'triangle',.14);setTimeout(()=>tn(440,.18,'triangle',.13),120)},
+  foul(){tn(350,.1,'square',.1);setTimeout(()=>tn(250,.18,'square',.09),100)},
+  wallOut(){tn(250,.12,'square',.08);tn(180,.18,'square',.06)},
+  strike(){tn(200,.15,'square',.08);tn(150,.2,'square',.05)},
+  over(){[392,349,330,262].forEach((f,i)=>setTimeout(()=>tn(f,.25,'square',.08),i*130))},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tn(f,.18,'square',.11),i*90))},
+  coin(){tn(988,.07,'square',.13);setTimeout(()=>tn(1319,.18,'square',.13),70)},
+  inn(){tn(440,.12,'triangle',.08);setTimeout(()=>tn(660,.15,'triangle',.08),150)},
+};
+
+/* ===== pitches ===== */
+let knk=0;
+const PITCHES=[
+  {n:'FASTBALL',   fr:24,oX:t=>0,                                    color:'#ffffff',inn:1},
+  {n:'CHANGEUP',   fr:44,oX:t=>2.5*Math.sin(t*2.5),                  color:'#ffdd00',inn:2},
+  {n:'CURVEBALL',  fr:30,oX:t=>-14*Math.sin(t*Math.PI),               color:'#ff8800',inn:2},
+  {n:'HEATER',     fr:19,oX:t=>0,                                    color:'#ff3333',inn:3},
+  {n:'KNUCKLEBALL',fr:36,oX:t=>Math.sin(t*14+knk)*8*Math.min(t*2,1), color:'#cc44ff',inn:3},
+];
+
+/* ===== rounds ===== */
+const ROUNDS=[
+  {name:'ROOKIE',   target:5,  baseOuts:2, pitchRule:'rookie'},
+  {name:'VETERAN',  target:8,  baseOuts:3, pitchRule:'veteran'},
+  {name:'ALL-STAR', target:10, baseOuts:3, pitchRule:'allFrom1', inn3Outs:4},
+  {name:'MVP',      target:12, baseOuts:4, pitchRule:'legend', heater:.28},
+  {name:'LEGEND',   target:15, baseOuts:4, pitchRule:'legend', heater:.36, conditionalHR:true, inn3Outs:5},
+];
+let round=0,nextRound=0,exhibitionMode=false;
+let maxUnlocked=0;try{maxUnlocked=parseInt(localStorage.getItem('dsUnlk'))||0}catch(e){}
+
+/* ===== zones ===== */
+const ZBG={HR:'zHR','3B':'z3B','2B':'z2B','1B':'z1B',BB:'zBB',OUT:'zOUT',
+  SF:'zSF',BNT:'zBNT',DP:'zDP',CS:'zCS',SB:'zSB'};
+const ZWALLCOL={HR:'#b88400','3B':'#111f55','2B':'#1d3d77','1B':'#335599',BB:'#447799',OUT:'#992020',
+  SF:'#aa2828',BNT:'#aa2828',DP:'#661515',CS:'#992020',SB:'#5588aa'};
+let zones=[];
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// Weighted hit types (for non-OUT, non-HR slots)
+const ZWEIGHTS=[{z:'1B',w:.50},{z:'BB',w:.225},{z:'2B',w:.175},{z:'3B',w:.10}];
+function pickHitZone(){
+  let r=Math.random();
+  for(const{z,w}of ZWEIGHTS){r-=w;if(r<=0)return z}
+  return '1B'}
+
+function pickStreakZone(){const r=Math.random();
+  if(r<.425)return'1B';if(r<.60)return'BB';if(r<.75)return'2B';if(r<.85)return'3B';return'HR'}
+let flippedZones=[];
+let streakT=0; // pending STREAK OVER! (a third out shows it at once instead — see checkInning)
+function endStreak(){
+  if(hrStreak>=2){clearTimeout(streakT);streakT=setTimeout(()=>{streakT=0;showLbl('streakLbl','STREAK OVER!','#ff4444',900)},400)}
+  hrStreak=0}
+
+function newZones(){
+  const bo=ROUNDS[round].inn3Outs&&inning>=3?ROUNDS[round].inn3Outs:ROUNDS[round].baseOuts;
+  const numOuts=Math.min(6,bo+Math.floor(innBatters/3));
+  const pool=[];
+  // HR is guaranteed unless conditionalHR round in inning 2+
+  const rd=ROUNDS[round];
+  const hrEarned=!rd.conditionalHR||bases.some(b=>b)||hrStreak>=1;
+  if(hrEarned)pool.push('HR');
+  for(let i=0;i<numOuts;i++)pool.push('OUT');
+  while(pool.length<NUM_ZONES)pool.push(pickHitZone());
+  zones=shuf(pool);
+  // --- Situational zones ---
+  // SB+CS always appear as a pair when eligible (SB replaces a hit, CS replaces an OUT)
+  const sbElig=(bases[0]&&!bases[1]&&!bases[2]&&innOuts<=1)||  // 1-- 0 or 1 out (no 3rd)
+    (bases[1]&&!bases[0]&&!bases[2]&&innOuts===1)||  // -2- 1 out
+    (bases[0]&&bases[1]&&!bases[2]&&innOuts===1);    // 12- 1 out (not loaded)
+  // Helper: pick a random index matching a filter
+  function randIdx(fn){const m=zones.map((z,i)=>fn(z)?i:-1).filter(i=>i>=0);
+    return m.length?m[Math.floor(Math.random()*m.length)]:-1}
+  // SB consumes one hit zone; afterwards the wall must still offer two other ways on base
+  // (HR counts as one), so: HR present → ≥1 other hit left, HR absent → ≥2 left
+  const hitCount=zones.filter(z=>z!=='HR'&&z!=='OUT').length;
+  if(sbElig&&hitCount>=(zones.includes('HR')?2:3)){
+    const hi=randIdx(z=>z!=='HR'&&z!=='OUT');
+    const oi=randIdx(z=>z==='OUT');
+    if(hi>=0&&oi>=0){zones[hi]='SB';zones[oi]='CS'}}
+  // Collect eligible OUT-replacements: SF, BNT, DP (each max 1)
+  const outPool=[];
+  if(bases[2]&&innOuts<2)outPool.push('SF');
+  if(bases[0]&&bases[1]&&innOuts===0)outPool.push('BNT');
+  if(bases[0]&&innOuts<2)outPool.push('DP');
+  // Fill available OUT slots (keep at least 1 regular OUT)
+  if(outPool.length>0){shuf(outPool);
+    for(const sz of outPool){const rem=zones.filter(z=>z==='OUT').length;
+      if(rem>1){const oi=randIdx(z=>z==='OUT');if(oi>=0)zones[oi]=sz}}}
+  flippedZones=[];
+  if(hrStreak>=2){const outIdx=zones.map((z,i)=>z==='OUT'?i:-1).filter(i=>i>=0);
+    shuf(outIdx);const flips=Math.min(hrStreak-1,outIdx.length);
+    for(let n=0;n<flips;n++){const i=outIdx[n];
+      zones[i]=n<2?'HR':pickHitZone();flippedZones.push(i)}}
+  renderZones()}
+
+const SVGNS='http://www.w3.org/2000/svg';
+function svgEl(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
+function renderZones(){
+  const g=document.getElementById('zg');g.innerHTML='';
+  zones.forEach((z,i)=>{const s=ZSECT[i];
+    const grp=svgEl('g',{class:'zn enter '+ZBG[z]+(flippedZones.includes(i)?' zFlip':'')});
+    grp.style.setProperty('--r',s.rot.toFixed(2)+'deg');
+    grp.appendChild(svgEl('path',{d:s.d}));
+    const t=svgEl('text',{transform:`translate(${s.lx.toFixed(2)} ${s.ly.toFixed(2)}) rotate(${s.rot.toFixed(2)})`,
+      'text-anchor':'middle',dy:'0.4em'});
+    t.textContent=z;grp.appendChild(t);g.appendChild(grp)})}
+function flashZone(i){const el=document.querySelectorAll('.zn');
+  if(el[i]){el[i].classList.add('pop');setTimeout(()=>el[i].classList.remove('pop'),600)}}
+// Zone widths: edges 12.5% bigger, middle 5% smaller
+// Base width = W/7. Edge = base*1.125, mid = base*0.95
+// 2 edges + 5 mids = 2*1.125 + 5*0.95 = 2.25 + 4.75 = 7 ✓
+const ZBASE=W/NUM_ZONES;
+const ZWIDTHS=[ZBASE*1.125,ZBASE*.95,ZBASE*.95,ZBASE*.95,ZBASE*.95,ZBASE*.95,ZBASE*1.125];
+const ZEDGES=[0];for(let i=0;i<NUM_ZONES;i++)ZEDGES.push(ZEDGES[i]+ZWIDTHS[i]);
+function zoneFromX(x){for(let i=0;i<NUM_ZONES;i++){if(x<ZEDGES[i+1])return i}return NUM_ZONES-1}
+// Static sector geometry per zone: SVG path (outer arc → inner arc), label anchor, tilt.
+// Zone i spans wall units ZEDGES[i]..ZEDGES[i+1] — the same boundaries zoneFromX uses.
+const ZSECT=ZWIDTHS.map((_,i)=>{const u0=ZEDGES[i],u1=ZEDGES[i+1],f=n=>n.toFixed(2);
+  const o0=wallPoint(u0,WALL_H),o1=wallPoint(u1,WALL_H),i0=wallPoint(u0,0),i1=wallPoint(u1,0);
+  const ro=f(WALL_R+WALL_H),ri=f(WALL_R);
+  const d=`M${f(o0.x)} ${f(o0.y)}A${ro} ${ro} 0 0 1 ${f(o1.x)} ${f(o1.y)}L${f(i1.x)} ${f(i1.y)}A${ri} ${ri} 0 0 0 ${f(i0.x)} ${f(i0.y)}Z`;
+  const um=(u0+u1)/2,c=wallPoint(um,WALL_H/2);
+  return{d,lx:c.x,ly:c.y,rot:wallAngle(um)*180/Math.PI}});
+// foul poles: vertical, 2px wide, centred on the pole bases, drawn above the zone panels.
+// The zone layer is clipped to the span between pole centres: a sector's outer edge is
+// radial (it leans outward going up), so without the clip the edge zones' top corners
+// would poke out past the vertical poles.
+[POLE_X,W-POLE_X].forEach(px=>document.getElementById('poles')
+  .appendChild(svgEl('rect',{x:px-1,y:0,width:2,height:POLE_Y,fill:'#cc0'})));
+{const r=document.getElementById('zclipR');r.setAttribute('x',POLE_X);r.setAttribute('width',W-2*POLE_X)}
+
+/* ===== state ===== */
+let state='title',inning=1,innOuts=0,runs=0,totalHits=0,totalHR=0,totalBB=0,pitchCt=0,innBatters=0;
+let bases=[false,false,false]; // 1B,2B,3B
+let target=5;const MAX_INN=3;
+let innScores=[0,0,0],innHits=[0,0,0],innLOB=[0,0,0];
+let pitch,ballT,ballWX,ballWY;
+let readyT=0,windupT=0,resultT=0,shakeAmt=0;
+let swingReq=false,batFr=0,pFr=0,batRight=true;
+let hitFlyT=0,hitFlyFr=28,hitSX,hitSY,hitTX,hitTY,hitZI=-1,hitRes='';
+let trail=[],particles=[],runnerAnims=[];
+let swingTimeMs=0,lastFrameMs=0;
+let showGuide=false,innBreakT=0,basePending=[false,false,false],pendingRuns=0;
+let hitStreak=0,hrStreak=0,maxHRStreak=0;
+/* players: three skin-tone groups. Each batter (and each inning's pitcher) draws a tone
+   independently with the SKIN_W weights and carries it around the bases: bases[i] holds the
+   runner's tone, or false. */
+const SKIN=[['#f8c4b4','#f3c3a6','#e8b08e'],['#d9a066','#c98d5a','#b57b4b'],['#8d5524','#704226','#5a3420']];
+// weighted independent draw per player: 50% light / 35% medium / 15% dark
+const SKIN_W=[.50,.35,.15];
+function pickSkin(){let r=Math.random(),gi=0;for(;gi<SKIN_W.length-1&&r>=SKIN_W[gi];gi++)r-=SKIN_W[gi];
+  const g=SKIN[gi];return g[Math.floor(Math.random()*g.length)]}
+let batterSk=SKIN[0][0],pitcherSk=SKIN[1][0];
+let hiScores=[0,0,0,0,0];try{const h=JSON.parse(localStorage.getItem('dsHi2'));if(Array.isArray(h)){while(h.length<5)h.push(0);hiScores=h}}catch(e){}
+
+/* ===== base logic ===== */
+function processHit(type){
+  const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;let sc=0;
+  for(let i=2;i>=0;i--){if(bases[i]){const r=bases[i];bases[i]=false;if(i+adv>=3)sc++;else bases[i+adv]=r}}
+  if(adv>=4)sc++;else if(adv>0)bases[adv-1]=batterSk;
+  pendingRuns+=sc;return sc}
+
+function processWalk(){
+  // the batter takes 1B; each occupied base in the chain pushes its runner one up
+  let sc=0,t=batterSk;
+  for(let i=0;i<3&&t;i++){const nxt=bases[i];bases[i]=t;t=nxt}
+  if(t)sc=1;                                  // a runner forced off 3B scores
+  pendingRuns+=sc;return sc}
+
+function clearBases(){bases=[false,false,false]}
+
+function spawnRunners(type){
+  const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;if(!adv)return;
+  const bp=[HOME,B1,B2,B3];basePending=[false,false,false];
+  function mkPath(fi,ti){
+    const p=[{x:bp[fi].x,y:bp[fi].y}];
+    for(let b=fi+1;b<=Math.min(ti,3);b++)p.push({x:bp[b].x,y:bp[b].y});
+    if(ti>=4)p.push({x:HOME.x,y:HOME.y});return p}
+  function addA(p,sk){
+    if(p.length===2)runnerAnims.push({sx:p[0].x,sy:p[0].y,ex:p[1].x,ey:p[1].y,t:0,dur:20,sk});
+    else runnerAnims.push({path:p,t:0,dur:(p.length-1)*18,isPath:true,sk})}
+  for(let i=2;i>=0;i--){if(bases[i]){
+    const fi=i+1,to=fi+adv;addA(mkPath(fi,to),bases[i]);if(to<4)basePending[to-1]=true}}
+  const bp2=[{x:HOME.x,y:HOME.y+12}];
+  for(let b=1;b<=Math.min(adv,3);b++)bp2.push({x:bp[b].x,y:bp[b].y});
+  if(adv>=4)bp2.push({x:HOME.x,y:HOME.y});else basePending[adv-1]=true;
+  addA(bp2,batterSk)}
+
+function spawnWalkRunners(){
+  const bp=[HOME,B1,B2,B3];basePending=[false,false,false];
+  function addA(p,sk){
+    if(p.length===2)runnerAnims.push({sx:p[0].x,sy:p[0].y,ex:p[1].x,ey:p[1].y,t:0,dur:22,sk});
+    else runnerAnims.push({path:p,t:0,dur:(p.length-1)*18,isPath:true,sk})}
+  // Only forced runners advance: walk the chain from 1B until an empty base
+  for(let i=0;i<3&&bases[i];i++){
+    const to=i+1<3?bp[i+2]:HOME;                 // bp index = base number; i+1 is the next base
+    addA([{x:bp[i+1].x,y:bp[i+1].y},{x:to.x,y:to.y}],bases[i]);if(i+1<3)basePending[i+1]=true}
+  basePending[0]=true;
+  addA([{x:HOME.x,y:HOME.y+12},{x:bp[1].x,y:bp[1].y}],batterSk)}
+
+/* ===== field pre-render ===== */
+const fCv=document.createElement('canvas');fCv.width=W;fCv.height=H;
+const fc=fCv.getContext('2d');
+
+function drawFieldStatic(){
+  fc.fillStyle='#0a0c1a';fc.fillRect(0,0,W,H);
+
+  // grass: every row of fair territory (fLeft/fRight already clip to the wall arc), 8px mow stripes
+  for(let y=WALL_B;y<=HOME.y;y++){
+    const fl=fLeft(y),fr=fRight(y);if(fr<fl)continue;
+    fc.fillStyle=Math.floor((y-WALL_B)/8)%2?'#008a00':'#00a800';
+    fc.fillRect(fl,y,fr-fl+1,1)}
+
+  // stands / wall band / warning track: three rings around ARC, painted per pixel.
+  // Only rows down to the pole bases (+ track) can be touched by the rings.
+  const ringYMax=POLE_Y+TRACK_W+2;
+  for(let y=0;y<ringYMax;y++)for(let x=0;x<W;x++){
+    const d=Math.hypot(x+.5-ARC.x,y+.5-ARC.y);
+    if(d>WALL_R+WALL_H)fc.fillStyle='#141e3c';                 // stands
+    else if(d>WALL_R)fc.fillStyle=WALL_COL;                     // wall (zone panels sit on this)
+    else if(Math.abs(x+.5-HOME.x)>fieldHW(y+.5))continue;       // foul territory below a pole: keep bg
+    else if(d>WALL_R-TRACK_W)fc.fillStyle=DIRT;            // warning track
+    else continue;                                              // grass, already painted
+    fc.fillRect(x,y,1,1)}
+  // crowd dots (2×2), only where the stands are
+  const cc=['#c83838','#3838c8','#38a838','#c88838','#c838c8','#38c8c8','#8838c8','#c8c838'];
+  for(let y=4;y<POLE_Y;y++)for(let x=1;x<W;x+=3)
+    if((x*3+y*5)%5>1&&Math.hypot(x+1-ARC.x,y+2-ARC.y)>WALL_R+WALL_H){
+      fc.fillStyle=cc[(x*7+y*11)%8];fc.fillRect(x,y,2,2)}
+  // the dot pattern steps every 3px from x=1, so it isn't symmetric on its own: mirror the
+  // right half of the stands onto the left (the rings themselves are already symmetric)
+  {fc.save();fc.imageSmoothingEnabled=false;fc.translate(2*HOME.x,0);fc.scale(-1,1);
+   fc.drawImage(fCv,HOME.x,0,W-HOME.x,ringYMax,HOME.x,0,W-HOME.x,ringYMax);fc.restore()}
+  // (foul lines drawn later, after base paths)
+
+  // ---- infield dirt: one ellipse + the diamond ----
+  // A real infield's dirt edge is a circle centred on the mound; seen from this
+  // angle it's an ellipse. Its centre sits midway between 2B and the mound and its
+  // top lands 17px above 2B. The diamond quad supplies the dirt under the lower
+  // half of the inner grass.
+  fc.fillStyle=DIRT;
+  fillEllipse(fc,HOME.x,DIRT_ARC.cy,DIRT_ARC.rx,DIRT_ARC.ry,true);
+  poly(fc,[HOME,{x:fRight(B1.y),y:B1.y},B2,{x:fLeft(B3.y),y:B3.y}]);
+  // ---- inner grass: the diamond inset from the base-path centrelines ----
+  // Lower edges run parallel to the home→1B / 3B→home paths (which follow the foul
+  // lines), GRASS_LO px inside them horizontally. Upper edges run parallel to the
+  // 1B→2B / 2B→3B paths, GRASS_UP px inside them perpendicularly. Vertices are the
+  // intersections of those four lines, so the apex lands exactly in the inside
+  // corner where the two upper paths meet — no slivers, nothing to patch.
+  fc.fillStyle='#009200';
+  poly(fc,innerGrassPoly());
+  fc.fillStyle=DIRT;pxL(fc,B1.x,B1.y,B2.x,B2.y,3);pxL(fc,B2.x,B2.y,B3.x,B3.y,3); // upper base paths
+  // mirror the right half of the infield rows onto the left: the anti-aliased grass edges then
+  // match exactly about x=90 (column c ↔ 179−c). Everything drawn so far in these rows is
+  // meant to be symmetric; the odd-width centre pieces (mound, plate, bags) are drawn after.
+  {const y0=Math.floor(B2.y),h=HOME.y-y0+1;fc.save();fc.imageSmoothingEnabled=false;
+   fc.translate(2*HOME.x,0);fc.scale(-1,1);fc.drawImage(fCv,HOME.x,y0,W-HOME.x,h,HOME.x,y0,W-HOME.x,h);fc.restore()}
+
+  // base cutouts: a dirt wedge at each bag, radius 1.5× the bag's 7px diagonal, bounded by
+  // the two base lines through the bag centre (so it opens toward the mound). 1B is computed;
+  // 3B is its exact pixel mirror (column c ↔ 179−c); 2B is symmetric about its own centre.
+  fc.fillStyle=DIRT;
+  {const R=BASE_CUT_R,c1={x:B1.x+.5,y:B1.y+.5},c2={x:B2.x+.5,y:B2.y+.5};
+   const fl=(HOME.x-fRight(B1.y))/(HOME.y-B1.y);              // foul-line slope (dx per dy), toward home
+   const side=(o,d,px,py,q)=>Math.sign((px-o.x)*d.y-(py-o.y)*d.x)===Math.sign((q.x-o.x)*d.y-(q.y-o.y)*d.x);
+   const M={x:MOUND.x+.5,y:MOUND.y+.5};
+   // 1B: inside both lines through the bag centre — toward home (parallel to the foul line) and toward 2B
+   const dHome={x:fl,y:1},d12={x:c2.x-c1.x,y:c2.y-c1.y};
+   for(let y=Math.floor(c1.y-R);y<=Math.ceil(c1.y+R);y++)for(let x=Math.floor(c1.x-R);x<=Math.ceil(c1.x+R);x++){
+     const px=x+.5,py=y+.5;if(Math.hypot(px-c1.x,py-c1.y)>R)continue;
+     if(side(c1,dHome,px,py,M)&&side(c1,d12,px,py,M)){fc.fillRect(x,y,1,1);fc.fillRect(2*HOME.x-1-x,y,1,1)}}
+   // 2B: inside the lines toward 1B and toward 3B (mirrored directions, so symmetric about the bag)
+   const dR={x:c1.x-c2.x,y:c1.y-c2.y},dL={x:-dR.x,y:dR.y};
+   for(let y=Math.floor(c2.y-R);y<=Math.ceil(c2.y+R);y++)for(let x=Math.floor(c2.x-R);x<=Math.ceil(c2.x+R);x++){
+     const px=x+.5,py=y+.5;if(Math.hypot(px-c2.x,py-c2.y)>R)continue;
+     if(side(c2,dR,px,py,M)&&side(c2,dL,px,py,M))fc.fillRect(x,y,1,1)}}
+
+  // base paths (infield paths follow foul line trajectory for parallel alignment)
+  fc.fillStyle=DIRT;
+  // the foul-side strips (half the path width sits outside the line) run past the bags,
+  // stopping PATH_SHORT rows below where the dirt arc meets the foul line
+  // row-scanned 6px strips centred on each foul line (3 fair, 3 under/foul), starting at the
+  // first row where the clipped ellipse no longer reaches the foul-side edge — so the strip
+  // continues the ellipse's foul dirt seamlessly down to home
+  let yStrip=B1.y;
+  for(let y=B1.y;y>=Math.ceil(DIRT_ARC.cy);y--){const k=(y-DIRT_ARC.cy)/DIRT_ARC.ry;
+    if(Math.round(HOME.x+DIRT_ARC.rx*Math.sqrt(Math.max(0,1-k*k)))-1>=fRight(y)-2)yStrip=y;else break}
+  for(let y=yStrip;y<=HOME.y;y++){fc.fillRect(fRight(y)-3,y,6,1);fc.fillRect(fLeft(y)-2,y,6,1)}
+
+  // foul lines (pole base to home; mound & batting circle paint over them)
+  fc.fillStyle='rgba(255,255,255,.75)'; // foul lines: opaque enough to read over the light dirt
+  for(let y=POLE_Y;y<=HOME.y;y++){
+    const fl=fLeft(y),fr=fRight(y);
+    fc.fillRect(fl,y,3,1);fc.fillRect(fr-2,y,3,1)}
+
+  // pitcher's mound (bigger, visible circle)
+  for(let r=10;r>=0;r--){
+    fc.fillStyle=r>7?DIRT_DK:r>3?DIRT:DIRT_LT;
+    for(let dy=-r;dy<=r;dy++){const w=Math.round(Math.sqrt(r*r-dy*dy));
+      fc.fillRect(MOUND.x-w,MOUND.y+dy,w*2+1,1)}}
+  fc.fillStyle='#fff';fc.fillRect(MOUND.x-4,MOUND.y+1,9,2); // rubber, just under the pitcher's feet
+
+  // batting circle (single tone)
+  fc.fillStyle=DIRT;
+  for(let dy=-22;dy<=22;dy++){const w=Math.round(Math.sqrt(484-dy*dy));
+    fc.fillRect(HOME.x-w,HOME.y+dy,w*2,1)}   // columns 90−w..89+w: symmetric about the field centre
+
+  // bases
+  fc.fillStyle='#fff';
+  // all three bags are identical 7px pixel diamonds. 1B/3B are placed so the bottom corner
+  // touches the inside of the foul line; the outer corner then lands on the line itself.
+  [B1,B2,B3].forEach(b=>pxDiamond(fc,b.x,b.y,3));
+  // home plate: pentagon, flat edge toward the mound, point toward the catcher
+  fc.fillRect(HOME.x-3,HOME.y-2,7,4);fc.fillRect(HOME.x-2,HOME.y+2,5,1);
+  fc.fillRect(HOME.x-1,HOME.y+3,3,1);fc.fillRect(HOME.x,HOME.y+4,1,1);
+  // batter's boxes (white outlined rectangles on either side of home plate)
+  fc.fillStyle='rgba(255,255,255,.28)';
+  fc.fillRect(HOME.x-14,HOME.y-7,1,14);fc.fillRect(HOME.x-14,HOME.y-7,8,1);
+  fc.fillRect(HOME.x-14,HOME.y+6,8,1);fc.fillRect(HOME.x-7,HOME.y-7,1,14);
+  fc.fillRect(HOME.x+6,HOME.y-7,1,14);fc.fillRect(HOME.x+6,HOME.y-7,8,1);
+  fc.fillRect(HOME.x+6,HOME.y+6,8,1);fc.fillRect(HOME.x+13,HOME.y-7,1,14);
+  // (foul poles live in the SVG zone overlay so they draw on top of the zone panels)
+}
+function pxL(c,x1,y1,x2,y2,w){const dx=x2-x1,dy=y2-y1,st=Math.max(Math.abs(dx),Math.abs(dy)),hw=w>>1;
+  for(let i=0;i<=st;i++){const t=i/st;c.fillRect(Math.round(x1+dx*t)-hw,Math.round(y1+dy*t)-hw,w,w)}}
+function pxDiamond(c,x,y,r){for(let d=-r;d<=r;d++){const w=r-Math.abs(d);c.fillRect(x-w,y+d,w*2+1,1)}}
+function poly(c,pts){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill()}
+// crisp row-scan ellipse (no anti-aliasing, matches the other pixel-art fills)
+function fillEllipse(c,cx,cy,rx,ry,clipFair){
+  const y0=Math.ceil(cy-ry),y1=Math.floor(cy+ry),hwAt=y=>{const k=(y-cy)/ry;return rx*Math.sqrt(Math.max(0,1-k*k))};
+  // first row (from the top) where the arc reaches a foul line's inner pixel
+  let yTouch=y1+1;if(clipFair)for(let y=y0;y<=y1;y++)if(Math.round(cx+hwAt(y))-1>=fRight(y)-2){yTouch=y;break}
+  for(let y=y0;y<=y1;y++){
+    const hw=hwAt(y);let l=Math.round(cx-hw),r=2*cx-l; // r exclusive: columns l..2cx-1-l, exact mirror about x=cx
+    // Once the arc reaches a line it runs under the whole line (never half over grass). From
+    // two rows later it also carries FOUL_DIRT px past the line — the same 2px band as the
+    // base-path strip, so the two join — and is clipped there.
+    if(clipFair){const fl=fLeft(y),fr=fRight(y);
+      if(y>=yTouch+5){r=fr+FOUL_DIRT+1;l=fl-FOUL_DIRT}   // last right col fr+2 ↔ first left col fl-2
+      else if(y>=yTouch){r=fr+1;l=fl}}                     // last right col fr   ↔ first left col fl
+    if(r>l)c.fillRect(l,y,r-l,1)}}
+// line = {p:{x,y}, d:{x,y}}; the line through a→b shifted `off` px toward `toward`
+function offsetLine(a,b,off,toward){
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+  let nx=-dy/len,ny=dx/len;
+  const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+  if(nx*(toward.x-mx)+ny*(toward.y-my)<0){nx=-nx;ny=-ny}
+  return{p:{x:a.x+nx*off,y:a.y+ny*off},d:{x:dx,y:dy}}}
+function isect(l1,l2){
+  const den=l1.d.x*l2.d.y-l1.d.y*l2.d.x;
+  const t=((l2.p.x-l1.p.x)*l2.d.y-(l2.p.y-l1.p.y)*l2.d.x)/den;
+  return{x:l1.p.x+t*l1.d.x,y:l1.p.y+t*l1.d.y}}
+function innerGrassPoly(){
+  const r1={x:fRight(B1.y),y:B1.y},l3={x:fLeft(B3.y),y:B3.y}; // where the lower paths meet 1B/3B
+  const loR={p:{x:r1.x-GRASS_LO,y:r1.y},d:{x:HOME.x-r1.x,y:HOME.y-r1.y}};
+  const loL={p:{x:l3.x+GRASS_LO,y:l3.y},d:{x:HOME.x-l3.x,y:HOME.y-l3.y}};
+  const upR=offsetLine(B1,B2,GRASS_UP,MOUND),upL=offsetLine(B2,B3,GRASS_UP,MOUND);
+  return[isect(loL,loR),isect(loR,upR),isect(upR,upL),isect(upL,loL)]} // home, 1B side, apex, 3B side
+drawFieldStatic();
+
+/* ===== sprites ===== */
+function drawPitcher(fr){
+  const px=MOUND.x,py=MOUND.y-10,sk=pitcherSk,un='#d82020',uD='#a01818'; // feet (py+9..py+10) land on the rubber
+  cx.save();if(pitchLefty){cx.translate(2*px+1,0);cx.scale(-1,1)}             // lefty: mirror about the mound centre
+  cx.fillStyle=un;cx.fillRect(px-3,py+1,7,5);cx.fillStyle=uD;cx.fillRect(px-3,py+1,7,1);
+  cx.fillStyle='#fff';cx.fillRect(px-1,py+2,1,2);cx.fillRect(px+1,py+2,1,2);
+  cx.fillStyle='#ddd';cx.fillRect(px-2,py+6,3,4);cx.fillRect(px+1,py+6,3,4);
+  cx.fillStyle='#333';cx.fillRect(px-2,py+9,3,2);cx.fillRect(px+1,py+9,3,2);
+  cx.fillStyle=sk;
+  if(fr===0){cx.fillRect(px-4,py+2,2,2);cx.fillRect(px+4,py+2,2,2);
+    cx.fillStyle=GLOVE;cx.fillRect(px+4,py+1,3,3)}
+  else if(fr===1){cx.fillRect(px-3,py-3,2,3);cx.fillRect(px+4,py+2,2,2);
+    cx.fillStyle=GLOVE;cx.fillRect(px+4,py+1,3,3)}
+  else{cx.fillRect(px-6,py+5,2,2);cx.fillRect(px+4,py+3,2,2);               // release: hand beside the hip, belt height
+    cx.fillStyle=GLOVE;cx.fillRect(px+4,py+2,3,3)}
+  cx.fillStyle=sk;cx.fillRect(px-2,py-4,5,4);
+  cx.fillStyle=un;cx.fillRect(px-3,py-5,7,3);
+  // ball in hand during windup
+  if(fr===1){cx.fillStyle=pitch?pitch.color:'#fff';cx.fillRect(px-5,py-7,4,4)}
+  cx.restore();
+}
+function drawBatter(fr){
+  const bx=HOME.x+(batRight?-11:11),by=HOME.y+5,sk=batterSk,bt='#b07830',bk='#8a5c20';
+  cx.save();cx.translate(bx,by);if(!batRight)cx.scale(-1,1);
+  cx.fillStyle='#f0f0f0';cx.fillRect(-3,-7,8,7);
+  cx.fillStyle='#d8d8d8';cx.fillRect(-3,-7,8,2);
+  cx.fillStyle='#f0f0f0';cx.fillRect(-2,0,3,6);cx.fillRect(2,0,3,6);
+  cx.fillStyle='#333';cx.fillRect(-2,5,3,2);cx.fillRect(2,5,3,2);
+  cx.fillStyle=sk;
+  if(fr===0){cx.fillRect(3,-5,2,3);cx.fillRect(4,-7,2,3);
+    cx.fillStyle=bt;cx.fillRect(5,-20,2,15);cx.fillStyle=bk;cx.fillRect(5,-20,2,3)}
+  else if(fr===1){cx.fillRect(-6,-6,2,3);cx.fillRect(-7,-8,2,3);
+    cx.fillStyle=bt;cx.fillRect(-9,-22,2,16);cx.fillStyle=bk;cx.fillRect(-9,-22,2,3)}
+  else if(fr===2){cx.fillRect(-4,-8,2,3);cx.fillRect(-5,-10,2,3);
+    cx.fillStyle=bt;cx.fillRect(-6,-22,2,14);cx.fillStyle=bk;cx.fillRect(-6,-22,2,3)}
+  else if(fr===3){cx.fillRect(-1,-7,2,3);cx.fillRect(0,-9,2,3);
+    cx.fillStyle=bt;for(let i=0;i<11;i++)cx.fillRect(1+i,-10+i,2,2);
+    cx.fillStyle=bk;cx.fillRect(10,-1,3,3)}
+  else if(fr===4){cx.fillRect(5,-4,2,3);cx.fillRect(7,-3,2,3);
+    cx.fillStyle=bt;cx.fillRect(8,-4,18,2);cx.fillStyle=bk;cx.fillRect(23,-4,3,2)}
+  else if(fr===5){cx.fillRect(6,-5,2,3);cx.fillRect(8,-6,2,3);
+    cx.fillStyle=bt;for(let i=0;i<11;i++)cx.fillRect(8+i,-6-i,2,2);
+    cx.fillStyle=bk;cx.fillRect(17,-15,3,3)}
+  else{cx.fillRect(5,-7,2,3);cx.fillRect(6,-9,2,3);
+    cx.fillStyle=bt;cx.fillRect(6,-20,2,13);cx.fillStyle=bk;cx.fillRect(6,-20,2,3)}
+  cx.fillStyle=sk;cx.fillRect(-2,-12,6,5);
+  cx.fillStyle='#222258';cx.fillRect(-3,-13,8,5);cx.fillRect(-4,-11,2,3);
+  cx.restore();
+}
+function drawBaseRunner(x,y,sk){
+  cx.fillStyle='#f0f0f0';cx.fillRect(x-2,y-5,5,5);
+  cx.fillStyle='#d8d8d8';cx.fillRect(x-2,y-5,5,1);
+  cx.fillStyle='#999';cx.fillRect(x-2,y,5,4);
+  cx.fillStyle='#333';cx.fillRect(x-2,y+3,5,2);
+  cx.fillStyle=sk||SKIN[0][0];cx.fillRect(x-1,y-9,4,4);
+  cx.fillStyle='#222258';cx.fillRect(x-2,y-10,5,3);
+}
+
+/* ===== scoreboard (drawn on canvas) ===== */
+function drawScoreboard(){
+  // Wrigley-style board in the centre-field stands:
+  //   ROUND        TGT n   HI n     (HI gold + live while a new high is being set)
+  //   1 2 3 R H           ● ● ○     (out lamps, centred on the score line)
+  //   values
+  // width is set by the longest header row: 'ALL-STAR' + 'TGT 15' + 'HI 21' with 4px gaps
+  const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=WALL_T-bhgt-12;
+  cx.fillStyle='#0d2418';cx.fillRect(bx,by,bwid,bhgt);                 // board face (dark green)
+  cx.fillStyle='#2a5a3a';cx.fillRect(bx,by,bwid,1);cx.fillRect(bx,by+bhgt-1,bwid,1);
+  cx.fillRect(bx,by,1,bhgt);cx.fillRect(bx+bwid-1,by,1,bhgt);          // frame
+  cx.font='6px "Press Start 2P",monospace';cx.textBaseline='alphabetic';
+  const L=bx+3,Rt=bx+bwid-3,r1=by+10,r2=by+22,r3=by+32;
+  // row 1: round · TGT · HI
+  // header row: ROUND · TGT n · HI n, justified. A label and its number sit 3px apart; the
+  // three items share the leftover width — equal gaps between them, edges get 70% of a gap.
+  const ch=6,gapIn=3,hiLive=!exhibitionMode&&runs>hiScores[round];
+  const nm=ROUNDS[round].name,tgN=''+target,hiN=''+(hiLive?runs:hiScores[round]);
+  const w1=nm.length*ch,w2=3*ch+gapIn+tgN.length*ch,w3=2*ch+gapIn+hiN.length*ch;
+  const g=(bwid-w1-w2-w3)/3.4,e=g*.7;let x=bx+e;
+  cx.textAlign='left';
+  cx.fillStyle='#ffd642';cx.fillText(nm,Math.round(x),r1);x+=w1+g;
+  cx.fillStyle='#aaa';cx.fillText('TGT',Math.round(x),r1);cx.fillText(tgN,Math.round(x+3*ch+gapIn),r1);x+=w2+g;
+  cx.fillStyle=hiLive?'#ffd642':'#bbb';cx.fillText('HI',Math.round(x),r1);cx.fillText(hiN,Math.round(x+2*ch+gapIn),r1);
+  // rows 2-3: inning grid (cells bw wide × 10 tall, text centred; caps ~6px → baseline = top+8)
+  const bw=14,cw=bw-1,cellTop=r3-9,hdr=['1','2','3','R','H'];
+  cx.textAlign='center';
+  for(let i=0;i<5;i++){const cxm=L+i*bw+cw/2,isInn=i<MAX_INN,isCur=isInn&&i===inning-1&&inning<=MAX_INN;
+    cx.fillStyle=isCur?'#ffd642':isInn?'#888':'#ccc';cx.fillText(hdr[i],cxm,r2);
+    cx.fillStyle=isInn?(i<inning?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'):'rgba(255,255,255,.07)';
+    cx.fillRect(L+i*bw,cellTop,cw,10);
+    const txt=isInn?(i<inning-1?''+innScores[i]:isCur?(innScores[i]>0?''+innScores[i]:'-'):'-'):''+(i===MAX_INN?runs:totalHits);
+    cx.fillStyle=isCur?'#ffd642':isInn?(i<inning?'#bbb':'#555'):'#ddd';cx.fillText(txt,cxm,r3)}
+  cx.textAlign='left';
+  // out lamps: centred in the space right of the grid, on the score line
+  const lampR=3.6,lampGap=6.5,gridR=L+5*bw,areaC=(gridR+Rt)/2+2,lampW=3*lampR*2+2*lampGap;
+  for(let i=0;i<3;i++){const lx=areaC-lampW/2+lampR+i*(lampR*2+lampGap),ly=cellTop+2;
+    cx.fillStyle=i<innOuts?'#ee2222':'#331111';cx.beginPath();cx.arc(lx,ly,lampR,0,Math.PI*2);cx.fill();
+    if(i<innOuts){cx.fillStyle='rgba(255,50,50,.3)';cx.beginPath();cx.arc(lx,ly,lampR+2,0,Math.PI*2);cx.fill()}}
+}
+
+/* ===== particles ===== */
+function spawnP(x,y,n,cols,spd){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=(.5+Math.random()*.5)*spd;
+  particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-.3,life:20+Math.random()*18,
+    color:cols[0|Math.random()*cols.length],sz:Math.random()<.3?2:1})}}
+function updP(){particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.03;p.life--;return p.life>0})}
+function drwP(){particles.forEach(p=>{cx.fillStyle=p.color;cx.fillRect(0|p.x,0|p.y,p.sz,p.sz)})}
+
+/* ===== game logic ===== */
+function pickPitch(){
+  const rule=ROUNDS[round].pitchRule;
+  if(rule==='legend'){const r=Math.random(),hp=ROUNDS[round].heater||.28; // heater share; the rest split evenly
+    if(r<hp)return{...PITCHES[3]};
+    return{...PITCHES[[0,1,2,4][Math.min(Math.floor((r-hp)/((1-hp)/4)),3)]]}}
+  let idx;
+  if(rule==='rookie'){
+    idx=inning<=1?[0]:inning<=2?[0,1]:[0,1,2];
+  }else if(rule==='veteran'){
+    idx=inning<=1?[0,1,2]:inning<=2?[0,1,2,4]:[0,1,2,3,4];
+  }else if(rule==='allFrom1'){idx=[0,1,2,3,4];
+  }else{idx=PITCHES.map((_,i)=>i).filter(i=>PITCHES[i].inn<=inning)}
+  return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
+function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+  round=nextRound;target=ROUNDS[round].target;
+  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;hitStreak=0;hrStreak=0;maxHRStreak=0;
+  innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];
+  clearBases();particles=[];trail=[];hide('goScr');newZones();
+  isNewRound=true;isNewInning=true;
+  showLbl('resLbl',ROUNDS[round].name,'#ffd642',OPEN_ROUND_MS);
+  nextPitch()}
+/* ===== TIMING CONSTANTS (tweak these) ===== */
+// All values in ms. Converted to frames (÷16.67) internally.
+const DELAY_ZONES    = 125;  // pause after zones appear before pitch starts (every at-bat)
+const DELAY_LEFTY    = 75;   // extra pause when batter is a lefty (during LEFTY! popup)
+const DELAY_INNING   = 150;  // extra pause at start of each new inning
+const DELAY_ROUND    = 250;  // extra pause at start of each new difficulty level
+const DELAY_STREAK   = 400;  // extra pause during HR streak (to read flipped zones)
+const DELAY_BASE     = 800;  // base ready time before pitch (default feel)
+// game opening, in ms from the tap: level name 0→OPEN_ROUND_MS; 1ST INNING from OPEN_INNING_AT
+// for OPEN_INNING_MS (overlapping the level name's tail); first windup at OPEN_WINDUP_AT
+const OPEN_ROUND_MS=1100,OPEN_INNING_AT=850,OPEN_INNING_MS=950,OPEN_WINDUP_AT=1925;
+// inning change, in ms from the third-out result (the game's final out skips all this):
+//   0      result (result row) + STREAK OVER! at once if a streak just ended (streak row)
+//   500    result fades
+//   700    next inning label + new zones; STREAK OVER! fades
+//   1900   inning label fades;  +125 → windup (+ the lefty pause)
+const INN_RESULT_MS=500,INN_NEXT_AT=700,INN_LABEL_MS=1200,INN_WINDUP_GAP=125;
+const msF=ms=>Math.round(ms/16.67);
+/* =========================================== */
+let isNewInning=false,isNewRound=false,sameBatter=false,paused=false,openInnAt=0;
+
+function nextPitch(){
+  pitch=pickPitch();innBatters++;batterSk=pickSkin();
+  knk=Math.random()*100;
+  // the game's first batter is always a righty; in Rookie the first three are
+  // (chosen before the delay below, which depends on it)
+  batRight=(inning===1&&(innBatters===1||(round===0&&innBatters<=3)))?true:Math.random()>.3;
+  const gameStart=isNewRound;
+  // Calculate ready time from timing constants
+  let delayMs=DELAY_BASE+DELAY_ZONES;
+  if(isNewInning){delayMs=INN_LABEL_MS+INN_WINDUP_GAP;isNewInning=false}   // new inning: wait out the inning label
+  if(isNewRound){delayMs+=DELAY_ROUND;isNewRound=false}
+  if(!batRight)delayMs+=DELAY_LEFTY;
+  if(hrStreak>=2)delayMs+=DELAY_STREAK;
+  if(gameStart){delayMs=OPEN_WINDUP_AT;openInnAt=Math.round((OPEN_WINDUP_AT-OPEN_INNING_AT)/16.67)}
+  readyT=Math.round(delayMs/16.67);
+  state='ready';batFr=0;pFr=0;swingReq=false;trail=[];
+  if(!batRight)showLbl('resLbl','LEFTY!','#88ddff',750)}
+function beginWindup(){state='windup';windupT=14;pFr=1;sfx.pitch()}
+function launchBall(){state='pitch';pFr=2;ballT=0;pitchCt++;setTimeout(()=>pFr=0,180);
+  if(pitch.n!=='FASTBALL')showLbl('resLbl',pitch.n,pitch.color,450)}
+
+/* ===== swing ===== */
+// Contact zones: FOUL_W is 2x the width of edge zones (0 and 6)
+// |--FOUL--|--zone0--...--zone6--|--FOUL--|
+// Mapping: full swing range = WHIFF > FOUL > FAIR > FOUL > WHIFF
+const FAIR=20;        // ±20px offset = fair ball (zones 0-6)
+const FOUL_EXTRA=Math.round(ZWIDTHS[0]*1.5/(W/(2*FAIR))*1.6); // 1.5× edge zone, extended 60%
+const WHIFF=FAIR+FOUL_EXTRA+4; // beyond this = total miss
+
+function doSwing(){
+  if(state!=='pitch')return;sfx.swing();state='swung';
+
+  const frameDt=swingTimeMs-lastFrameMs;
+  const subT=Math.max(0,Math.min(1,frameDt/TK));
+  const interpBallT=ballT+subT/pitch.fr;
+  const interpBallWY=PITCH_Y+(HOME.y-PITCH_Y)*interpBallT;
+  const offset=interpBallWY-HOME.y,absO=Math.abs(offset);
+
+  // Swing animation
+  batFr=2;setTimeout(()=>{batFr=3},30);setTimeout(()=>{batFr=4},55);
+  setTimeout(()=>{batFr=5},85);setTimeout(()=>{batFr=6},130);
+
+  if(absO>WHIFF){
+    setTimeout(()=>{batFr=0},300);
+    innOuts++;hitStreak=0;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
+    state='result';checkInning();return}
+
+  sfx.crack();
+  hitSX=HOME.x;hitSY=HOME.y-3; // ball leaves from the front edge of the plate, where the bat meets it
+
+  const adjOff=batRight?offset:-offset;
+
+  if(absO>FAIR){
+    // FOUL — flight path varies with timing:
+    // barely foul → deep foul near wall; very foul → short/wide near batter
+    const foulPct=Math.min(1,(absO-FAIR)/FOUL_EXTRA);
+    hitTY=Math.round(POLE_Y+4+(HOME.y-POLE_Y-46)*foulPct);
+    const foulLineX=adjOff<0?fLeft(hitTY):fRight(hitTY);
+    const nudge=(2+foulPct*30)*(adjOff<0?-1:1);
+    hitTX=Math.round(Math.max(0,Math.min(W,foulLineX+nudge)));
+    hitRes='FOUL';hitZI=-1;
+    hitFlyT=0;hitFlyFr=22;trail=[];state='hitfly';return}
+
+  // FAIR: map ±FAIR to the full pole-to-pole sweep. `wallU` is the exact quantity the
+  // flat wall used as x (same clamp, same rounding), so zone selection is unchanged;
+  // the landing point is then that same unit's position on the arc, 2px into the band.
+  const norm=Math.max(0,Math.min(1,(adjOff+FAIR)/(2*FAIR)));
+  const wallU=Math.max(2,Math.min(W-2,Math.round(norm*W)));
+  hitZI=zoneFromX(wallU);
+  hitRes=zones[hitZI];
+  const land=wallPoint(wallU,2);hitTX=land.x;hitTY=land.y;
+  hitFlyT=0;hitFlyFr=28;trail=[];state='hitfly';
+}
+
+function ballPassed(){
+  innOuts++;hitStreak=0;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
+  state='result';checkInning()}
+
+function resolveHit(){
+  if(hitZI>=0)flashZone(hitZI);
+  const wx=hitTX,wy=hitTY;
+  if(hitRes==='FOUL'){
+    sfx.foul();innOuts++;hitStreak=0;endStreak();
+    showLbl('resLbl','FOUL!','#ffaa44',900);
+    spawnP(wx,wy,5,['#aaa','#666'],1.5);
+  }else if(hitRes==='OUT'){
+    innOuts++;hitStreak=0;endStreak();
+    sfx.wallOut();showLbl('resLbl','OUT!','#ff4444',900);
+    spawnP(wx,wy+6,6,['#aa4444','#882222','#ffaaaa'],1.8);
+  }else if(hitRes==='SF'){
+    innOuts++;hitStreak=0;endStreak();
+    if(bases[2]){runnerAnims.push({sx:B3.x,sy:B3.y,ex:HOME.x,ey:HOME.y,t:0,dur:20,sk:bases[2]});bases[2]=false;pendingRuns++}
+    sfx.crack();showLbl('resLbl','SAC FLY!','#ffaa44',900);
+    spawnP(wx,wy+6,5,['#aa6644','#884422','#ffccaa'],1.5);
+  }else if(hitRes==='BNT'){
+    innOuts++;hitStreak=0;endStreak();
+    basePending=[false,false,false];
+    if(bases[2]){runnerAnims.push({sx:B3.x,sy:B3.y,ex:HOME.x,ey:HOME.y,t:0,dur:20,sk:bases[2]});bases[2]=false;pendingRuns++}
+    if(bases[1]){runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:20,sk:bases[1]});bases[2]=bases[1];bases[1]=false;basePending[2]=true}
+    if(bases[0]){runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:20,sk:bases[0]});bases[1]=bases[0];bases[0]=false;basePending[1]=true}
+    sfx.hit1B();showLbl('resLbl','BUNT!','#ffaa44',900);
+    spawnP(wx,wy+6,4,['#aa6644','#884422'],1.2);
+  }else if(hitRes==='SB'){
+    // Stolen base — runners advance, batter stays up
+    endStreak();basePending=[false,false,false];
+    const dblSteal=bases[0]&&bases[1];
+    if(bases[1]){runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:18,sk:bases[1]});bases[2]=bases[1];bases[1]=false;basePending[2]=true}
+    if(bases[0]){runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:bases[0]});bases[1]=bases[0];bases[0]=false;basePending[1]=true}
+    sfx.hit1B();showLbl('resLbl',dblSteal?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
+    spawnP(wx,wy+6,5,['#7ff0e0','#bffff5'],1.2);
+    sameBatter=true;state='result';resultT=30;return;
+  }else if(hitRes==='CS'){
+    // Caught stealing — lead runner out, trailing advances if double steal
+    endStreak();basePending=[false,false,false];
+    const wasDbl=bases[0]&&bases[1];
+    if(bases[1]&&bases[0]){
+      // 12-: lead runner (2nd→3rd) caught, trailing (1st→2nd) advances
+      bases[1]=false;innOuts++;
+      runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:bases[0]});
+      bases[1]=bases[0];bases[0]=false;basePending[1]=true;
+    }else if(bases[1]){bases[1]=false;innOuts++;
+    }else if(bases[0]){bases[0]=false;innOuts++}
+    sfx.wallOut();showLbl('resLbl','CAUGHT STEALING!','#ff4444',900);
+    spawnP(wx,wy+6,4,['#aa4444','#882222'],1.5);
+    sameBatter=true;state='result';checkInning();return;
+  }else if(hitRes==='DP'){
+    // Double play — 2 outs, runner on 1st removed, others advance
+    endStreak();hitStreak=0;basePending=[false,false,false];
+    const prevOuts=innOuts;innOuts+=2;
+    bases[0]=false; // runner on 1st is out
+    if(innOuts<3){ // only advance/score if inning continues
+      if(bases[2]){runnerAnims.push({sx:B3.x,sy:B3.y,ex:HOME.x,ey:HOME.y,t:0,dur:20,sk:bases[2]});bases[2]=false;pendingRuns++}
+      if(bases[1]){runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:20,sk:bases[1]});bases[2]=bases[1];bases[1]=false;basePending[2]=true}
+    }
+    sfx.wallOut();sfx.strike();showLbl('resLbl','DOUBLE PLAY!','#ff2222',1100);
+    spawnP(wx,wy+6,8,['#aa2222','#661111','#ff6666'],2);
+  }else if(hitRes==='BB'){
+    totalBB++;hitStreak=0;endStreak();
+    spawnWalkRunners();
+    const scored=processWalk();
+    sfx.bb();showLbl('resLbl','WALK!','#dfe8c8',900);
+    spawnP(wx,wy+6,4,['#aaa','#ccc'],1);
+    if(scored>0)setTimeout(()=>showLbl('scorLbl','RUN SCORED!','#ffd642',1100),350);
+  }else{
+    totalHits++;hitStreak++;innHits[Math.min(inning,MAX_INN)-1]++;
+    const isGrand=hitRes==='HR'&&bases[0]&&bases[1]&&bases[2];
+    spawnRunners(hitRes);
+    const scored=processHit(hitRes);
+    if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;sfx.hr();shakeAmt=9;
+      showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',1200);
+      if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#ff8844',1200),700);
+      spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
+    }else{endStreak();
+      const hc=hitRes==='3B'?'#f78fff':hitRes==='2B'?'#6fd6ff':'#e8f6ff'; // single → double → triple: brighter, more distinct
+      sfx[hitRes==='3B'?'hit3B':hitRes==='2B'?'hit2B':'hit1B']();
+      const hitName=hitRes==='3B'?'TRIPLE':hitRes==='2B'?'DOUBLE':'SINGLE';
+      showLbl('resLbl',hitName+'!',hc,900);
+      spawnP(wx,wy+6,8,[hc,'#fff'],1.8)}
+    if(scored>0)setTimeout(()=>showLbl('scorLbl',
+      scored===1?'RUN SCORED!':scored+' RUNS!','#ffd642',1100),350);
+  }
+  state='result';checkInning();
+}
+
+function checkInning(){
+  if(innOuts>=3){
+    if(streakT){clearTimeout(streakT);streakT=0;showLbl('streakLbl','STREAK OVER!','#ff4444',INN_NEXT_AT)}
+    if(inning<MAX_INN)hideLblAfter('resLbl',INN_RESULT_MS);
+    state='innbreak';innBreakT=inning>=MAX_INN?42:msF(INN_NEXT_AT)}
+  else{resultT=hitRes==='HR'?55:30}
+}
+function doInnBreak(){
+  innLOB[Math.min(inning,MAX_INN)-1]=bases.filter(b=>b).length;
+  clearBases();runnerAnims=[];innOuts=0;innBatters=0;inning++;pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+  if(inning>MAX_INN){
+    state='gameover';
+    const isHi=!exhibitionMode&&runs>hiScores[round];
+    if(isHi){hiScores[round]=runs;try{localStorage.setItem('dsHi2',JSON.stringify(hiScores))}catch(e){}}
+    const won=runs>=target;if(won)sfx.win();else sfx.over();
+    const gt=document.getElementById('goT');
+    if(won&&round>=ROUNDS.length-1&&!exhibitionMode){gt.textContent='🏆 LEGEND!';gt.style.color='#ffd642';
+    }else{gt.textContent=won?'YOU WIN!':'GAME OVER';gt.style.color=won?'#ffd642':'#ff4433'}
+    document.getElementById('goR').textContent='RUNS: '+runs;
+    document.getElementById('goTgt').textContent=(won?'TARGET: ':'NEEDED: ')+target;
+    document.getElementById('goH').textContent='HITS: '+totalHits+' · HR: '+totalHR;
+    document.getElementById('goB').textContent='BB: '+totalBB+' · LOB: '+innLOB.reduce((a,b)=>a+b,0);
+    document.getElementById('goStrk').textContent='HR STREAK: '+maxHRStreak;
+    if(exhibitionMode){
+      nextRound=round;
+      document.getElementById('goN').textContent='EXHIBITION · '+ROUNDS[round].name;
+      document.getElementById('goPlay').textContent='TAP TO REPLAY';
+    }else{
+      const gp=document.getElementById('goPlay');
+      if(won&&round<ROUNDS.length-1){nextRound=round+1;
+        if(nextRound>maxUnlocked){maxUnlocked=nextRound;try{localStorage.setItem('dsUnlk',maxUnlocked)}catch(e){}}
+        document.getElementById('goN').textContent='NEXT: '+ROUNDS[nextRound].name+' · '+ROUNDS[nextRound].target+' RUNS';
+        gp.textContent='TAP TO CONTINUE';
+      }else if(won){nextRound=round;document.getElementById('goN').textContent='YOU BEAT THE GAME!';gp.textContent='TAP TO PLAY AGAIN';
+      }else{nextRound=0;document.getElementById('goN').textContent='BACK TO '+ROUNDS[0].name;gp.textContent='TAP TO CONTINUE'}}
+    document.getElementById('goHi').textContent=isHi?'HIGH SCORE!!':'';
+    document.getElementById('goHi').style.display=isHi?'':'none';
+    show('goScr');
+  }else{isNewInning=true;
+    showLbl('innLbl',['1ST','2ND','3RD'][inning-1]+' INNING','#fff',INN_LABEL_MS);sfx.inn();
+    newZones();nextPitch()}
+}
+
+/* ===== UI ===== */
+function show(id){document.getElementById(id).classList.add('show')}
+function hide(id){document.getElementById(id).classList.remove('show')}
+const _t={};
+function hideLblAfter(id,ms){clearTimeout(_t[id]);_t[id]=setTimeout(()=>document.getElementById(id).classList.remove('show'),ms)}
+function showLbl(id,txt,col,dur){const e=document.getElementById(id);e.textContent=txt;e.style.color=col;
+  e.classList.add('show');clearTimeout(_t[id]);_t[id]=setTimeout(()=>e.classList.remove('show'),dur)}
+
+/* ===== update ===== */
+function update(){
+  lastFrameMs=performance.now();
+  updP();if(shakeAmt>0)shakeAmt-=.7;if(shakeAmt<0)shakeAmt=0;
+  if(state==='ready'){readyT--;
+    if(openInnAt&&readyT===openInnAt){showLbl('innLbl','1ST INNING','#fff',OPEN_INNING_MS);sfx.inn();openInnAt=0}
+    if(readyT<=0)beginWindup()}
+  if(state==='windup'){windupT--;if(windupT<=0)launchBall()}
+  if(state==='pitch'){
+    ballT+=1/pitch.fr;const tC=Math.min(ballT,1);
+    // straight line from the hand to the arm-side target, plus the pitch's movement with its
+    // end offset removed (oX(t)−t·oX(1)), so every pitch type still finishes on that target
+    const rx=releaseX(),tx=plateX();
+    ballWX=rx+(tx-rx)*tC+(pitchLefty?-1:1)*(pitch.oX(tC)-tC*pitch.oX(1));ballWY=PITCH_Y+(HOME.y-PITCH_Y)*ballT;
+    if(swingReq){swingReq=false;doSwing()}
+    if(ballT>1+(WHIFF+5)/(HOME.y-MOUND.y))ballPassed()}
+  if(state==='hitfly'){
+    hitFlyT+=1/hitFlyFr;
+    const t=Math.min(hitFlyT,1);
+    const fx=hitSX+(hitTX-hitSX)*t,fy=hitSY+(hitTY-hitSY)*t;
+    trail.push({x:fx,y:fy});if(trail.length>50)trail.shift();
+    if(hitFlyT>=1&&hitZI>=0){flashZone(hitZI);hitZI=-1}
+    if(hitFlyT>=1.15)resolveHit()}
+  if(state==='result'){resultT--;
+    if(resultT<=0&&innOuts<3&&runnerAnims.length===0){
+      if(sameBatter){sameBatter=false;newZones();readyT=48;state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}
+      else{batFr=0;newZones();nextPitch()}}}
+  if(state==='innbreak'){innBreakT--;if(innBreakT<=0)doInnBreak()}
+  runnerAnims=runnerAnims.filter(r=>{r.t+=1/r.dur;
+    if(r.t>=1&&!r.done){r.done=true;
+      const endX=r.isPath?r.path[r.path.length-1].x:r.ex;
+      const endY=r.isPath?r.path[r.path.length-1].y:r.ey;
+      if(Math.abs(endX-HOME.x)<5&&Math.abs(endY-HOME.y)<5&&pendingRuns>0){
+        sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;
+}}
+    return r.t<1.05});
+  if(!runnerAnims.length)basePending=[false,false,false];
+  // show SKIP button once target is met
+  const sb=document.getElementById('skipBtn');
+  if(runs>=target&&state!=='gameover'&&state!=='title')sb.style.display='';
+  else sb.style.display='none';
+}
+
+/* ===== draw ===== */
+function draw(){
+  cx.clearRect(0,0,W,H);
+  const sx=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;
+  const sy=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;
+  cx.save();cx.translate(sx,sy);
+
+  cx.drawImage(fCv,0,0);
+
+
+  // runners on bases
+  const bpos=[B1,B2,B3];
+  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i])drawBaseRunner(bpos[i].x,bpos[i].y,bases[i])}
+
+  // runner animations
+  runnerAnims.forEach(r=>{if(r.t<0)return;const t=Math.min(r.t,1);let rx,ry;
+    if(r.isPath){const pl=r.path.length-1,pt=t*pl,sg=Math.min(Math.floor(pt),pl-1),st=pt-sg;
+      rx=r.path[sg].x+(r.path[sg+1].x-r.path[sg].x)*st;
+      ry=r.path[sg].y+(r.path[sg+1].y-r.path[sg].y)*st-6*Math.sin(t*Math.PI*pl);
+    }else{rx=r.sx+(r.ex-r.sx)*t;ry=r.sy+(r.ey-r.sy)*t-8*Math.sin(t*Math.PI)}
+    drawBaseRunner(rx|0,ry|0,r.sk)});
+
+  // swing zone glow
+  if(state==='pitch'){const d=Math.abs(ballWY-HOME.y);
+    if(d<FAIR*1.3){const g=Math.max(0,1-d/(FAIR*1.1));
+      cx.fillStyle=`rgba(255,255,180,${g*.28})`;cx.fillRect(HOME.x-9,HOME.y-3,18,8)}}
+
+  // guide line
+  if(state==='pitch'&&showGuide){
+    const gOff=ballWY-HOME.y,gAdj=batRight?gOff:-gOff,gAbsO=Math.abs(gOff);
+    if(gAbsO<=WHIFF){
+      const isFoul=gAbsO>FAIR;
+      let gTX,gTY;
+      if(isFoul){const fPct=Math.min(1,(gAbsO-FAIR)/FOUL_EXTRA);
+        gTY=Math.round(POLE_Y+4+(HOME.y-POLE_Y-46)*fPct);
+        const flX=gAdj<0?fLeft(gTY):fRight(gTY);
+        const nudge=(2+fPct*30)*(gAdj<0?-1:1);
+        gTX=Math.round(Math.max(0,Math.min(W,flX+nudge)))}
+      else{const gN=(gAdj+FAIR)/(2*FAIR),gu=Math.max(2,Math.min(W-2,Math.round(gN*W)));
+        const gp=wallPoint(gu,2);gTX=Math.round(gp.x);gTY=Math.round(gp.y)}
+      cx.fillStyle=isFoul?'rgba(255,170,68,.3)':'rgba(255,255,0,.35)';
+      const clampTX=Math.max(0,Math.min(W,gTX));
+      const gdx=clampTX-HOME.x,gdy=gTY-HOME.y,gst=Math.max(Math.abs(gdx),Math.abs(gdy));
+      for(let i=0;i<=gst;i++){const gt=i/gst;
+        cx.fillRect(Math.round(HOME.x+gdx*gt),Math.round(HOME.y+gdy*gt),1,1)}}}
+
+  // trail
+  if(trail.length>1&&(state==='hitfly'||state==='result')){trail.forEach((p,i)=>{const a=i/trail.length;
+    cx.fillStyle=hitRes==='FOUL'?`rgba(255,170,68,${a*.4})`
+      :hitRes==='OUT'?`rgba(180,60,60,${a*.5})`
+      :hitRes==='HR'?`rgba(255,214,66,${a*.6})`
+      :hitRes==='BB'?`rgba(170,170,170,${a*.4})`:`rgba(100,255,100,${a*.5})`;
+    cx.fillRect(0|p.x,0|p.y,2,2)})}
+
+  drawPitcher(pFr);
+  drawBatter(batFr);
+
+  // pitched ball
+  if(state==='pitch'&&pitch){
+    // a constant 3px ball, centred on (ballWX,ballWY), from release to the plate
+    const sz=3,bsx=Math.round(ballWX-sz/2),bsy=Math.round(ballWY-sz/2);
+    cx.fillStyle='rgba(0,0,0,.45)';cx.fillRect(bsx-1,bsy-1,sz+2,sz+2);
+    cx.fillStyle=pitch.color;cx.fillRect(bsx,bsy,sz,sz);
+    cx.fillStyle='rgba(255,255,255,.45)';cx.fillRect(bsx,bsy,1,1)}
+
+  // hit ball in flight
+  if(state==='hitfly'&&trail.length>0){
+    const last=trail[trail.length-1];
+    const sz=Math.max(2,4-Math.round(hitFlyT*2));
+    cx.fillStyle='#ccc';cx.fillRect((0|last.x)-1,(0|last.y)-1,sz+1,sz+1);
+    cx.fillStyle='#fff';cx.fillRect(0|last.x,0|last.y,sz,sz)}
+
+  drwP();
+
+  // scoreboard
+  drawScoreboard();
+
+  cx.restore();
+}
+
+/* ===== exhibition ===== */
+function showExh(){
+  const list=document.getElementById('exhList');list.innerHTML='';
+  ROUNDS.forEach((r,i)=>{const d=document.createElement('div');
+    const ok=i<=maxUnlocked;
+    d.style.cssText='font:clamp(10px,2.8vw,16px) "Press Start 2P",monospace;padding:8px 12px;border-radius:4px;cursor:'+(ok?'pointer':'default')+';text-align:center;'+
+      (ok?'color:#fff;background:rgba(255,255,255,.1)':'color:#444;background:rgba(255,255,255,.03)');
+    d.textContent=r.name+' · '+r.target+' RUNS';
+    if(ok)d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();aud();
+      hide('exhScr');exhibitionMode=true;round=i;nextRound=i;startGame()});
+    list.appendChild(d)})}
+document.getElementById('exhBtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();hide('titleScr');showExh();show('exhScr')});
+document.getElementById('exhScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
+document.getElementById('exhBack').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();hide('exhScr');show('titleScr')});
+
+/* ===== input ===== */
+function inp(){aud();
+  if(paused){paused=false;hide('pauseScr');return}
+  if(state==='title'){hide('titleScr');exhibitionMode=false;startGame()}
+  else if(state==='gameover'){hide('goScr');
+    if(exhibitionMode){nextRound=round}
+    startGame()}
+  else if(state==='pitch'){swingReq=true;swingTimeMs=performance.now()}}
+document.getElementById('fsBtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();const w=document.getElementById('wrap');
+  if(document.fullscreenElement||document.webkitFullscreenElement){
+    (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  }else{(w.requestFullscreen||w.webkitRequestFullscreen).call(w)}});
+document.getElementById('pauseBtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();
+  if(state==='title'||state==='gameover')return;
+  paused=!paused;if(paused)show('pauseScr');else hide('pauseScr')});
+document.getElementById('resetBtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();aud();musicStop();hide('goScr');hide('exhScr');
+  document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;paused=false;hide('pauseScr');state='title';show('titleScr')});
+document.getElementById('skipBtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();
+  if(state!=='title'&&state!=='gameover'){
+    // skip remaining innings, go straight to game over
+    innLOB[Math.min(inning,MAX_INN)-1]=bases.filter(b=>b).length;
+    clearBases();runnerAnims=[];pendingRuns=0;inning=MAX_INN;innOuts=0;innBatters=0;
+    document.getElementById('skipBtn').style.display='none';
+    doInnBreak()}});
+document.getElementById('guideBtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();showGuide=!showGuide;
+  const gb=document.getElementById('guideBtn');
+  gb.style.color=showGuide?'#ffd642':'#555';
+  gb.style.borderColor=showGuide?'#ffd642':'#444';
+  gb.style.background=showGuide?'rgba(255,214,66,.12)':'rgba(255,255,255,.05)'});
+document.getElementById('wrap').addEventListener('pointerdown',e=>{e.preventDefault();inp()});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();inp()}
+  if(e.code==='KeyG'){showGuide=!showGuide}});
+
+/* ===== title music: "Take Me Out to the Ball Game" chorus (1908, public domain) =====
+   NES-style chiptune: 2 pulse + triangle + noise. From the project's ballgame-chiptune.js.
+   Plays once per tap of the note icon on the title screen; never autoplays; any game start stops it. */
+window.BallgameChiptune = (() => {
+  'use strict';
+  const TPB = 4, BPB = 3, TPBAR = TPB * BPB, BARS = 32, TOTAL = BARS * TPBAR;
+  const SEQ = [
+    [60,2,'Take',0],[72,1,'me',0],[69,1,'out',0],[67,1,'to',0],[64,1,'the',0],[67,3,'ball',0],[62,3,'game,',0],
+    [60,2,'Take',1],[72,1,'me',1],[69,1,'out',1],[67,1,'with',1],[64,1,'the',1],[67,6,'crowd;',1],
+    [69,1,'Buy',2],[68,1,'me',2],[69,1,'some',2],[64,1,'pea-',2],[65,1,'nuts',2],[67,1,'and',2],[69,2,'Crack-',2],[65,1,'er',2],[62,3,'Jack,',2],
+    [69,2,'I',3],[69,1,"don't",3],[69,1,'care',3],[71,1,'if',3],[72,1,'I',3],[74,1,'nev-',3],[71,1,'er',3],[69,1,'get',3],[67,1,'back.',3],
+    [65,1,'Let',4],[62,1,'me',4],[60,1,'root,',4],[null,1],[72,1,'root,',4],[69,1,'root',4],[67,1,'for',4],[64,1,'the',4],[67,3,'home',4],[62,2,'team,',4],
+    [64,1,'If',5],[60,2,'they',5],[62,1,"don't",5],[64,1,'win,',5],[65,1,"it's",5],[67,1,'a',5],[69,4,'shame.',5],
+    [69,1,'For',6],[71,1,"it's",6],[72,1,'one,',6],[null,2],[72,1,'two,',6],[null,2],[72,1,'three',6],[71,1,'strikes,',6],[69,1,"you're",6],[67,1,'out,',6],
+    [66,1,'At',7],[67,1,'the',7],[69,3,'old',7],[71,3,'ball',7],[72,4,'game!',7],[null,2]
+  ];
+  const CHORDS = ['C','Am','G7','G7','C','Am','G7','G7','A7','A7','Dm','D7','D7','D7','G7','G7',
+                  'C','Am','G7','G7','C','C7','F','F','F','Fs7','C','A7','D7','G7','C','C'];
+  const VOICING = { C:[60,64,67], Am:[60,64,69], G7:[59,62,65], A7:[61,64,67], Dm:[62,65,69], D7:[62,66,69], C7:[60,64,70], F:[60,65,69], Fs7:[60,63,66] };
+  const BASSN   = { C:[36,43], Am:[45,40], G7:[43,38], A7:[45,40], Dm:[38,45], D7:[38,45], C7:[36,43], F:[41,36], Fs7:[42,36] };
+  const NOTE_AT = new Array(TOTAL).fill(null);
+  { let t = 0; for (const [midi, beats, syl, line] of SEQ) { if (midi !== null) NOTE_AT[t] = { midi, beats, syl, line }; t += beats * TPB; } }
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  let ctx = null, comp, master, noiseBuf;
+  const ch = {};
+  const enabled = { lead: true, arp: true, bass: true, drums: true };
+  const waves = {};
+  let duty = 0.5, bpm = 240, volume = 0.9, looping = false;
+  let playing = false, pos = 0, nextTime = 0, timer = null, stopAt = Infinity;
+  const live = new Set();
+  const api = { onNote: null, onEnd: null };
+
+  function pulseWave(d) {
+    const N = 48, real = new Float32Array(N), imag = new Float32Array(N);
+    for (let n = 1; n < N; n++) real[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * d);
+    return ctx.createPeriodicWave(real, imag);
+  }
+  function init(opts) {
+    ctx = opts.ctx || new (window.AudioContext || window.webkitAudioContext)();
+    comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.12;
+    master = ctx.createGain(); master.gain.value = volume;
+    comp.connect(master); master.connect(opts.destination || ctx.destination);
+    for (const k of ['lead', 'arp', 'bass', 'drums']) { ch[k] = ctx.createGain(); ch[k].gain.value = enabled[k] ? 1 : 0; ch[k].connect(comp); }
+    for (const d of [0.125, 0.25, 0.5]) waves[d] = pulseWave(d);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  }
+  function track(...nodes) { for (const n of nodes) { live.add(n); n.onended = () => live.delete(n); } }
+
+  function playLead(midi, t, dur) {
+    const o = ctx.createOscillator(); o.setPeriodicWave(waves[duty]); o.frequency.value = mtof(midi);
+    const g = ctx.createGain();
+    const rel = Math.max(t + 0.08, t + dur - 0.03);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.3, t + 0.004);
+    g.gain.linearRampToValueAtTime(0.22, t + 0.07);
+    g.gain.setValueAtTime(0.22, rel);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 5.6;
+    const lg = ctx.createGain();
+    lg.gain.setValueAtTime(0, t); lg.gain.setValueAtTime(0, t + 0.2); lg.gain.linearRampToValueAtTime(14, t + 0.6);
+    lfo.connect(lg); lg.connect(o.detune);
+    o.connect(g); g.connect(ch.lead);
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02);
+    track(o, lfo);
+  }
+  function playArp(midi, t, dur, vol) {
+    const o = ctx.createOscillator(); o.setPeriodicWave(waves[0.125]); o.frequency.value = mtof(midi);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(ch.arp); o.start(t); o.stop(t + dur + 0.02); track(o);
+  }
+  function playBass(midi, t, dur) {
+    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = mtof(midi);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.9, t + 0.006);
+    g.gain.setValueAtTime(0.9, Math.max(t + 0.02, t + dur - 0.04));
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    o.connect(g); g.connect(ch.bass); o.start(t); o.stop(t + dur + 0.02); track(o);
+  }
+  function noise(t, dur, vol, type, freq, q) {
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(ch.drums); s.start(t); s.stop(t + dur + 0.02); track(s);
+  }
+  function kick(t) {
+    const o = ctx.createOscillator(); o.type = 'triangle';
+    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.11);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.8, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.17);
+    o.connect(g); g.connect(ch.drums); o.start(t); o.stop(t + 0.2); track(o);
+    noise(t, 0.025, 0.35, 'highpass', 3000);
+  }
+  function snare(t) {
+    noise(t, 0.12, 0.45, 'bandpass', 1700, 0.7);
+    const o = ctx.createOscillator(); o.type = 'triangle';
+    o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(130, t + 0.07);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+    o.connect(g); g.connect(ch.drums); o.start(t); o.stop(t + 0.12); track(o);
+  }
+  const hat = (t, soft) => noise(t, soft ? 0.03 : 0.045, soft ? 0.18 : 0.4, 'highpass', 8000);
+  const crash = t => noise(t, 1.3, 0.5, 'highpass', 5000);
+
+  const tickDur = () => 60 / bpm / TPB;
+  function scheduleTick(tick, t) {
+    const td = tickDur();
+    const bar = Math.floor(tick / TPBAR), inBar = tick % TPBAR;
+    const beat = Math.floor(inBar / TPB), sub = inBar % TPB;
+    const chord = CHORDS[bar], last = bar === BARS - 1;
+    const n = NOTE_AT[tick];
+    if (n) {
+      playLead(n.midi + 12, t, n.beats * TPB * td * 0.92);
+      if (typeof api.onNote === 'function') {
+        const delay = Math.max(0, (t - ctx.currentTime) * 1000);
+        setTimeout(() => { if (playing) api.onNote({ syl: n.syl, line: n.line, midi: n.midi, beats: n.beats }); }, delay);
+      }
+    }
+    if (last) {
+      if (inBar === 0) {
+        playBass(BASSN[chord][0], t, td * 10);
+        VOICING[chord].forEach((m, i) => playArp(m, t + i * 0.018, td * 9, 0.14));
+        kick(t); crash(t);
+      }
+      return;
+    }
+    if (sub === 0) {
+      if (beat === 0) playBass(BASSN[chord][0], t, td * 7.5);
+      else if (beat === 2) playBass(BASSN[chord][1], t, td * 3.6);
+    }
+    if (beat > 0 && sub < 3) playArp(VOICING[chord][sub], t, td * 0.9, 0.16);
+    if (sub === 0) { if (beat === 0) kick(t); else if (beat === 1) hat(t, false); else { snare(t); hat(t, false); } }
+    else if (sub === 2) hat(t, true);
+  }
+  function scheduler() {
+    const now = ctx.currentTime;
+    while (nextTime < now + 0.14 && pos < TOTAL) {
+      scheduleTick(pos, nextTime);
+      pos++; nextTime += tickDur();
+      if (pos >= TOTAL) { if (looping) pos = 0; else stopAt = nextTime + 0.9; }
+    }
+    if (now >= stopAt) { stop(true); if (typeof api.onEnd === 'function') api.onEnd(); }
+  }
+  function play(opts = {}) {
+    if (typeof opts.bpm === 'number') bpm = opts.bpm;
+    if (typeof opts.duty === 'number' && [0.125, 0.25, 0.5].includes(opts.duty)) duty = opts.duty;
+    if (typeof opts.loop === 'boolean') looping = opts.loop;
+    if (typeof opts.volume === 'number') volume = opts.volume;
+    if (!ctx) init(opts);
+    if (ctx.state === 'suspended') ctx.resume();
+    if (playing) stop(false);
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(volume, ctx.currentTime);
+    playing = true; pos = 0; stopAt = Infinity;
+    nextTime = ctx.currentTime + 0.08;
+    scheduler();
+    timer = setInterval(scheduler, 25);
+  }
+  function stop(natural) {
+    clearInterval(timer); timer = null;
+    playing = false; stopAt = Infinity;
+    if (ctx) {
+      const now = ctx.currentTime;
+      if (!natural) {
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.linearRampToValueAtTime(0, now + 0.04);
+      }
+      for (const s of live) { try { s.stop(now + (natural ? 0 : 0.05)); } catch (e) {} }
+      live.clear();
+    }
+  }
+  api.play = play;
+  api.stop = () => stop(false);
+  api.isPlaying = () => playing;
+  api.setTempo = v => { bpm = Math.max(40, Math.min(400, +v || bpm)); };
+  api.setLoop = v => { looping = !!v; };
+  api.setDuty = d => { if ([0.125, 0.25, 0.5].includes(d)) duty = d; };
+  api.setVolume = v => { volume = Math.max(0, Math.min(1, +v)); if (master) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.02); };
+  api.mute = (k, on) => { if (!(k in enabled)) return; enabled[k] = !on; if (ch[k]) ch[k].gain.setTargetAtTime(on ? 0 : 1, ctx.currentTime, 0.01); };
+  api.getContext = () => ctx;
+  api.durationSeconds = () => TOTAL * tickDur();
+  return api;
+})();
+
+/* note icon on the title screen: toggles the song; lights up while it plays */
+const musicBtn=document.getElementById('musicBtn');
+function musicSet(on){musicBtn.classList.toggle('on',on)}
+function musicStop(){if(window.BallgameChiptune&&BallgameChiptune.isPlaying())BallgameChiptune.stop();musicSet(false)}
+BallgameChiptune.onEnd=()=>musicSet(false);
+// pointerdown only swallows the tap so it doesn't start a game; the audio work happens on
+// click, which (unlike a touch pointerdown) counts as a user activation for Web Audio.
+musicBtn.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
+musicBtn.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();aud();
+  if(BallgameChiptune.isPlaying()){musicStop();return}
+  const go=()=>{BallgameChiptune.play({ctx:ac,loop:false,volume:.5});musicSet(true)};
+  if(ac.state==='suspended')ac.resume().then(go,go);else go()});
+
+/* ===== stage sizing: largest 1:2 box inside #wrap, capped at 380×760 ===== */
+function fitStage(){const w=document.getElementById('wrap'),s=document.getElementById('stage');
+  const h=Math.max(2,Math.min(w.clientHeight-4,(w.clientWidth-4)*2,760)); // -4: stage border
+  s.style.height=h+'px';s.style.width=(h/2)+'px'}
+fitStage();new ResizeObserver(fitStage).observe(document.getElementById('wrap'));
+document.addEventListener('fullscreenchange',()=>setTimeout(fitStage,50));
+document.addEventListener('webkitfullscreenchange',()=>setTimeout(fitStage,50));
+
+/* ===== loop ===== */
+let last=0,acc=0;const TK=1000/60;
+function loop(ts){if(!last)last=ts;
+  if(!paused){acc+=ts-last;last=ts;while(acc>=TK){update();acc-=TK}}else{last=ts}
+  draw();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+</script>
+
+</body></html>
