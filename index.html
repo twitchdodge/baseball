@@ -203,6 +203,7 @@ const sfx={
   over(){[392,349,330,262].forEach((f,i)=>setTimeout(()=>tn(f,.25,'square',.08),i*130))},
   win(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tn(f,.18,'square',.11),i*90))},
   coin(){tn(988,.07,'square',.13);setTimeout(()=>tn(1319,.18,'square',.13),70)},
+  target(){tn(784,.08,'square',.12);setTimeout(()=>tn(784,.08,'square',.12),100);setTimeout(()=>tn(1047,.34,'square',.13),200)},
   inn(){tn(440,.12,'triangle',.08);setTimeout(()=>tn(660,.15,'triangle',.08),150)},
 };
 
@@ -332,6 +333,8 @@ const ZSECT=ZWIDTHS.map((_,i)=>{const u0=ZEDGES[i],u1=ZEDGES[i+1],f=n=>n.toFixed
 let state='title',inning=1,innOuts=0,runs=0,totalHits=0,totalHR=0,totalBB=0,pitchCt=0,innBatters=0;
 let bases=[false,false,false]; // 1B,2B,3B
 let target=5;const MAX_INN=3;
+// TGT number: grey like its label until reached, then flashes green-grey-green-grey-green (5 phases) and stays green
+const TGT_OFF='#aaa',TGT_GRN='#5ee05e',TGT_PH=12;let tgtFlash=0;
 let innScores=[0,0,0],innHits=[0,0,0],innLOB=[0,0,0];
 let pitch,ballT,ballWX,ballWY;
 let readyT=0,windupT=0,resultT=0,shakeAmt=0;
@@ -619,7 +622,7 @@ function drawBaseRunner(x,y,sk){
 function drawScoreboard(){
   // Wrigley-style board in the centre-field stands:
   //   ROUND        TGT n   HI n     (HI gold + live while a new high is being set)
-  //   1 2 3 R H           ● ● ○     (out lamps, centred on the score line)
+  //   1 2 3 R           ● ● ○     (out lamps, centred on the score line)
   //   values
   // width is set by the longest header row: 'ALL-STAR' + 'TGT 15' + 'HI 21' with 4px gaps
   const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=WALL_T-bhgt-12;
@@ -627,7 +630,7 @@ function drawScoreboard(){
   cx.fillStyle='#2a5a3a';cx.fillRect(bx,by,bwid,1);cx.fillRect(bx,by+bhgt-1,bwid,1);
   cx.fillRect(bx,by,1,bhgt);cx.fillRect(bx+bwid-1,by,1,bhgt);          // frame
   cx.font='6px "Press Start 2P",monospace';cx.textBaseline='alphabetic';
-  const L=bx+3,Rt=bx+bwid-3,r1=by+10,r2=by+22,r3=by+32;
+  const L=bx+13,Rt=bx+bwid-3,r1=by+10,r2=by+22,r3=by+32;
   // row 1: round · TGT · HI
   // header row: ROUND · TGT n · HI n, justified. A label and its number sit 3px apart; the
   // three items share the leftover width — equal gaps between them, edges get 70% of a gap.
@@ -637,20 +640,22 @@ function drawScoreboard(){
   const g=(bwid-w1-w2-w3)/3.4,e=g*.7;let x=bx+e;
   cx.textAlign='left';
   cx.fillStyle='#ffd642';cx.fillText(nm,Math.round(x),r1);x+=w1+g;
-  cx.fillStyle='#aaa';cx.fillText('TGT',Math.round(x),r1);cx.fillText(tgN,Math.round(x+3*ch+gapIn),r1);x+=w2+g;
+  cx.fillStyle='#aaa';cx.fillText('TGT',Math.round(x),r1);
+  cx.fillStyle=runs<target?TGT_OFF:(tgtFlash>0&&Math.floor((5*TGT_PH-tgtFlash)/TGT_PH)%2===1)?TGT_OFF:TGT_GRN;
+  cx.fillText(tgN,Math.round(x+3*ch+gapIn),r1);x+=w2+g;
   cx.fillStyle=hiLive?'#ffd642':'#bbb';cx.fillText('HI',Math.round(x),r1);cx.fillText(hiN,Math.round(x+2*ch+gapIn),r1);
   // rows 2-3: inning grid (cells bw wide × 10 tall, text centred; caps ~6px → baseline = top+8)
-  const bw=14,cw=bw-1,cellTop=r3-9,hdr=['1','2','3','R','H'];
+  const bw=14,cw=bw-1,cellTop=r3-9,hdr=['1','2','3','R'];
   cx.textAlign='center';
-  for(let i=0;i<5;i++){const cxm=L+i*bw+cw/2,isInn=i<MAX_INN,isCur=isInn&&i===inning-1&&inning<=MAX_INN;
+  for(let i=0;i<4;i++){const cxm=L+i*bw+cw/2,isInn=i<MAX_INN,isCur=isInn&&i===inning-1&&inning<=MAX_INN;
     cx.fillStyle=isCur?'#ffd642':isInn?'#888':'#ccc';cx.fillText(hdr[i],cxm,r2);
     cx.fillStyle=isInn?(i<inning?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'):'rgba(255,255,255,.07)';
     cx.fillRect(L+i*bw,cellTop,cw,10);
-    const txt=isInn?(i<inning-1?''+innScores[i]:isCur?(innScores[i]>0?''+innScores[i]:'-'):'-'):''+(i===MAX_INN?runs:totalHits);
+    const txt=isInn?(i<inning-1?''+innScores[i]:isCur?(innScores[i]>0?''+innScores[i]:'-'):'-'):''+runs;
     cx.fillStyle=isCur?'#ffd642':isInn?(i<inning?'#bbb':'#555'):'#ddd';cx.fillText(txt,cxm,r3)}
   cx.textAlign='left';
   // out lamps: centred in the space right of the grid, on the score line
-  const lampR=3.6,lampGap=6.5,gridR=L+5*bw,areaC=(gridR+Rt)/2+2,lampW=3*lampR*2+2*lampGap;
+  const lampR=3.6,lampGap=6.5,gridR=L+4*bw,areaC=(gridR+Rt)/2+2,lampW=3*lampR*2+2*lampGap;
   for(let i=0;i<3;i++){const lx=areaC-lampW/2+lampR+i*(lampR*2+lampGap),ly=cellTop+2;
     cx.fillStyle=i<innOuts?'#ee2222':'#331111';cx.beginPath();cx.arc(lx,ly,lampR,0,Math.PI*2);cx.fill();
     if(i<innOuts){cx.fillStyle='rgba(255,50,50,.3)';cx.beginPath();cx.arc(lx,ly,lampR+2,0,Math.PI*2);cx.fill()}}
@@ -679,7 +684,7 @@ function pickPitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=ROUNDS[round].target;
-  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;hitStreak=0;hrStreak=0;maxHRStreak=0;
+  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];
   clearBases();particles=[];trail=[];hide('goScr');newZones();
   isNewRound=true;isNewInning=true;
@@ -848,7 +853,7 @@ function resolveHit(){
     const scored=processWalk();
     sfx.bb();showLbl('resLbl','WALK!','#dfe8c8',900);
     spawnP(wx,wy+6,4,['#aaa','#ccc'],1);
-    if(scored>0)setTimeout(()=>showLbl('scorLbl','RUN SCORED!','#ffd642',1100),350);
+    if(scored>0)runLbl(scored,'RUN SCORED!');
   }else{
     totalHits++;hitStreak++;innHits[Math.min(inning,MAX_INN)-1]++;
     const isGrand=hitRes==='HR'&&bases[0]&&bases[1]&&bases[2];
@@ -856,7 +861,7 @@ function resolveHit(){
     const scored=processHit(hitRes);
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;sfx.hr();shakeAmt=9;
       showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',1200);
-      if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#ff8844',1200),700);
+      if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
     }else{endStreak();
       const hc=hitRes==='3B'?'#f78fff':hitRes==='2B'?'#6fd6ff':'#e8f6ff'; // single → double → triple: brighter, more distinct
@@ -864,8 +869,7 @@ function resolveHit(){
       const hitName=hitRes==='3B'?'TRIPLE':hitRes==='2B'?'DOUBLE':'SINGLE';
       showLbl('resLbl',hitName+'!',hc,900);
       spawnP(wx,wy+6,8,[hc,'#fff'],1.8)}
-    if(scored>0)setTimeout(()=>showLbl('scorLbl',
-      scored===1?'RUN SCORED!':scored+' RUNS!','#ffd642',1100),350);
+    if(scored>0)runLbl(scored,scored===1?'RUN SCORED!':scored+' RUNS!');
   }
   state='result';checkInning();
 }
@@ -918,13 +922,17 @@ function show(id){document.getElementById(id).classList.add('show')}
 function hide(id){document.getElementById(id).classList.remove('show')}
 const _t={};
 function hideLblAfter(id,ms){clearTimeout(_t[id]);_t[id]=setTimeout(()=>document.getElementById(id).classList.remove('show'),ms)}
-function showLbl(id,txt,col,dur){const e=document.getElementById(id);e.textContent=txt;e.style.color=col;
+function showLbl(id,txt,col,dur,glow){const e=document.getElementById(id);e.textContent=txt;e.style.color=col;e.style.textShadow=glow||'';
   e.classList.add('show');clearTimeout(_t[id]);_t[id]=setTimeout(()=>e.classList.remove('show'),dur)}
+
+// run label for a play: TARGET!! for the whole play if this play's runs take the total to the target
+function runLbl(scored,txt){const before=runs+pendingRuns-scored,hit=before<target&&before+scored>=target;
+  setTimeout(()=>hit?showLbl('scorLbl','TARGET!!',TGT_GRN,1100,'0 0 12px rgba(94,224,94,.5)'):showLbl('scorLbl',txt,'#ffd642',1100),350)}
 
 /* ===== update ===== */
 function update(){
   lastFrameMs=performance.now();
-  updP();if(shakeAmt>0)shakeAmt-=.7;if(shakeAmt<0)shakeAmt=0;
+  updP();if(tgtFlash>0)tgtFlash--;if(shakeAmt>0)shakeAmt-=.7;if(shakeAmt<0)shakeAmt=0;
   if(state==='ready'){readyT--;
     if(openInnAt&&readyT===openInnAt){showLbl('innLbl','1ST INNING','#fff',OPEN_INNING_MS);sfx.inn();openInnAt=0}
     if(readyT<=0)beginWindup()}
@@ -955,6 +963,7 @@ function update(){
       const endY=r.isPath?r.path[r.path.length-1].y:r.ey;
       if(Math.abs(endX-HOME.x)<5&&Math.abs(endY-HOME.y)<5&&pendingRuns>0){
         sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;
+        if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
 }}
     return r.t<1.05});
   if(!runnerAnims.length)basePending=[false,false,false];
