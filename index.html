@@ -179,7 +179,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
     <div class="gR"><div class="gK">DOUBLE PLAY</div><div class="gV">Two outs on one ground ball, usually the runner at 2nd and the batter at 1st.</div></div>
     <div class="gR"><div class="gK">FIELDER'S CHOICE</div><div class="gV">The fielders get a runner out instead of the batter, who reaches 1st.</div></div>
     <div class="gR"><div class="gK">SAC FLY</div><div class="gV">A fly-ball out that lets the runner on 3rd tag up and score.</div></div>
-    <div class="gR"><div class="gK">E / ERROR</div><div class="gV">A fielder boots it and the zone flips to E. It plays like a single but isn't a hit (a dropped fly ball with two outs plays like a double, since everyone was running). Grounders get booted more often than fly balls, and you won't know until it happens.</div></div>
+    <div class="gR"><div class="gK">E / ERROR</div><div class="gV">A fielder boots it and the zone flips to E. It plays like a single but isn't a hit. A dropped fly ball puts the batter on 2nd if 1st is open, and with two outs it plays like a double, since everyone was running. Grounders get booted more often than fly balls, and you won't know until it happens.</div></div>
     <div class="gR"><div class="gK">STRIKE</div><div class="gV">Miss the pitch or let it go by and you're out. Every batter gets one pitch.</div></div>
     <div class="gR"><div class="gK">FOUL</div><div class="gV">Swing too early or too late and you foul it off. Here that's an out too.</div></div>
     <div class="gR"><div class="gK">LOB</div><div class="gV">Left on base: runners still on when the inning ends.</div></div>
@@ -1014,8 +1014,11 @@ function launchBall(){state='pitch';pFr=2;ballT=0;pitchCt++;setTimeout(()=>pFr=0
 // |--FOUL--|--zone0--...--zone6--|--FOUL--|
 // Mapping: full swing range = WHIFF > FOUL > FAIR > FOUL > WHIFF
 const FAIR=20;        // ±20px offset = fair ball (zones 0-6)
-const FOUL_EXTRA=Math.round(ZWIDTHS[0]*1.5/(W/(2*FAIR))*1.6); // 1.5× edge zone, extended 60%
+const FOUL_EXTRA=8;   // foul band beyond the fair zone (was 15): tighter, so badly timed swings miss
 const WHIFF=FAIR+FOUL_EXTRA+4; // beyond this = total miss
+// called strike: when the ball is this far through its flight (1 = at the plate). Kept where it was
+// before the foul bands tightened, so the time they gave up became a real late-whiff window.
+const PASS_T=1+44/(HOME.y-MOUND.y);
 
 function doSwing(){
   if(state!=='pitch')return;sfx.swing();state='swung';
@@ -1043,7 +1046,7 @@ function doSwing(){
   if(absO>FAIR){
     // FOUL — flight path varies with timing:
     // barely foul → deep foul near wall; very foul → short/wide near batter
-    const foulPct=Math.min(1,(absO-FAIR)/FOUL_EXTRA);
+    const foulPct=Math.min(1,(absO-FAIR)/(WHIFF-FAIR));   // 0 = just foul … 1 = edge of a miss: the full spread of foul landing spots over the band
     hitTY=Math.round(POLE_Y+4+(HOME.y-POLE_Y-46)*foulPct);
     const foulLineX=adjOff<0?fLeft(hitTY):fRight(hitTY);
     const nudge=(2+foulPct*30)*(adjOff<0?-1:1);
@@ -1143,10 +1146,13 @@ function resolveHit(){
   }else if(hitRes==='E'){
     // error: plays like a single but isn't a hit (no hit stats); ends an HR streak like any non-HR.
     // A dropped fly ball with 2 outs plays like a double: everyone was running on contact.
+    // With fewer outs, a dropped fly still puts the batter on 2nd if 1st is open (runners move up one).
     endStreak();
-    const eAs=errFrom==='FB'&&innOuts>=2?'2B':'1B';
+    const eAs=errFrom==='FB'&&innOuts>=2?'2B':'1B',to2nd=errFrom==='FB'&&innOuts<2&&!bases[0];
     spawnRunners(eAs);
     const scored=processHit(eAs);
+    if(to2nd){const i=runnerAnims.findIndex(a=>a.wt&&a.sk===batterSk&&!a.out);
+      if(i>=0)runnerAnims[i]=batterRun(2);bases[1]=bases[0];bases[0]=false;basePending[0]=false;basePending[1]=true}
     sfx.err();showLbl('resLbl','ERROR!','#d6ff7a',1000);
     spawnP(wx,wy+6,8,['#d6ff7a','#fff','#ffd642'],1.8);
     if(scored>0)runLbl(scored,scored===1?'RUN SCORED!':scored+' RUNS!');
@@ -1257,7 +1263,7 @@ function update(){
     const rx=releaseX(),tx=plateX();
     ballWX=rx+(tx-rx)*tC+(pitchLefty?-1:1)*(pitch.oX(tC)-tC*pitch.oX(1));ballWY=PITCH_Y+(HOME.y-PITCH_Y)*ballT;
     if(swingReq){swingReq=false;doSwing()}
-    if(ballT>1+(WHIFF+5)/(HOME.y-MOUND.y))ballPassed()}
+    if(ballT>PASS_T)ballPassed()}
   if(state==='hitfly'){
     hitFlyT+=1/hitFlyFr;
     const t=Math.min(hitFlyT,1);
@@ -1324,7 +1330,7 @@ function draw(){
     if(gAbsO<=WHIFF){
       const isFoul=gAbsO>FAIR;
       let gTX,gTY;
-      if(isFoul){const fPct=Math.min(1,(gAbsO-FAIR)/FOUL_EXTRA);
+      if(isFoul){const fPct=Math.min(1,(gAbsO-FAIR)/(WHIFF-FAIR));
         gTY=Math.round(POLE_Y+4+(HOME.y-POLE_Y-46)*fPct);
         const flX=gAdj<0?fLeft(gTY):fRight(gTY);
         const nudge=(2+fPct*30)*(gAdj<0?-1:1);
@@ -1486,7 +1492,7 @@ window.BallgameChiptune = (() => {
   function init(opts) {
     ctx = opts.ctx || new (window.AudioContext || window.webkitAudioContext)();
     comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.12;
+    comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 2; comp.attack.value = 0.003; comp.release.value = 0.12;
     master = ctx.createGain(); master.gain.value = volume;
     comp.connect(master); master.connect(opts.destination || ctx.destination);
     for (const k of ['lead', 'arp', 'bass', 'drums']) { ch[k] = ctx.createGain(); ch[k].gain.value = enabled[k] ? 1 : 0; ch[k].connect(comp); }
@@ -1502,23 +1508,26 @@ window.BallgameChiptune = (() => {
     const g = ctx.createGain();
     const rel = Math.max(t + 0.08, t + dur - 0.03);
     g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.3, t + 0.004);
-    g.gain.linearRampToValueAtTime(0.22, t + 0.07);
-    g.gain.setValueAtTime(0.22, rel);
+    g.gain.linearRampToValueAtTime(0.26, t + 0.006);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.07);
+    g.gain.setValueAtTime(0.2, rel);
     g.gain.linearRampToValueAtTime(0, t + dur);
     const lfo = ctx.createOscillator(); lfo.frequency.value = 5.6;
     const lg = ctx.createGain();
-    lg.gain.setValueAtTime(0, t); lg.gain.setValueAtTime(0, t + 0.2); lg.gain.linearRampToValueAtTime(14, t + 0.6);
+    lg.gain.setValueAtTime(0, t); lg.gain.setValueAtTime(0, t + 0.2); lg.gain.linearRampToValueAtTime(6, t + 0.6);
     lfo.connect(lg); lg.connect(o.detune);
-    o.connect(g); g.connect(ch.lead);
+    // softened: the square's top end is rolled off so it sounds warmer and less metallic
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1700; lp.Q.value = 0.4;
+    o.connect(lp); lp.connect(g); g.connect(ch.lead);
     o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02);
     track(o, lfo);
   }
   function playArp(midi, t, dur, vol) {
-    const o = ctx.createOscillator(); o.setPeriodicWave(waves[0.125]); o.frequency.value = mtof(midi);
+    const o = ctx.createOscillator(); o.setPeriodicWave(waves[0.5]); o.frequency.value = mtof(midi);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1300; lp.Q.value = 0.4;
     const g = ctx.createGain();
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(ch.arp); o.start(t); o.stop(t + dur + 0.02); track(o);
+    g.gain.setValueAtTime(vol * 0.6, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(lp); lp.connect(g); g.connect(ch.arp); o.start(t); o.stop(t + dur + 0.02); track(o);
   }
   function playBass(midi, t, dur) {
     const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = mtof(midi);
@@ -1545,15 +1554,15 @@ window.BallgameChiptune = (() => {
     noise(t, 0.025, 0.35, 'highpass', 3000);
   }
   function snare(t) {
-    noise(t, 0.12, 0.45, 'bandpass', 1700, 0.7);
+    noise(t, 0.1, 0.28, 'bandpass', 1500, 0.7);
     const o = ctx.createOscillator(); o.type = 'triangle';
     o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(130, t + 0.07);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
     o.connect(g); g.connect(ch.drums); o.start(t); o.stop(t + 0.12); track(o);
   }
-  const hat = (t, soft) => noise(t, soft ? 0.03 : 0.045, soft ? 0.18 : 0.4, 'highpass', 8000);
-  const crash = t => noise(t, 1.3, 0.5, 'highpass', 5000);
+  const hat = (t, soft) => noise(t, soft ? 0.03 : 0.04, soft ? 0.07 : 0.15, 'highpass', 7000);
+  const crash = t => noise(t, 0.6, 0.18, 'highpass', 5000);
 
   const tickDur = () => 60 / bpm / TPB;
   function scheduleTick(tick, t) {
