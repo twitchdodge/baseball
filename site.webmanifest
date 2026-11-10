@@ -1,7 +1,7 @@
 {
   "name": "Baseball",
   "short_name": "Baseball",
-  "description": "A one-thumb pixel baseball game. Time your swing, hit the wall, score runs from Rookie to Legend.",
+  "description": "A tap-to-swing pixel baseball game. Time it right, hit the wall, score runs from Rookie to Legend.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
