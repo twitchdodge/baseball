@@ -1,0 +1,16 @@
+{
+  "name": "Baseball",
+  "short_name": "Baseball",
+  "description": "A one-thumb pixel baseball game. Time your swing, hit the wall, score runs from Rookie to Legend.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0c1a",
+  "theme_color": "#0a0c1a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
