@@ -34,6 +34,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .zHR path{fill:#e8b830}.zHR text{fill:#1a0e00}.z3B path{fill:#1a2d77}
 .z2B path{fill:#2952a3}.z1B path{fill:#4477cc}
 .zBB path{fill:#6699dd}.zOUT path{fill:#bb3333}.zOUT text{fill:#fdd}
+.zE path{fill:#bb3333}.zE text{fill:#fdd}
 .zSF path{fill:#ee7766}.zBNT path{fill:#ee7766}
 .zDP path{fill:#661111}.zDP text{fill:#fcc}.zCS path{fill:#bb3333}.zCS text{fill:#fdd}
 .zSB path{fill:#7899aa}
@@ -48,6 +49,8 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 /* overlay labels: soft drop shadow */
 .ol{text-shadow:0 2px 8px rgba(0,0,0,.7)}
 #resLbl{top:30%;font-size:clamp(14px,4.5vw,28px)}
+#resLbl.gsl{animation:gsl .3s steps(1) infinite}
+@keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
 #innLbl{top:44%;font-size:clamp(14px,4.5vw,28px);color:#fff}
 #scorLbl{top:58.37%;font-size:clamp(10px,3vw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
 #streakLbl{top:25%;font-size:clamp(14px,4.4vw,27px)}
@@ -189,10 +192,28 @@ function tn(f,d,t='square',v=.1){try{aud();const o=ac.createOscillator(),g=ac.cr
   o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);
   g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);
   o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+// scheduled voices for the richer jingles: vc = tone with a quick attack, kick = falling sine thump,
+// noiseHit = filtered noise burst (hi-hat / snare); 'at' is ms from now
+const mHz=n=>440*Math.pow(2,(n-69)/12);
+function vc(f,at,d,type,v){try{aud();const t=ac.currentTime+at/1000,o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.012);
+  g.gain.setValueAtTime(v,t+d*.6);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
+function kick(at,v){try{aud();const t=ac.currentTime+at/1000,o=ac.createOscillator(),g=ac.createGain();o.type='sine';
+  o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(38,t+.35);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.5);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.52)}catch(e){}}
+function noiseHit(at,d,v,type,freq){try{aud();const t=ac.currentTime+at/1000,len=Math.ceil(ac.sampleRate*d),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+  for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
+  const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=ac.createGain();
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);src.connect(f).connect(g).connect(ac.destination);src.start(t);src.stop(t+d)}catch(e){}}
 const sfx={
   pitch(){tn(260,.06,'square',.05)},swing(){tn(130,.04,'sawtooth',.06)},
   crack(){tn(880,.04,'sawtooth',.15);tn(440,.08,'square',.08)},
   hr(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tn(f,.14,'square',.12),i*70))},
+  // grand slam: a longer run up, a da-da-da on G, then a held high C over a soft chord
+  // grand slam ("chip victory"): G-C-E pickup, G held, E-G landing over a bouncing triangle bass, kick, hat and snare
+  gs(){[[67,0,.09],[72,95,.09],[76,190,.09],[79,285,.22],[76,520,.09],[79,615,.5]].forEach(([n,at,d])=>vc(mHz(n),at,d,'square',.1));
+    [[48,0],[55,285],[48,520],[48,615]].forEach(([n,at])=>vc(mHz(n),at,.2,'triangle',.3));
+    [0,285,615].forEach(ms=>kick(ms,.35));[140,430].forEach(ms=>noiseHit(ms,.04,.12,'highpass',6000));noiseHit(520,.13,.22,'bandpass',1800)},
   hit1B(){tn(600,.08,'square',.1)},
   hit2B(){tn(500,.08,'square',.1);setTimeout(()=>tn(700,.12,'square',.11),110)},
   hit3B(){tn(440,.07,'square',.1);setTimeout(()=>tn(587,.07,'square',.11),100);setTimeout(()=>tn(740,.14,'square',.12),200)},
@@ -204,6 +225,12 @@ const sfx={
   win(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tn(f,.18,'square',.11),i*90))},
   coin(){tn(988,.07,'square',.13);setTimeout(()=>tn(1319,.18,'square',.13),70)},
   target(){tn(784,.08,'square',.12);setTimeout(()=>tn(784,.08,'square',.12),100);setTimeout(()=>tn(1047,.34,'square',.13),200)},
+  // error: a slide-whistle 'whoops' (dip then swoop up) followed by a ta-da
+  err(){try{aud();const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();o.type='triangle';
+    o.frequency.setValueAtTime(330,t);o.frequency.exponentialRampToValueAtTime(200,t+.12);o.frequency.exponentialRampToValueAtTime(900,t+.34);
+    g.gain.setValueAtTime(.18,t);g.gain.setValueAtTime(.18,t+.3);g.gain.exponentialRampToValueAtTime(.001,t+.42);
+    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.42)}catch(e){}
+    setTimeout(()=>tn(1047,.07,'square',.11),400);setTimeout(()=>tn(1319,.07,'square',.11),470);setTimeout(()=>tn(1568,.2,'square',.12),540)},
   inn(){tn(440,.12,'triangle',.08);setTimeout(()=>tn(660,.15,'triangle',.08),150)},
 };
 
@@ -229,9 +256,9 @@ let round=0,nextRound=0,exhibitionMode=false;
 let maxUnlocked=0;try{maxUnlocked=parseInt(localStorage.getItem('dsUnlk'))||0}catch(e){}
 
 /* ===== zones ===== */
-const ZBG={HR:'zHR','3B':'z3B','2B':'z2B','1B':'z1B',BB:'zBB',OUT:'zOUT',
+const ZBG={HR:'zHR','3B':'z3B','2B':'z2B','1B':'z1B',BB:'zBB',OUT:'zOUT',E:'zE',
   SF:'zSF',BNT:'zBNT',DP:'zDP',CS:'zCS',SB:'zSB'};
-const ZWALLCOL={HR:'#b88400','3B':'#111f55','2B':'#1d3d77','1B':'#335599',BB:'#447799',OUT:'#992020',
+const ZWALLCOL={HR:'#b88400','3B':'#111f55','2B':'#1d3d77','1B':'#335599',BB:'#447799',OUT:'#992020',E:'#992020',
   SF:'#aa2828',BNT:'#aa2828',DP:'#661515',CS:'#992020',SB:'#5588aa'};
 let zones=[];
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -255,9 +282,10 @@ function newZones(){
   const bo=ROUNDS[round].inn3Outs&&inning>=3?ROUNDS[round].inn3Outs:ROUNDS[round].baseOuts;
   const numOuts=Math.min(6,bo+Math.floor(innBatters/3));
   const pool=[];
-  // HR is guaranteed unless conditionalHR round in inning 2+
+  // HR is always on the wall, except in conditionalHR rounds (Legend): there it shows only right after
+  // a hit or walk (HR included, so streaks keep it). After any out, foul, strike or error it's gone.
   const rd=ROUNDS[round];
-  const hrEarned=!rd.conditionalHR||bases.some(b=>b)||hrStreak>=1;
+  const hrEarned=!rd.conditionalHR||hrOK;
   if(hrEarned)pool.push('HR');
   for(let i=0;i<numOuts;i++)pool.push('OUT');
   while(pool.length<NUM_ZONES)pool.push(pickHitZone());
@@ -292,6 +320,8 @@ function newZones(){
     for(let n=0;n<flips;n++){const i=outIdx[n];
       zones[i]=n<2?'HR':pickHitZone();flippedZones.push(i)}}
   renderZones()}
+// hidden errors: any OUT zone that gets hit has an ERR_P chance of being booted (revealed as E)
+const ERR_P=.02;
 
 const SVGNS='http://www.w3.org/2000/svg';
 function svgEl(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
@@ -343,7 +373,7 @@ let hitFlyT=0,hitFlyFr=28,hitSX,hitSY,hitTX,hitTY,hitZI=-1,hitRes='';
 let trail=[],particles=[],runnerAnims=[];
 let swingTimeMs=0,lastFrameMs=0;
 let showGuide=false,innBreakT=0,basePending=[false,false,false],pendingRuns=0;
-let hitStreak=0,hrStreak=0,maxHRStreak=0;
+let hitStreak=0,hrStreak=0,maxHRStreak=0,hrOK=false; // hrOK: last result was a hit or walk (Legend HR rule)
 /* players: three skin-tone groups. Each batter (and each inning's pitcher) draws a tone
    independently with the SKIN_W weights and carries it around the bases: bases[i] holds the
    runner's tone, or false. */
@@ -662,9 +692,13 @@ function drawScoreboard(){
 }
 
 /* ===== particles ===== */
-function spawnP(x,y,n,cols,spd){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=(.5+Math.random()*.5)*spd;
+function spawnP(x,y,n,cols,spd,big){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=(.5+Math.random()*.5)*spd;
   particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-.3,life:20+Math.random()*18,
-    color:cols[0|Math.random()*cols.length],sz:Math.random()<.3?2:1})}}
+    color:cols[0|Math.random()*cols.length],sz:Math.random()<(big?.8:.3)?2:1})}}
+// grand slam: the label shimmers gold/white/orange and four fireworks pop over the outfield
+function grandSlamFx(){const e=document.getElementById('resLbl');e.classList.add('gsl');setTimeout(()=>e.classList.remove('gsl'),1900);
+  const C=[['#ffd642','#fff','#ffb347'],['#ff5a4a','#fff','#ffd642'],['#7fd0ff','#fff','#9ec8ff'],['#5ee05e','#fff','#ffd642']];
+  C.forEach((c,k)=>setTimeout(()=>spawnP(45+Math.random()*90,100+Math.random()*45,34,c,2.6,true),250+k*260))}
 function updP(){particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.03;p.life--;return p.life>0})}
 function drwP(){particles.forEach(p=>{cx.fillStyle=p.color;cx.fillRect(0|p.x,0|p.y,p.sz,p.sz)})}
 
@@ -684,7 +718,7 @@ function pickPitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=ROUNDS[round].target;
-  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;hitStreak=0;hrStreak=0;maxHRStreak=0;
+  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];
   clearBases();particles=[];trail=[];hide('goScr');newZones();
   isNewRound=true;isNewInning=true;
@@ -755,7 +789,7 @@ function doSwing(){
 
   if(absO>WHIFF){
     setTimeout(()=>{batFr=0},300);
-    innOuts++;hitStreak=0;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
+    innOuts++;hitStreak=0;hrOK=false;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
     state='result';checkInning();return}
 
   sfx.crack();
@@ -786,10 +820,11 @@ function doSwing(){
 }
 
 function ballPassed(){
-  innOuts++;hitStreak=0;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
+  innOuts++;hitStreak=0;hrOK=false;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
   state='result';checkInning()}
 
 function resolveHit(){
+  if(hitRes!=='SB')hrOK=['1B','2B','3B','HR','BB'].includes(hitRes);   // a steal keeps whatever the batter had
   if(hitZI>=0)flashZone(hitZI);
   const wx=hitTX,wy=hitTY;
   if(hitRes==='FOUL'){
@@ -828,11 +863,12 @@ function resolveHit(){
     const wasDbl=bases[0]&&bases[1];
     if(bases[1]&&bases[0]){
       // 12-: lead runner (2nd→3rd) caught, trailing (1st→2nd) advances
+      runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:18,sk:bases[1],out:true});
       bases[1]=false;innOuts++;
       runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:bases[0]});
       bases[1]=bases[0];bases[0]=false;basePending[1]=true;
-    }else if(bases[1]){bases[1]=false;innOuts++;
-    }else if(bases[0]){bases[0]=false;innOuts++}
+    }else if(bases[1]){runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:18,sk:bases[1],out:true});bases[1]=false;innOuts++;
+    }else if(bases[0]){runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:bases[0],out:true});bases[0]=false;innOuts++}
     sfx.wallOut();showLbl('resLbl','CAUGHT STEALING!','#ff4444',900);
     spawnP(wx,wy+6,4,['#aa4444','#882222'],1.5);
     sameBatter=true;state='result';checkInning();return;
@@ -840,13 +876,24 @@ function resolveHit(){
     // Double play — 2 outs, runner on 1st removed, others advance
     endStreak();hitStreak=0;basePending=[false,false,false];
     const prevOuts=innOuts;innOuts+=2;
-    bases[0]=false; // runner on 1st is out
+    // runner on 1st is forced at 2nd, batter thrown out at 1st: both run there, then vanish
+    runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:20,sk:bases[0],out:true});
+    runnerAnims.push({sx:HOME.x,sy:HOME.y+12,ex:B1.x,ey:B1.y,t:0,dur:22,sk:batterSk,out:true});
+    bases[0]=false;
     if(innOuts<3){ // only advance/score if inning continues
       if(bases[2]){runnerAnims.push({sx:B3.x,sy:B3.y,ex:HOME.x,ey:HOME.y,t:0,dur:20,sk:bases[2]});bases[2]=false;pendingRuns++}
       if(bases[1]){runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:20,sk:bases[1]});bases[2]=bases[1];bases[1]=false;basePending[2]=true}
     }
     sfx.wallOut();sfx.strike();showLbl('resLbl','DOUBLE PLAY!','#ff2222',1100);
     spawnP(wx,wy+6,8,['#aa2222','#661111','#ff6666'],2);
+  }else if(hitRes==='E'){
+    // error: plays like a single but isn't a hit (no hit stats); ends an HR streak like any non-HR
+    endStreak();
+    spawnRunners('1B');
+    const scored=processHit('1B');
+    sfx.err();showLbl('resLbl','ERROR!','#d6ff7a',1000);
+    spawnP(wx,wy+6,8,['#d6ff7a','#fff','#ffd642'],1.8);
+    if(scored>0)runLbl(scored,scored===1?'RUN SCORED!':scored+' RUNS!');
   }else if(hitRes==='BB'){
     totalBB++;hitStreak=0;endStreak();
     spawnWalkRunners();
@@ -859,8 +906,9 @@ function resolveHit(){
     const isGrand=hitRes==='HR'&&bases[0]&&bases[1]&&bases[2];
     spawnRunners(hitRes);
     const scored=processHit(hitRes);
-    if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;sfx.hr();shakeAmt=9;
-      showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',1200);
+    if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
+      if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}
+      showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);
       if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
     }else{endStreak();
@@ -883,8 +931,10 @@ function checkInning(){
 }
 function doInnBreak(){
   innLOB[Math.min(inning,MAX_INN)-1]=bases.filter(b=>b).length;
-  clearBases();runnerAnims=[];innOuts=0;innBatters=0;inning++;pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+  const endOuts=innOuts;
+  clearBases();runnerAnims=[];innOuts=0;innBatters=0;hrOK=false;inning++;pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   if(inning>MAX_INN){
+    innOuts=endOuts; // keep the out lamps lit behind the game-over screen
     state='gameover';
     const isHi=!exhibitionMode&&runs>hiScores[round];
     if(isHi){hiScores[round]=runs;try{localStorage.setItem('dsHi2',JSON.stringify(hiScores))}catch(e){}}
@@ -950,7 +1000,10 @@ function update(){
     const t=Math.min(hitFlyT,1);
     const fx=hitSX+(hitTX-hitSX)*t,fy=hitSY+(hitTY-hitSY)*t;
     trail.push({x:fx,y:fy});if(trail.length>50)trail.shift();
-    if(hitFlyT>=1&&hitZI>=0){flashZone(hitZI);hitZI=-1}
+    if(hitFlyT>=1&&hitZI>=0){
+      if(hitRes==='OUT'&&Math.random()<ERR_P){hitRes='E';   // booted! the zone's OUT turns into an E as it pops
+        const t=document.querySelectorAll('.zn')[hitZI]?.querySelector('text');if(t)t.textContent='E'}
+      flashZone(hitZI);hitZI=-1}
     if(hitFlyT>=1.15)resolveHit()}
   if(state==='result'){resultT--;
     if(resultT<=0&&innOuts<3&&runnerAnims.length===0){
@@ -965,7 +1018,7 @@ function update(){
         sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;
         if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
 }}
-    return r.t<1.05});
+    return r.t<(r.out?1.5:1.05)});
   if(!runnerAnims.length)basePending=[false,false,false];
   // show SKIP button once target is met
   const sb=document.getElementById('skipBtn');
@@ -988,7 +1041,7 @@ function draw(){
   for(let i=0;i<3;i++){if(bases[i]&&!basePending[i])drawBaseRunner(bpos[i].x,bpos[i].y,bases[i])}
 
   // runner animations
-  runnerAnims.forEach(r=>{if(r.t<0)return;const t=Math.min(r.t,1);let rx,ry;
+  runnerAnims.forEach(r=>{if(r.t<0)return;if(r.out&&r.t>1&&Math.floor((r.t-1)*r.dur/3)%2)return;const t=Math.min(r.t,1);let rx,ry;
     if(r.isPath){const pl=r.path.length-1,pt=t*pl,sg=Math.min(Math.floor(pt),pl-1),st=pt-sg;
       rx=r.path[sg].x+(r.path[sg+1].x-r.path[sg].x)*st;
       ry=r.path[sg].y+(r.path[sg+1].y-r.path[sg].y)*st-6*Math.sin(t*Math.PI*pl);
