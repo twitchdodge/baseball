@@ -107,13 +107,23 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .tBtn.chal{color:#7c8094}
 .tBtn.chal.on{border-color:#3d8bff;color:#cfe2ff;background:rgba(61,139,255,.16);box-shadow:0 0 12px rgba(61,139,255,.35)}
 svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* Press Start 2P capitals sit one font-pixel (1/8 em) above the baseline */ fill:#ffd642;shape-rendering:crispEdges}
-#goScr .chalTxt{text-align:center;color:#5aa2ff;text-shadow:0 0 12px rgba(61,139,255,.55);line-height:1.5}
+#goScr .chalTxt,#wipeScr .chalTxt{text-align:center;color:#5aa2ff;text-shadow:0 0 12px rgba(61,139,255,.55);line-height:1.5}
 /* dev panel (test builds only) */
 .devP{position:absolute;top:1%;left:2%;right:2%;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;justify-content:center;
   font-size:clamp(6px,1.7vw,9px);color:#9fe;background:rgba(0,40,30,.85);border:1px dashed #3a8;border-radius:3px;padding:5px;pointer-events:auto;z-index:9}
 .devP b{color:#6c9;font-weight:normal}
 .devP span{border:1px solid #3a8;border-radius:2px;padding:3px 5px;cursor:pointer;color:#8ba}
 .devP span.on{background:#3a8;color:#021}
+/* high scores */
+#hiList{pointer-events:auto;width:86%;display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.hiRow{display:flex;align-items:center;gap:8px;font-size:clamp(9px,2.5vw,14px);padding:7px 10px;border-radius:4px;background:rgba(255,255,255,.07);color:#fff}
+.hiRow.lock{background:rgba(255,255,255,.03);color:#555}
+.hiRow .hN{flex:1;white-space:nowrap}.hiRow .hS{min-width:3.2em;text-align:right;color:var(--gold)}.hiRow.lock .hS{color:#555}
+.hiR{font-size:.75em;padding:5px 6px;border:1px solid #556;border-radius:3px;color:#8a8fa6;cursor:pointer;min-width:5.2em;text-align:center}
+.hiR.off{visibility:hidden}.hiR.sure{border-color:#b33;color:#ff6b5e;background:rgba(187,51,51,.15)}
+.tBtn.danger{border-color:#7a2a2a;color:#ff6b5e}
+#wipeScr{background:rgba(6,8,18,.95)}
+.wipeTxt{width:82%;text-align:center;font-size:clamp(8px,2.3vw,13px);line-height:1.7;color:#d8dbe6}
 /* glossary */
 #glossScr{justify-content:flex-start;padding:5% 0 0;background:rgba(6,8,18,.94)}
 #glossBox{pointer-events:auto;width:90%;max-height:72%;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -191,12 +201,27 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
     <div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">EXHIBITION MODE</div>
+    <div id="hiBtn" class="tBtn">HIGH SCORES</div>
     <div id="glossBtn" class="tBtn">GLOSSARY</div></div>
 </div>
 <div class="scr" id="exhScr">
   <div class="sS" style="color:var(--gold);margin-bottom:12px">EXHIBITION</div>
   <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
   <div class="tBtns" style="margin-top:18px"><div id="exhBack" class="tBtn">BACK</div></div>
+</div>
+<div class="scr" id="hiScr">
+  <div class="sS" style="color:var(--gold)">HIGH SCORES</div>
+  <div class="tBtns">
+    <div id="hiChal" class="tBtn chal">CHALLENGE MODE</div>
+    <div id="hiMode" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div></div>
+  <div id="hiList"></div>
+  <div class="tBtns"><div id="hiWipe" class="tBtn danger">RESET ALL</div><div id="hiBack" class="tBtn">BACK</div></div>
+</div>
+<div class="scr" id="wipeScr">
+  <div class="sS" style="color:#ff6b5e">RESET EVERYTHING?</div>
+  <div class="wipeTxt">This erases every high score and every level you've unlocked, in FULL and SIMPLE. You'll start over at ROOKIE.</div>
+  <div class="wipeTxt chalTxt" id="wipeChal">You'll also lose CHALLENGE MODE. To get it back you'll have to beat LEGEND again.</div>
+  <div class="tBtns" style="margin-top:6px"><div id="wipeYes" class="tBtn danger">ERASE IT ALL</div><div id="wipeNo" class="tBtn">CANCEL</div></div>
 </div>
 <div class="scr" id="glossScr">
   <div id="glossBox">
@@ -1527,6 +1552,41 @@ function paintDev(){document.querySelectorAll('.devP span').forEach(el=>{const k
 function devUnlockDemo(){musicStop();hide('titleScr');hide('pauseScr');paused=false;challenge=false;chalUnlocked=false;loadModeScores();paintChal();
   exhibitionMode=false;round=4;nextRound=4;target=RD(4).target;runs=target;inning=MAX_INN;innOuts=3;
   hiScores[4]=Infinity;doInnBreak();loadModeScores()}
+// HIGH SCORES: browse any style (FULL/SIMPLE) and, once unlocked, CHALLENGE — without changing the
+// mode the next game uses. Each level's best can be cleared (tap twice); RESET ALL wipes every score,
+// every unlocked level and CHALLENGE MODE itself, behind a warning screen.
+const hiView={simple:false,chal:false};
+const viewKey=k=>k+(hiView.chal?'C':'')+(hiView.simple?'S':'');
+function readArr(k){try{const h=JSON.parse(localStorage.getItem(k));if(Array.isArray(h))return h}catch(e){}return[]}
+function renderHi(){
+  const cb=document.getElementById('hiChal');cb.style.display=chalUnlocked?'':'none';if(!chalUnlocked)hiView.chal=false;cb.classList.toggle('on',hiView.chal);
+  document.querySelectorAll('#hiMode span').forEach(el=>el.classList.toggle('on',(el.dataset.m==='simple')===hiView.simple));
+  const h=readArr(viewKey('dsHi2'));let unl=0;try{unl=parseInt(localStorage.getItem(viewKey('dsUnlk')))||0}catch(e){}
+  const list=document.getElementById('hiList');list.innerHTML='';
+  ROUNDS.forEach((r,i)=>{const v=h[i]||0,ok=i<=unl,row=document.createElement('div');row.className='hiRow'+(ok?'':' lock');
+    row.innerHTML=`<span class="hN">${nmHTML(r.name+(hiView.chal?'\u1D9C':''))}</span><span class="hS">${v>0?v:'—'}</span><span class="hiR${v>0?'':' off'}">RESET</span>`;
+    const rb=row.querySelector('.hiR');let armT=0;
+    rb.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();if(!(v>0))return;
+      if(!rb.classList.contains('sure')){rb.classList.add('sure');rb.textContent='SURE?';clearTimeout(armT);
+        armT=setTimeout(()=>{rb.classList.remove('sure');rb.textContent='RESET'},2500);return}
+      const k=viewKey('dsHi2'),a=readArr(k);while(a.length<5)a.push(0);a[i]=0;
+      try{localStorage.setItem(k,JSON.stringify(a))}catch(err){}loadModeScores();renderHi()});
+    list.appendChild(row)})}
+function openHi(){hiView.simple=simpleMode;hiView.chal=challenge;hide('titleScr');renderHi();show('hiScr')}
+function wipeAll(){
+  try{for(const c of ['','C'])for(const m of ['','S']){localStorage.removeItem('dsHi2'+c+m);localStorage.removeItem('dsUnlk'+c+m)}
+    localStorage.removeItem('bbChalUnlk');localStorage.setItem('bbChal','0')}catch(e){}
+  chalUnlocked=false;challenge=false;chalJustUnlocked=false;round=0;   // (test builds get it back on reload)
+  nextRound=0;loadModeScores();paintChal()}
+const tap=(id,fn)=>document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn(e)});
+tap('hiBtn',openHi);
+tap('hiBack',()=>{hide('hiScr');show('titleScr')});
+tap('hiChal',()=>{hiView.chal=!hiView.chal;renderHi()});
+tap('hiMode',e=>{const m=e.target.closest('span');if(!m)return;hiView.simple=m.dataset.m==='simple';renderHi()});
+tap('hiWipe',()=>{document.getElementById('wipeChal').style.display=chalUnlocked?'':'none';hide('hiScr');show('wipeScr')});
+tap('wipeNo',()=>{hide('wipeScr');show('hiScr')});
+tap('wipeYes',()=>{wipeAll();hide('wipeScr');renderHi();show('hiScr')});
+for(const id of ['hiScr','wipeScr'])document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 // glossary: from the title screen or the pause menu; BACK returns to wherever it was opened from
 let glossFrom='titleScr';
 function openGloss(from){glossFrom=from;hide(from);show('glossScr');document.getElementById('glossBox').scrollTop=0}
