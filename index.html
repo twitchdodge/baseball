@@ -103,6 +103,17 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
   background:rgba(10,12,26,.6);cursor:pointer;text-align:center;pointer-events:auto}
 .tBtn.seg{flex:1;color:#7c8094}.tBtn.seg+.tBtn.seg{margin-left:-2px}
 .tBtn.on{border-color:#8a8fa6;color:#e4e6ee;background:rgba(255,255,255,.08);position:relative}   /* quiet selection, not a call to action */
+/* challenge mode: its own toggle, lit in super-fast blue when on */
+.tBtn.chal{color:#7c8094}
+.tBtn.chal.on{border-color:#3d8bff;color:#cfe2ff;background:rgba(61,139,255,.16);box-shadow:0 0 12px rgba(61,139,255,.35)}
+svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* Press Start 2P capitals sit one font-pixel (1/8 em) above the baseline */ fill:#ffd642;shape-rendering:crispEdges}
+#goScr .chalTxt{text-align:center;color:#5aa2ff;text-shadow:0 0 12px rgba(61,139,255,.55);line-height:1.5}
+/* dev panel (test builds only) */
+.devP{position:absolute;top:1%;left:2%;right:2%;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;justify-content:center;
+  font-size:clamp(6px,1.7vw,9px);color:#9fe;background:rgba(0,40,30,.85);border:1px dashed #3a8;border-radius:3px;padding:5px;pointer-events:auto;z-index:9}
+.devP b{color:#6c9;font-weight:normal}
+.devP span{border:1px solid #3a8;border-radius:2px;padding:3px 5px;cursor:pointer;color:#8ba}
+.devP span.on{background:#3a8;color:#021}
 /* glossary */
 #glossScr{justify-content:flex-start;padding:5% 0 0;background:rgba(6,8,18,.94)}
 #glossBox{pointer-events:auto;width:90%;max-height:72%;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -173,10 +184,11 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
     </svg></div>
   <div id="musicSpacer"></div>
   <div class="sT">BASEBALL</div>
-  <div class="sS" style="color:var(--gold)">Score 5+ runs in 3 innings</div>
+  <div class="sS" id="tSub" style="color:var(--gold)">Score 5+ runs in 3 innings</div>
   <div class="sS blink">TAP TO PLAY</div>
   <!-- menu sits low so the middle of the screen is free to tap and play -->
   <div class="tBtns" style="position:absolute;bottom:11%">
+    <div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">EXHIBITION MODE</div>
     <div id="glossBtn" class="tBtn">GLOSSARY</div></div>
@@ -323,7 +335,7 @@ const sfx={
   hit1B(){tn(600,.08,'square',.1)},
   hit2B(){tn(500,.08,'square',.1);setTimeout(()=>tn(700,.12,'square',.11),110)},
   hit3B(){tn(440,.07,'square',.1);setTimeout(()=>tn(587,.07,'square',.11),100);setTimeout(()=>tn(740,.14,'square',.12),200)},
-  bb(){tn(330,.12,'triangle',.14);setTimeout(()=>tn(440,.18,'triangle',.13),120)},
+  bb(){tn(330,.12,'triangle',.196);setTimeout(()=>tn(440,.18,'triangle',.182),120)},   // +40%
   foul(){tn(350,.1,'square',.1);setTimeout(()=>tn(250,.18,'square',.09),100)},
   wallOut(){tn(250,.12,'square',.08);tn(180,.18,'square',.06)},
   strike(){tn(200,.15,'square',.08);tn(150,.2,'square',.05)},
@@ -358,7 +370,13 @@ const PITCHES=[
 
 // radar gun: what the scoreboard shows once a pitch is thrown (mph range per pitch)
 // ordered to match how fast each pitch actually travels in this game (our changeup is the slowest)
-const MPH={HEATER:[98,103],FASTBALL:[92,96],CURVEBALL:[82,87],KNUCKLEBALL:[76,79],CHANGEUP:[70,74]};
+const MPH={'SUPER FAST':[104,107],HEATER:[98,103],FASTBALL:[92,96],CURVEBALL:[82,87],KNUCKLEBALL:[76,79],CHANGEUP:[70,74]};
+// CHALLENGE: every pitch is bumped one notch faster; the heater becomes SUPER FAST, which only exists here.
+// SF_PLUS = how many frames quicker than the heater it reaches the plate.
+const SF_COLOR='#3d8bff';let SF_PLUS=3,devAllSF=false;   // +3 locked in (16 frames vs the heater's 19)
+const LEVEL_UP={CHANGEUP:'KNUCKLEBALL',KNUCKLEBALL:'CURVEBALL',CURVEBALL:'FASTBALL',FASTBALL:'HEATER'};
+function superFast(){return{n:'SUPER FAST',fr:PITCHES[3].fr-SF_PLUS,oX:t=>0,color:SF_COLOR}}
+function levelUp(p){if(p.n==='HEATER')return superFast();return{...PITCHES.find(q=>q.n===LEVEL_UP[p.n])}}
 let radar=0;
 
 /* ===== rounds ===== */
@@ -370,11 +388,29 @@ const ROUNDS=[
   {name:'LEGEND',   target:15, baseOuts:4, pitchRule:'legend', heater:.36, conditionalHR:true, inn3Outs:5},
 ];
 let round=0,nextRound=0,exhibitionMode=false;
+// CHALLENGE MODE (unlocked by beating LEGEND in either style): the same five rounds, marked with a
+// superscript c, with target +2, one more out on the wall (6 max) and LEGEND's HR rule from the start.
+// It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
+const DEV=false;   // test builds: challenge unlocked + developer toggles
+let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
+function RD(i){const r=ROUNDS[i];if(!challenge)return r;
+  return{...r,name:r.name+'\u1D9C',target:r.target+2,baseOuts:Math.min(6,r.baseOuts+1),
+    inn3Outs:r.inn3Outs?Math.min(6,r.inn3Outs+1):0,conditionalHR:true}}
+// a name ending in the modifier letter ᶜ is shown with a real superscript c
+// challenge rounds carry a little pixel trophy after the name (the same 7×6 drawing on the
+// scoreboard canvas and, as an inline SVG, in every HTML label)
+// the scoreboard's 6px font renders its capitals 6 rows tall on most phones, 5 on some screens;
+// drawCaps() measures what this device actually draws and the trophy matches it
+const TROPHY6=['#######','#.###.#','.#####.','..###..','...#...','.#####.'],TROPHY5=['#######','#.###.#','.#####.','...#...','.#####.'];
+let TROPHY=TROPHY6;
+const trophyRects=()=>TROPHY.flatMap((row,y)=>[...row].map((c,x)=>c==='#'?`<rect x="${x}" y="${y}" width="1" height="1"/>`:'')).join('');
+const trophySVG=()=>`<svg class="trph" viewBox="0 0 ${TROPHY[0].length} ${TROPHY.length}" aria-label="challenge">${trophyRects()}</svg>`;
+const nmHTML=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\u1D9C/g,()=>trophySVG());
 // SIMPLE mode: the wall is only 1B 2B 3B HR and plain OUT (no walks, steals, bunts, errors or
 // situational outs; outs never move runners). FULL is the default. Each mode keeps its own HI scores
 // and unlocked levels (simple mode's keys end in S).
 let simpleMode=false;try{simpleMode=localStorage.getItem('bbMode')==='simple'}catch(e){}
-const modeKey=k=>simpleMode?k+'S':k;
+const modeKey=k=>k+(challenge?'C':'')+(simpleMode?'S':'');
 let maxUnlocked=0;try{maxUnlocked=parseInt(localStorage.getItem(modeKey('dsUnlk')))||0}catch(e){}
 
 /* ===== zones ===== */
@@ -412,12 +448,11 @@ function endStreak(){
   hrStreak=0}
 
 function newZones(){
-  const bo=ROUNDS[round].inn3Outs&&inning>=3?ROUNDS[round].inn3Outs:ROUNDS[round].baseOuts;
+  const rd=RD(round),bo=rd.inn3Outs&&inning>=3?rd.inn3Outs:rd.baseOuts;
   const numOuts=Math.min(6,bo+Math.floor(innBatters/3));
   const pool=[];
   // HR is always on the wall, except in conditionalHR rounds (Legend): there it shows only right after
   // a hit or walk (HR included, so streaks keep it). After any out, foul, strike or error it's gone.
-  const rd=ROUNDS[round];
   const hrEarned=!rd.conditionalHR||hrOK;
   if(hrEarned)pool.push('HR');
   for(let i=0;i<numOuts;i++)pool.push('OUT');
@@ -592,7 +627,7 @@ let pitch,ballT,ballWX,ballWY;
 let readyT=0,windupT=0,resultT=0,shakeAmt=0;
 let swingReq=false,batFr=0,pFr=0,batRight=true,batterUp=true,batBlinkT=0;const BLINK_FR=12;   // batBlinkT: frames left of a struck-out batter blinking in the box // batterUp: false once he runs or is out
 // where the batter stands, as a runner position (feet line up with drawBaseRunner)
-const batStart=()=>({x:HOME.x+(batRight?-11:11),y:HOME.y+7});
+const batStart=()=>({x:HOME.x+(batRight?-11:11),y:HOME.y+10});   // feet of the batter in the box
 // batter-runner: from the box into the running lane just fair of the 1B line, then base to base.
 // distance-weighted so the short first leg doesn't eat a whole segment's time.
 function batterRun(toBase,extra){
@@ -604,7 +639,10 @@ function batterRun(toBase,extra){
 let errFrom='';   // what the booted ball was (GB/FB)
 let hitFlyT=0,hitFlyFr=28,hitSX,hitSY,hitTX,hitTY,hitZI=-1,hitRes='';
 let trail=[],particles=[],runnerAnims=[];
-let swingTimeMs=0,lastFrameMs=0;
+// Swing timing runs off real time, not frames: swingTimeMs is when the finger actually hit the glass
+// (the event's own timestamp; phones deliver taps lined up with the next frame), and frameMs is the
+// real time each fixed 60 Hz update stands for. The ball's position is interpolated to the exact tap time.
+let swingTimeMs=0,frameMs=0;
 let showGuide=false,innBreakT=0,basePending=[false,false,false],pendingRuns=0;
 let hitStreak=0,hrStreak=0,maxHRStreak=0,hrOK=false; // hrOK: last result was a hit or walk (Legend HR rule)
 /* players: three skin-tone groups. Each batter (and each inning's pitcher) draws a tone
@@ -620,6 +658,14 @@ let hiScores=[0,0,0,0,0];
 function loadModeScores(){hiScores=[0,0,0,0,0];maxUnlocked=0;
   try{const h=JSON.parse(localStorage.getItem(modeKey('dsHi2')));if(Array.isArray(h)){while(h.length<5)h.push(0);hiScores=h}}catch(e){}
   try{maxUnlocked=parseInt(localStorage.getItem(modeKey('dsUnlk')))||0}catch(e){}}
+loadModeScores();
+// challenge unlock is shared by FULL and SIMPLE. Players who already beat LEGEND (a HI of 15+ on it) have it.
+try{chalUnlocked=localStorage.getItem('bbChalUnlk')==='1';
+  if(!chalUnlocked)for(const k of ['dsHi2','dsHi2S']){const h=JSON.parse(localStorage.getItem(k)||'[]');if((h[4]||0)>=ROUNDS[4].target)chalUnlocked=true}
+  if(chalUnlocked)localStorage.setItem('bbChalUnlk','1')}catch(e){}
+if(DEV)chalUnlocked=true;
+try{challenge=chalUnlocked&&localStorage.getItem('bbChal')==='1'}catch(e){}
+if(DEV)try{devAllSF=localStorage.getItem('bbDevAllSF')==='1';const v=+localStorage.getItem('bbDevSF');if(v>=2&&v<=5)SF_PLUS=v}catch(e){}
 loadModeScores();
 
 /* ===== base logic ===== */
@@ -781,9 +827,9 @@ function drawFieldStatic(){
 
   // bases
   fc.fillStyle='#fff';
-  // all three bags are identical 7px pixel diamonds. 1B/3B are placed so the bottom corner
-  // touches the inside of the foul line; the outer corner then lands on the line itself.
-  [B1,B2,B3].forEach(b=>pxDiamond(fc,b.x,b.y,3));
+  // all three bags are identical 9px pixel diamonds. 1B/3B sit one pixel fair of their base point so,
+  // as with the old 7px bags, the outer corner lands on the foul line and the bottom corner stays inside it.
+  [B1,B2,B3].forEach(b=>{const c=bagAt(b);pxDiamond(fc,c.x,c.y,BAG_R)});
   // home plate: pentagon, flat edge toward the mound, point toward the catcher
   fc.fillRect(HOME.x-3,HOME.y-2,7,4);fc.fillRect(HOME.x-2,HOME.y+2,5,1);
   fc.fillRect(HOME.x-1,HOME.y+3,3,1);fc.fillRect(HOME.x,HOME.y+4,1,1);
@@ -797,6 +843,8 @@ function drawFieldStatic(){
 }
 function pxL(c,x1,y1,x2,y2,w){const dx=x2-x1,dy=y2-y1,st=Math.max(Math.abs(dx),Math.abs(dy)),hw=w>>1;
   for(let i=0;i<=st;i++){const t=i/st;c.fillRect(Math.round(x1+dx*t)-hw,Math.round(y1+dy*t)-hw,w,w)}}
+const BAG_R=4,BAG_IN=1;   // bag half-diagonal; how far 1B/3B are drawn toward fair ground
+function bagAt(b){return{x:b.x+(b===B1?-BAG_IN:b===B3?BAG_IN:0),y:b.y}}
 function pxDiamond(c,x,y,r){for(let d=-r;d<=r;d++){const w=r-Math.abs(d);c.fillRect(x-w,y+d,w*2+1,1)}}
 function poly(c,pts){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill()}
 // crisp row-scan ellipse (no anti-aliasing, matches the other pixel-art fills)
@@ -909,7 +957,8 @@ function drawOnDeck(){   // the kneeling next batter (both circles are drawn wit
   cx.save();
   cx.restore();
 }
-function drawBaseRunner(x,y,sk){
+// (x,y) is where his feet are: standing on a bag they're on its middle, running they're on the path
+function drawBaseRunner(x,y,sk){y-=3;
   cx.fillStyle='#f0f0f0';cx.fillRect(x-2,y-5,5,5);
   cx.fillStyle='#d8d8d8';cx.fillRect(x-2,y-5,5,1);
   cx.fillStyle='#999';cx.fillRect(x-2,y,5,4);
@@ -919,6 +968,23 @@ function drawBaseRunner(x,y,sk){
 }
 
 /* ===== scoreboard (drawn on canvas) ===== */
+// rows the scoreboard font's capitals occupy, relative to the baseline (measured once the font has loaded)
+let _capBox=null;
+function capBox(){if(_capBox)return _capBox;
+  const c=document.createElement('canvas');c.width=40;c.height=20;const g=c.getContext('2d');
+  g.font='6px "Press Start 2P",monospace';g.textBaseline='alphabetic';g.fillStyle='#fff';g.fillText('HEIT',2,12);
+  const d=g.getImageData(0,0,40,20).data;let t=99,b=-99;
+  for(let y=0;y<20;y++)for(let x=0;x<40;x++)if(d[(y*40+x)*4+3]>110){t=Math.min(t,y);b=Math.max(b,y)}
+  const box=b<0?{top:-7,bot:-2}:{top:t-12,bot:b-12};
+  if(document.fonts&&document.fonts.status==='loaded'&&document.fonts.check('6px "Press Start 2P"'))_capBox=box;
+  return box}
+// CHALLENGE MODE: a big trophy painted on the grass above each on-deck circle, facing the viewer
+const PAINT_S=4,PAINT_DY=59,PAINT_A=.42;
+function drawChalPaint(){cx.save();cx.globalAlpha=PAINT_A;cx.fillStyle='#ffd642';
+  const w=TROPHY6[0].length*PAINT_S,h=TROPHY6.length*PAINT_S;
+  for(const ox of [OD_LX,OD_RX]){const x0=ox-Math.floor(w/2),y0=OD_Y-PAINT_DY-Math.floor(h/2);
+    TROPHY6.forEach((row,yy)=>[...row].forEach((c,xx)=>{if(c==='#')cx.fillRect(x0+xx*PAINT_S,y0+yy*PAINT_S,PAINT_S,PAINT_S)}))}
+  cx.restore()}
 function drawScoreboard(){
   // Wrigley-style board in the centre-field stands:
   //   ROUND        TGT n   HI n     (HI gold + live while a new high is being set)
@@ -935,11 +1001,14 @@ function drawScoreboard(){
   // header row: ROUND · TGT n · HI n, justified. A label and its number sit 3px apart; the
   // three items share the leftover width — equal gaps between them, edges get 70% of a gap.
   const ch=6,gapIn=3,hiLive=!exhibitionMode&&runs>hiScores[round];
-  const nm=ROUNDS[round].name,tgN=''+target,hiN=''+(hiLive?runs:hiScores[round]);
-  const w1=nm.length*ch,w2=3*ch+gapIn+tgN.length*ch,w3=2*ch+gapIn+hiN.length*ch;
+  const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),nm=sup?rnm.slice(0,-1):rnm,tgN=''+target,hiN=''+(hiLive?runs:hiScores[round]);
+  const w1=nm.length*ch+(sup?TROPHY[0].length+1:0),w2=3*ch+gapIn+tgN.length*ch,w3=2*ch+gapIn+hiN.length*ch;
   const g=(bwid-w1-w2-w3)/3.4,e=g*.7;let x=bx+e;
   cx.textAlign='left';
-  cx.fillStyle='#ffd642';cx.fillText(nm,Math.round(x),r1);x+=w1+g;
+  cx.fillStyle='#ffd642';cx.fillText(nm,Math.round(x),r1);
+  if(sup){const cb=capBox(),T=cb.bot-cb.top+1>=6?TROPHY6:TROPHY5,sx=Math.round(x)+nm.length*ch+1,sy=r1+cb.bot-T.length+1;   // bottom on the caps' bottom row
+    T.forEach((row,yy)=>[...row].forEach((c,xx)=>{if(c==='#')cx.fillRect(sx+xx,sy+yy,1,1)}))}
+  x+=w1+g;
   cx.fillStyle='#aaa';cx.fillText('TGT',Math.round(x),r1);
   cx.fillStyle=runs<target?TGT_OFF:(tgtFlash>0&&Math.floor((5*TGT_PH-tgtFlash)/TGT_PH)%2===1)?TGT_OFF:TGT_GRN;
   cx.fillText(tgN,Math.round(x+3*ch+gapIn),r1);x+=w2+g;
@@ -976,6 +1045,9 @@ function drwP(){particles.forEach(p=>{cx.fillStyle=p.color;cx.fillRect(0|p.x,0|p
 
 /* ===== game logic ===== */
 function pickPitch(){
+  if(DEV&&devAllSF)return superFast();
+  return challenge?levelUp(basePitch()):basePitch()}
+function basePitch(){
   const rule=ROUNDS[round].pitchRule;
   if(rule==='legend'){const r=Math.random(),hp=ROUNDS[round].heater||.28; // heater share; the rest split evenly
     if(r<hp)return{...PITCHES[3]};
@@ -989,12 +1061,12 @@ function pickPitch(){
   }else{idx=PITCHES.map((_,i)=>i).filter(i=>PITCHES[i].inn<=inning)}
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
-  round=nextRound;target=ROUNDS[round].target;
+  round=nextRound;target=RD(round).target;
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
   clearBases();particles=[];trail=[];hide('goScr');newZones();
   isNewRound=true;isNewInning=true;
-  showLbl('resLbl',ROUNDS[round].name,'#ffd642',OPEN_ROUND_MS);
+  showLbl('resLbl',RD(round).name,'#ffd642',OPEN_ROUND_MS);
   nextPitch()}
 /* ===== TIMING CONSTANTS (tweak these) ===== */
 // All values in ms. Converted to frames (÷16.67) internally.
@@ -1052,9 +1124,9 @@ const PASS_T=1+44/(HOME.y-MOUND.y);
 function doSwing(){
   if(state!=='pitch')return;sfx.swing();state='swung';
 
-  const frameDt=swingTimeMs-lastFrameMs;
-  const subT=Math.max(0,Math.min(1,frameDt/TK));
-  const interpBallT=ballT+subT/pitch.fr;
+  // this update has already moved the ball to where it is at frameMs; step it back to the tap
+  const interpBallT=Math.max(0,ballT-Math.max(0,frameMs-swingTimeMs)/(TK*pitch.fr));
+  window._swingT=interpBallT;
   const interpBallWY=PITCH_Y+(HOME.y-PITCH_Y)*interpBallT;
   const offset=interpBallWY-HOME.y,absO=Math.abs(offset);
 
@@ -1229,27 +1301,33 @@ function doInnBreak(){
     state='gameover';
     const isHi=!exhibitionMode&&runs>hiScores[round];
     if(isHi){hiScores[round]=runs;try{localStorage.setItem(modeKey('dsHi2'),JSON.stringify(hiScores))}catch(e){}}
-    const won=runs>=target;if(won)sfx.win();else sfx.over();
-    const gt=document.getElementById('goT');
-    if(won&&round>=ROUNDS.length-1&&!exhibitionMode){gt.textContent='🏆 LEGEND!';gt.style.color='#ffd642';
+    const won=runs>=target;
+    // beating LEGEND (either style, not in exhibition) unlocks CHALLENGE MODE for good
+    const unlockNow=won&&round>=ROUNDS.length-1&&!challenge&&!chalUnlocked&&!exhibitionMode;
+    if(unlockNow){chalUnlocked=true;chalJustUnlocked=true;try{localStorage.setItem('bbChalUnlk','1')}catch(e){}}
+    if(unlockNow)sfx.gs();else if(won)sfx.win();else sfx.over();
+    const gt=document.getElementById('goT'),goN=document.getElementById('goN');goN.classList.remove('chalTxt');
+    if(won&&round>=ROUNDS.length-1&&!exhibitionMode){gt.innerHTML=challenge?nmHTML(RD(round).name)+'!':'🏆 LEGEND!';gt.style.color=challenge?SF_COLOR:'#ffd642';
     }else{gt.textContent=won?'YOU WIN!':'GAME OVER';gt.style.color=won?'#ffd642':'#ff4433'}
     document.getElementById('goR').textContent='RUNS: '+runs;
     document.getElementById('goTgt').textContent=(won?'TARGET: ':'NEEDED: ')+target;
     document.getElementById('goH').textContent='HITS: '+totalHits+' · HR: '+totalHR;
     document.getElementById('goB').textContent='BB: '+totalBB+' · LOB: '+innLOB.reduce((a,b)=>a+b,0);
     document.getElementById('goStrk').textContent='HR STREAK: '+maxHRStreak;
-    if(exhibitionMode){
+    if(unlockNow){nextRound=0;goN.innerHTML='CHALLENGE MODE<br>UNLOCKED!!';goN.classList.add('chalTxt');
+      document.getElementById('goPlay').textContent='TAP TO PLAY';
+    }else if(exhibitionMode){
       nextRound=round;
-      document.getElementById('goN').textContent='EXHIBITION · '+ROUNDS[round].name;
+      goN.innerHTML='EXHIBITION · '+nmHTML(RD(round).name);
       document.getElementById('goPlay').textContent='TAP TO REPLAY';
     }else{
       const gp=document.getElementById('goPlay');
       if(won&&round<ROUNDS.length-1){nextRound=round+1;
         if(nextRound>maxUnlocked){maxUnlocked=nextRound;try{localStorage.setItem(modeKey('dsUnlk'),maxUnlocked)}catch(e){}}
-        document.getElementById('goN').textContent='NEXT: '+ROUNDS[nextRound].name+' · '+ROUNDS[nextRound].target+' RUNS';
+        goN.innerHTML='NEXT: '+nmHTML(RD(nextRound).name)+' · '+RD(nextRound).target+' RUNS';
         gp.textContent='TAP TO CONTINUE';
-      }else if(won){nextRound=round;document.getElementById('goN').textContent='YOU BEAT THE GAME!';gp.textContent='TAP TO PLAY AGAIN';
-      }else{nextRound=0;document.getElementById('goN').textContent='BACK TO '+ROUNDS[0].name;gp.textContent='TAP TO CONTINUE'}}
+      }else if(won){nextRound=round;goN.textContent=challenge?'YOU BEAT CHALLENGE MODE!':'YOU BEAT THE GAME!';gp.textContent='TAP TO PLAY AGAIN';
+      }else{nextRound=0;goN.innerHTML='BACK TO '+nmHTML(RD(0).name);gp.textContent='TAP TO CONTINUE'}}
     document.getElementById('goHi').textContent=isHi?'HIGH SCORE!!':'';
     document.getElementById('goHi').style.display=isHi?'':'none';
     show('goScr');
@@ -1263,12 +1341,12 @@ function show(id){document.getElementById(id).classList.add('show')}
 function hide(id){document.getElementById(id).classList.remove('show')}
 const _t={};
 function hideLblAfter(id,ms){clearTimeout(_t[id]);_t[id]=setTimeout(()=>document.getElementById(id).classList.remove('show'),ms)}
-function showLbl(id,txt,col,dur,glow){const e=document.getElementById(id);e.textContent=txt;e.style.color=col;e.style.textShadow=glow||'';
+function showLbl(id,txt,col,dur,glow){const e=document.getElementById(id);e.textContent=txt;if(txt.includes('\u1D9C'))e.innerHTML=nmHTML(txt);e.style.color=col;e.style.textShadow=glow||'';
   e.style.fontSize='';
   if(txt.length>13&&txt.includes(' ')){   // long two-word labels (CAUGHT STEALING!, FIELDER'S CHOICE) wrap to two full-size lines
     const sp=[...txt.matchAll(/ /g)].map(m=>m.index).sort((a,b)=>Math.abs(a-txt.length/2)-Math.abs(b-txt.length/2))[0];
     e.textContent=txt.slice(0,sp)+'\n'+txt.slice(sp+1)}
-  else if(txt.length>12)e.style.fontSize=(parseFloat(getComputedStyle(e).fontSize)*12/txt.length).toFixed(1)+'px';
+  else if(txt.replace('\u1D9C','').length>12)e.style.fontSize=(parseFloat(getComputedStyle(e).fontSize)*12/txt.length).toFixed(1)+'px';
   e.classList.add('show');clearTimeout(_t[id]);_t[id]=setTimeout(()=>e.classList.remove('show'),dur)}
 
 // run label for a play: TARGET!! for the whole play if this play's runs take the total to the target
@@ -1277,7 +1355,6 @@ function runLbl(scored,txt){const before=runs+pendingRuns-scored,hit=before<targ
 
 /* ===== update ===== */
 function update(){
-  lastFrameMs=performance.now();
   updP();if(tgtFlash>0)tgtFlash--;
   if(steal&&--steal.T<=0)stealReveal();if(shakeAmt>0)shakeAmt-=.7;if(shakeAmt<0)shakeAmt=0;
   if(walkT>0)walkT--;if(batBlinkT>0)batBlinkT--;
@@ -1291,8 +1368,8 @@ function update(){
     // end offset removed (oX(t)−t·oX(1)), so every pitch type still finishes on that target
     const rx=releaseX(),tx=plateX();
     ballWX=rx+(tx-rx)*tC+(pitchLefty?-1:1)*(pitch.oX(tC)-tC*pitch.oX(1));ballWY=PITCH_Y+(HOME.y-PITCH_Y)*ballT;
-    if(swingReq){swingReq=false;doSwing()}
-    if(ballT>PASS_T)ballPassed()}
+    if(swingReq&&swingTimeMs<=frameMs){swingReq=false;doSwing()}   // a tap after this step's time waits for the next step
+    if(ballT>PASS_T&&state==='pitch')ballPassed()}
   if(state==='hitfly'){
     hitFlyT+=1/hitFlyFr;
     const t=Math.min(hitFlyT,1);
@@ -1335,11 +1412,12 @@ function draw(){
   cx.save();cx.translate(sx,sy);
 
   cx.drawImage(fCv,0,0);
+  if(challenge)drawChalPaint();
 
 
   // runners on bases
   const bpos=[B1,B2,B3];
-  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i])drawBaseRunner(bpos[i].x,bpos[i].y,bases[i])}
+  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]);drawBaseRunner(c.x,c.y,bases[i])}}
 
   // runner animations
   runnerAnims.forEach(r=>{if(r.t<0)return;if(r.out&&r.t>1&&Math.floor((r.t-1)*r.dur/3)%2)return;const t=Math.min(r.t,1);let rx,ry;
@@ -1410,11 +1488,11 @@ function draw(){
 /* ===== exhibition ===== */
 function showExh(){
   const list=document.getElementById('exhList');list.innerHTML='';
-  ROUNDS.forEach((r,i)=>{const d=document.createElement('div');
+  ROUNDS.forEach((_,i)=>{const d=document.createElement('div'),r=RD(i);
     const ok=i<=maxUnlocked;
     d.style.cssText='font:clamp(10px,2.8vw,16px) "Press Start 2P",monospace;padding:8px 12px;border-radius:4px;cursor:'+(ok?'pointer':'default')+';text-align:center;'+
       (ok?'color:#fff;background:rgba(255,255,255,.1)':'color:#444;background:rgba(255,255,255,.03)');
-    d.textContent=r.name+' · '+r.target+' RUNS';
+    d.innerHTML=nmHTML(r.name)+' · '+r.target+' RUNS';
     if(ok)d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();aud();
       hide('exhScr');exhibitionMode=true;round=i;nextRound=i;startGame()});
     list.appendChild(d)})}
@@ -1429,6 +1507,26 @@ document.getElementById('modeRow').addEventListener('pointerdown',e=>{e.stopProp
   try{localStorage.setItem('bbMode',simpleMode?'simple':'full')}catch(err){}
   loadModeScores();paintMode()});
 paintMode();
+// CHALLENGE MODE toggle (only once unlocked). The title's subtitle and scoreboard follow it.
+function paintChal(){const b=document.getElementById('chalBtn');b.style.display=chalUnlocked?'':'none';b.classList.toggle('on',challenge);
+  if(state==='title'){round=0;nextRound=0;target=RD(0).target}
+  document.getElementById('tSub').textContent='Score '+RD(0).target+'+ runs in 3 innings'}
+function setChallenge(on){challenge=on&&chalUnlocked;try{localStorage.setItem('bbChal',challenge?'1':'0')}catch(e){}loadModeScores();paintChal()}
+document.getElementById('chalBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setChallenge(!challenge)});
+paintChal();
+// developer toggles (test builds only): every challenge pitch SUPER FAST, and how much faster than a heater
+if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW UNLOCK</span>';
+  for(const id of ['titleScr','pauseScr']){const d=document.createElement('div');d.className='devP';d.innerHTML=html;document.getElementById(id).appendChild(d);
+    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const k=e.target.dataset.d;if(!k)return;
+      if(k==='all')devAllSF=!devAllSF;else if(k==='unl'){devUnlockDemo();return}else SF_PLUS=+k;
+      try{localStorage.setItem('bbDevAllSF',devAllSF?'1':'0');localStorage.setItem('bbDevSF',''+SF_PLUS)}catch(err){}paintDev()})}
+  paintDev()}
+function paintDev(){document.querySelectorAll('.devP span').forEach(el=>{const k=el.dataset.d;
+  el.classList.toggle('on',k==='all'?devAllSF:k===''+SF_PLUS)})}
+// play out the end of a LEGEND win so the unlock screen can be seen without beating it
+function devUnlockDemo(){musicStop();hide('titleScr');hide('pauseScr');paused=false;challenge=false;chalUnlocked=false;loadModeScores();paintChal();
+  exhibitionMode=false;round=4;nextRound=4;target=RD(4).target;runs=target;inning=MAX_INN;innOuts=3;
+  hiScores[4]=Infinity;doInnBreak();loadModeScores()}
 // glossary: from the title screen or the pause menu; BACK returns to wherever it was opened from
 let glossFrom='titleScr';
 function openGloss(from){glossFrom=from;hide(from);show('glossScr');document.getElementById('glossBox').scrollTop=0}
@@ -1440,13 +1538,16 @@ document.getElementById('exhBack').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();hide('exhScr');show('titleScr')});
 
 /* ===== input ===== */
-function inp(){aud();
+// the time of a tap/key press: its event timestamp when that's sane, otherwise now
+function evTime(e){const now=performance.now(),t=e&&e.timeStamp;return t>0&&t<=now+1&&now-t<500?t:now}
+function inp(t){aud();
   if(paused){paused=false;hide('pauseScr');sfx.unpause();return}
   if(state==='title'){hide('titleScr');exhibitionMode=false;startGame()}
   else if(state==='gameover'){hide('goScr');
-    if(exhibitionMode){nextRound=round}
+    if(chalJustUnlocked){chalJustUnlocked=false;exhibitionMode=false;setChallenge(true);nextRound=0}   // straight into ROOKIEᶜ
+    else if(exhibitionMode){nextRound=round}
     startGame()}
-  else if(state==='pitch'){swingReq=true;swingTimeMs=performance.now()}}
+  else if(state==='pitch'&&!swingReq){swingReq=true;swingTimeMs=t==null?performance.now():t}}
 document.getElementById('fsBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();const w=document.getElementById('wrap');
   if(document.fullscreenElement||document.webkitFullscreenElement){
@@ -1460,7 +1561,7 @@ document.getElementById('pauseBtn').addEventListener('pointerdown',e=>{
   paused=!paused;if(paused){show('pauseScr');sfx.pause()}else{hide('pauseScr');sfx.unpause()}});
 document.getElementById('resetBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();aud();musicStop();hide('goScr');hide('exhScr');
-  document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;paused=false;hide('pauseScr');state='title';show('titleScr')});
+  document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;chalJustUnlocked=false;paused=false;hide('pauseScr');state='title';paintChal();show('titleScr')});
 document.getElementById('skipBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();
   if(state!=='title'&&state!=='gameover'){
@@ -1482,7 +1583,7 @@ const PAUSE_DEAD=.1;   // bottom 10% of the field ignores taps while paused
 let resumeTap=null;
 const wrapEl=document.getElementById('wrap');
 wrapEl.addEventListener('pointerdown',e=>{e.preventDefault();
-  if(!paused){inp();return}
+  if(!paused){inp(evTime(e));return}
   const r=document.getElementById('stage').getBoundingClientRect();
   const onField=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom-r.height*PAUSE_DEAD;
   resumeTap=onField?{id:e.pointerId,x:e.clientX,y:e.clientY}:null});
@@ -1490,7 +1591,7 @@ wrapEl.addEventListener('pointerup',e=>{const t=resumeTap;resumeTap=null;
   if(paused&&t&&t.id===e.pointerId&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<12)inp()});
 wrapEl.addEventListener('pointercancel',()=>{resumeTap=null});
 document.addEventListener('keydown',e=>{
-  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();inp()}
+  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(!e.repeat)inp(evTime(e))}
   if(e.code==='KeyG'){showGuide=!showGuide}});
 
 /* ===== title music: "Take Me Out to the Ball Game" chorus (1908, public domain) =====
@@ -1711,7 +1812,7 @@ document.addEventListener('webkitfullscreenchange',()=>setTimeout(fitStage,50));
 /* ===== loop ===== */
 let last=0,acc=0;const TK=1000/60;
 function loop(ts){if(!last)last=ts;
-  if(!paused){acc+=ts-last;last=ts;while(acc>=TK){update();acc-=TK}}else{last=ts}
+  if(!paused){acc+=ts-last;last=ts;while(acc>=TK){acc-=TK;frameMs=ts-acc;update()}}else{last=ts}
   draw();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
