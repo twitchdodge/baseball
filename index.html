@@ -200,12 +200,12 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="tBtns" style="position:absolute;bottom:11%">
     <div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
-    <div id="exhBtn" class="tBtn">EXHIBITION MODE</div>
+    <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
     <div id="glossBtn" class="tBtn">GLOSSARY</div></div>
 </div>
 <div class="scr" id="exhScr">
-  <div class="sS" style="color:var(--gold);margin-bottom:12px">EXHIBITION</div>
+  <div class="sS" style="color:var(--gold);margin-bottom:12px">PRACTICE</div>
   <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
   <div class="tBtns" style="margin-top:18px"><div id="exhBack" class="tBtn">BACK</div></div>
 </div>
@@ -1343,7 +1343,7 @@ function doInnBreak(){
       document.getElementById('goPlay').textContent='TAP TO PLAY';
     }else if(exhibitionMode){
       nextRound=round;
-      goN.innerHTML='EXHIBITION · '+nmHTML(RD(round).name);
+      goN.innerHTML='PRACTICE · '+nmHTML(RD(round).name);
       document.getElementById('goPlay').textContent='TAP TO REPLAY';
     }else{
       const gp=document.getElementById('goPlay');
@@ -1355,13 +1355,17 @@ function doInnBreak(){
       }else{nextRound=0;goN.innerHTML='BACK TO '+nmHTML(RD(0).name);gp.textContent='TAP TO CONTINUE'}}
     document.getElementById('goHi').textContent=isHi?'HIGH SCORE!!':'';
     document.getElementById('goHi').style.display=isHi?'':'none';
-    show('goScr');
+    show('goScr');fitLine(goN);
   }else{isNewInning=true;
     showLbl('innLbl',['1ST','2ND','3RD'][inning-1]+' INNING','#fff',INN_LABEL_MS);sfx.inn();
     newZones();nextPitch()}
 }
 
 /* ===== UI ===== */
+// keep a one-line message on one line: shrink its font until it fits the stage (narrow phones)
+function fitLine(el){el.style.fontSize='';el.style.whiteSpace=el.innerHTML.includes('<br')?'':'nowrap';if(!el.style.whiteSpace)return;
+  const max=document.getElementById('stage').clientWidth*.92;let fs=parseFloat(getComputedStyle(el).fontSize);
+  while(el.scrollWidth>max&&fs>8){fs-=.5;el.style.fontSize=fs+'px'}}
 function show(id){document.getElementById(id).classList.add('show')}
 function hide(id){document.getElementById(id).classList.remove('show')}
 const _t={};
