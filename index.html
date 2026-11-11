@@ -1475,7 +1475,20 @@ document.getElementById('guideBtn').addEventListener('pointerdown',e=>{
   gb.style.color=showGuide?'#ffd642':'#555';
   gb.style.borderColor=showGuide?'#ffd642':'#444';
   gb.style.background=showGuide?'rgba(255,214,66,.12)':'rgba(255,255,255,.05)'});
-document.getElementById('wrap').addEventListener('pointerdown',e=>{e.preventDefault();inp()});
+// While paused, only a real tap on the field resumes: not the black margins, not the bottom strip
+// of the field (where Android's swipe-up-to-switch-apps gesture starts), and not a swipe. So the
+// resume waits for the finger to lift, and only if it barely moved.
+const PAUSE_DEAD=.1;   // bottom 10% of the field ignores taps while paused
+let resumeTap=null;
+const wrapEl=document.getElementById('wrap');
+wrapEl.addEventListener('pointerdown',e=>{e.preventDefault();
+  if(!paused){inp();return}
+  const r=document.getElementById('stage').getBoundingClientRect();
+  const onField=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom-r.height*PAUSE_DEAD;
+  resumeTap=onField?{id:e.pointerId,x:e.clientX,y:e.clientY}:null});
+wrapEl.addEventListener('pointerup',e=>{const t=resumeTap;resumeTap=null;
+  if(paused&&t&&t.id===e.pointerId&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<12)inp()});
+wrapEl.addEventListener('pointercancel',()=>{resumeTap=null});
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'||e.code==='Enter'){e.preventDefault();inp()}
   if(e.code==='KeyG'){showGuide=!showGuide}});
