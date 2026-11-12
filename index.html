@@ -65,9 +65,10 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 /* ↓GB ↑FB K shades: plain red = just an out; light = a run can score (not on a DP);
    dark = a double play is possible; striped = both */
 .zORUN path{fill:#d9655b}.zORUN text,.zORUN polygon{fill:#fff}
-.zODP path{fill:#7a1818}.zODP text,.zODP polygon{fill:#fcc}
+.zODP path{fill:url(#zStripeDP)}.zODP text,.zODP polygon{fill:#fff}
 .zOBOTH path{fill:url(#zStripe)}.zOBOTH text,.zOBOTH polygon{fill:#fff}
 .zOUT polygon{fill:#fdd}
+.zn polygon.aGB{fill:#f2c27a}.zn polygon.aFB{fill:#a8e2ff}   /* grounder arrows dirt tan, fly balls sky blue */
 .zSF path{fill:#ee7766}.zBNT path{fill:#ee7766}
 .zDP path{fill:#661111}.zDP text{fill:#fcc}.zCS path{fill:#bb3333}.zCS text{fill:#fdd}
 .zSB path{fill:url(#zStripeBR)}.zSB text{fill:#fff}
@@ -153,7 +154,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 <div id="wrap"><div id="stage">
 <canvas id="c" width="180" height="360"></canvas>
 <svg id="zones" viewBox="0 0 180 360" preserveAspectRatio="none">
-  <defs><pattern id="zStripeBR" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#bb3333"/><rect width="2.5" height="5" fill="#4477cc"/></pattern><pattern id="zStripe" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#d9655b"/><rect width="2" height="4" fill="#7a1818"/></pattern><clipPath id="zclip"><rect id="zclipR" x="0" y="0" width="180" height="360"/></clipPath></defs>
+  <defs><pattern id="zStripeBR" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#bb3333"/><rect width="2.5" height="5" fill="#4477cc"/></pattern><pattern id="zStripeDP" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#bb3333"/><rect width="2" height="4" fill="#7a1818"/></pattern><pattern id="zStripe" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#d9655b"/><rect width="2" height="4" fill="#7a1818"/></pattern><clipPath id="zclip"><rect id="zclipR" x="0" y="0" width="180" height="360"/></clipPath></defs>
   <g id="zg" clip-path="url(#zclip)"></g><g id="poles"></g></svg>
 <!-- guide commented out
 <div id="guideBtn" style="position:absolute;bottom:2%;left:2%;font-size:clamp(7px,1.8vw,11px);
@@ -237,23 +238,23 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
       <div>Whiff, foul it off, or let it go by and you're out.</div>
       <div>3 outs an inning, 3 innings a game.</div>
       <div>Score the target (TGT) to unlock the next level. Fall short and it's back to ROOKIE.</div>
-      <div><b>FULL or SIMPLE?</b> FULL is real baseball: walks, steals, sac bunts, and ground balls and fly balls that move runners (and the odd error). SIMPLE keeps just singles, doubles, triples, homers and plain outs. Same difficulty, separate high scores.</div>
+      <div><b>FULL or SIMPLE?</b> FULL is real baseball: walks, steals, sac bunts, ground balls and fly balls that move runners, runners taking the extra base and plays at the plate (and the odd error). SIMPLE keeps just singles, doubles, triples, homers and plain outs, and runners move exactly as far as the hit. Same difficulty, separate high scores.</div>
       <div>Replay any level you've unlocked in PRACTICE MODE. Scores there don't count.</div>
     </div>
     <div class="gH">ON THE WALL</div>
-    <div class="gR"><div class="gK"><span class="gC" style="background:#4477cc;color:#fff">1</span><span class="gC" style="background:#2952a3;color:#fff">2</span><span class="gC" style="background:#1a2d77;color:#fff">3</span></div><div class="gV">Single, double, triple. The batter takes that base and every runner moves up the same number of bases.</div></div>
+    <div class="gR"><div class="gK"><span class="gC" style="background:#4477cc;color:#fff">1</span><span class="gC" style="background:#2952a3;color:#fff">2</span><span class="gC" style="background:#1a2d77;color:#fff">3</span></div><div class="gV">Single, double, triple. The batter takes that base and every runner moves up the same number of bases. In FULL, runners can take an extra base (1st to 3rd, or scoring from 2nd on a single or from 1st on a double), and a runner waved home can be thrown out at the plate.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#e8b830;color:#1a0e00">HR</span></div><div class="gV">Home run. Everybody scores. With the bases loaded it's a GRAND SLAM.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#6699dd;color:#fff">BB</span></div><div class="gV">Walk. The batter takes 1st. Runners only move up if they're forced.</div></div>
-    <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"><svg viewBox="0 0 7.2 8" class="gA" aria-label="ground ball"><polygon points="2.3,0 4.9,0 4.9,4.4 7.2,4.4 3.6,8 0,4.4 2.3,4.4"/></svg></span></div><div class="gV">Ground ball. An out, but runners can move up or score. With a runner on 1st it can turn into a double play or a fielder's choice.</div></div>
-    <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"><svg viewBox="0 0 7.2 8" class="gA" aria-label="fly ball"><polygon points="2.3,8 4.9,8 4.9,3.6 7.2,3.6 3.6,0 0,3.6 2.3,3.6"/></svg></span></div><div class="gV">Fly ball. An out. A runner on 3rd can tag up and score (a sac fly), and a runner on 2nd can tag up to 3rd.</div></div>
+    <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"><svg viewBox="0 0 7.2 8" class="gA" aria-label="ground ball" style="fill:#f2c27a"><polygon points="2.3,0 4.9,0 4.9,4.4 7.2,4.4 3.6,8 0,4.4 2.3,4.4"/></svg></span></div><div class="gV">Ground ball. An out, but runners can move up or score. With a runner on 1st and fewer than 2 outs the box is striped: it's always a double play or a fielder's choice.</div></div>
+    <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"><svg viewBox="0 0 7.2 8" class="gA" aria-label="fly ball" style="fill:#a8e2ff"><polygon points="2.3,8 4.9,8 4.9,3.6 7.2,3.6 3.6,0 0,3.6 2.3,3.6"/></svg></span></div><div class="gV">Fly ball. An out. A runner on 3rd can tag up and score (a sac fly), and a runner on 2nd can tag up to 3rd. If the throw beats him, it's a double play.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff">K</span></div><div class="gV">Strikeout. An out, and nobody moves.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:repeating-linear-gradient(135deg,#4477cc 0 4px,#bb3333 4px 8px);color:#fff">SB</span></div><div class="gV">Steal. Your runners take off for the next base and you find out at the bag: usually a STOLEN BASE (two runners is a DOUBLE STEAL), sometimes the lead runner is CAUGHT STEALING. The batter stays up either way.</div></div>
         <div class="gR"><div class="gK"><span class="gC" style="background:#ee7766;color:#fff">SAC</span></div><div class="gV">Sacrifice bunt. The batter is out and both runners move up a base.</div></div>
     <div class="gH">OUT COLORS</div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"></span></div><div class="gV">Just an out.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#d9655b;color:#fff"></span></div><div class="gV">A run can score on this play.</div></div>
-    <div class="gR"><div class="gK"><span class="gC" style="background:#7a1818;color:#fff"></span></div><div class="gV">A double play is possible.</div></div>
-    <div class="gR"><div class="gK"><span class="gC" style="background:#d9655b;color:#fff;background:repeating-linear-gradient(135deg,#7a1818 0 4px,#d9655b 4px 8px)"></span></div><div class="gV">Both: a run can score, or it could be a double play.</div></div>
+    <div class="gR"><div class="gK"><span class="gC" style="background:repeating-linear-gradient(135deg,#7a1818 0 4px,#bb3333 4px 8px);color:#fff"></span></div><div class="gV">Striped: a ground ball here is a double play or a fielder's choice. The lead runner is out, then the batter races to 1st and you find out if he's out too.</div></div>
+    <div class="gR"><div class="gK"><span class="gC" style="background:#d9655b;color:#fff;background:repeating-linear-gradient(135deg,#7a1818 0 4px,#d9655b 4px 8px)"></span></div><div class="gV">Striped and lighter: the same, and a run can score.</div></div>
     <div class="gR"><div class="gK"></div><div class="gV">With two outs, every out ends the inning, so they're all plain red.</div></div>
     <div class="gH">TERMS</div>
     <div class="gR"><div class="gK">DOUBLE PLAY</div><div class="gV">Two outs on one ground ball, usually the runner at 2nd and the batter at 1st.</div></div>
@@ -390,6 +391,7 @@ const sfx={
     setTimeout(()=>tn(1047,.07,'square',.11),400);setTimeout(()=>tn(1319,.07,'square',.11),470);setTimeout(()=>tn(1568,.2,'square',.12),540)},
   // steal attempt: four footsteps over the 0.5s run, then a ta-da if he's safe (caught uses wallOut)
   steps(){for(let i=0;i<4;i++){noiseHit(i*125,.045,.38,'lowpass',700);vc(70,i*125,.05,'triangle',.18)}},   // crunch + a low thud per step
+  fcSafe(){tn(988,.08,'triangle',.09);setTimeout(()=>tn(1319,.16,'triangle',.08),80)},   // soft "safe" chime
   tada(){tn(1047,.07,'square',.11);setTimeout(()=>tn(1568,.22,'square',.12),80)},
   // pause / unpause: an E-C-E-C chime: soft triangle notes that ring out, with a faint octave on top for a bell edge
   pause(){[1319,1047,1319,1047].forEach((f,i)=>setTimeout(()=>{tn(f,i===3?.33:.21,'triangle',.11);tn(f*2,i===3?.23:.13,'sine',.024)},i*92))},
@@ -432,7 +434,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
-const NEW_T=[4,6,8,9,12];   // (test) targets for NEW ODDS, matched by simulation to today's win rates
+const NEW_T=[5,6,8,9,12];   // (test) targets for NEW ODDS: matched by simulation to today's win rates (ROOKIE kept at 5)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i]};if(!challenge)return r;
   return{...r,name:r.name+'\u1D9C',target:r.target+2,baseOuts:Math.min(6,r.baseOuts+1),
     inn3Outs:r.inn3Outs?Math.min(6,r.inn3Outs+1):0,conditionalHR:true}}
@@ -553,13 +555,22 @@ const OUT_MIX=[['GB',.45],['FB',.35],['K',.20]];
 function pickOutType(){let r=Math.random();for(const [t,w] of OUT_MIX){if((r-=w)<0)return t}return 'K'}
 const GB_T={
   '---':[[1,'GO',[['B',1,1]]]],
-  '1--':[[.4,'DP',[[0,2,1],['B',1,1]]],[.2,'FC',[[0,2,1],['B',1,0]]],[.4,'GO',[[0,2,0],['B',1,1]]]],
+  // runner on 1st, fewer than 2 outs: always DP (40%) or FC (60%) — a striped box = a reveal at 1st.
+  // Same outs per grounder as MLB-ish 40% DP / 60% one out; the old plain groundout became the FC.
+  '1--':[[.4,'DP',[[0,2,1],['B',1,1]]],[.6,'FC',[[0,2,1],['B',1,0]]]],
   '-2-':[[.5,'GO',[[1,3,0],['B',1,1]]],[.5,'GO',[['B',1,1]]]],
   '--3':[[.5,'GO',[[2,4,0],['B',1,1]]],[.5,'GO',[['B',1,1]]]],
-  '12-':[[.4,'DP',[[1,3,0],[0,2,1],['B',1,1]]],[.2,'FC',[[1,3,1],[0,2,0],['B',1,0]]],[.4,'GO',[[1,3,0],[0,2,0],['B',1,1]]]],
-  '1-3':[[.4,'DP',[[2,4,0],[0,2,1],['B',1,1]]],[.2,'FC',[[2,4,0],[0,2,1],['B',1,0]]],[.4,'GO',[[2,4,0],[0,2,0],['B',1,1]]]],
+  // 1st & 2nd: the force is taken at 2nd 70% / at 3rd 30%, the SAME split for DP and FC, so where the
+  // first out happens never gives away the batter's fate
+  '12-':[[.28,'DP',[[1,3,0],[0,2,1],['B',1,1]]],[.12,'DP',[[1,3,1],[0,2,0],['B',1,1]]],
+         [.42,'FC',[[1,3,0],[0,2,1],['B',1,0]]],[.18,'FC',[[1,3,1],[0,2,0],['B',1,0]]]],
+  '1-3':[[.4,'DP',[[2,4,0],[0,2,1],['B',1,1]]],[.6,'FC',[[2,4,0],[0,2,1],['B',1,0]]]],
   '-23':[[.5,'GO',[[2,4,0],[1,3,0],['B',1,1]]],[.3,'GO',[['B',1,1]]],[.2,'FC',[[2,4,1],[1,3,0],['B',1,0]]]],
-  '123':[[.4,'DP',[[2,4,1],[1,3,0],[0,2,0],['B',1,1]]],[.2,'FC',[[2,4,1],[1,3,0],[0,2,0],['B',1,0]]],[.4,'GO',[[2,4,0],[1,3,0],[0,2,0],['B',1,1]]]],
+  // bases loaded: force at home 45% / at 2nd 40% (the run crosses) / at 3rd 15% (the run crosses), the
+  // same split for DP and FC. Runs wait for the reveal; a DP for the 3rd out wipes them.
+  '123':[[.18,'DP',[[2,4,1],[1,3,0],[0,2,0],['B',1,1]]],[.27,'FC',[[2,4,1],[1,3,0],[0,2,0],['B',1,0]]],
+         [.16,'DP',[[2,4,0],[1,3,0],[0,2,1],['B',1,1]]],[.24,'FC',[[2,4,0],[1,3,0],[0,2,1],['B',1,0]]],
+         [.06,'DP',[[2,4,0],[1,3,1],[0,2,0],['B',1,1]]],[.09,'FC',[[2,4,0],[1,3,1],[0,2,0],['B',1,0]]]],
 };
 const FB_T={
   '---':[[1,'FO',[]]],'1--':[[1,'FO',[]]],
@@ -581,7 +592,37 @@ const OUT_LBL={GO:['GROUNDOUT!','#ff4444'],FO:['FLYOUT!','#ff4444'],DP:['DOUBLE 
 const halfRun=(a,b,sk)=>({sx:a.x,sy:a.y,ex:(a.x+b.x)/2,ey:(a.y+b.y)/2,t:0,dur:12,sk});
 function batterHalf(extra){const a=batterRun(1,extra),q=a.path;q[2]={x:(q[1].x+B1.x)/2,y:(q[1].y+B1.y)/2};
   a.wt=[0];for(let i=1;i<q.length;i++)a.wt.push(a.wt[i-1]+Math.hypot(q[i].x-q[i-1].x,q[i].y-q[i-1].y));a.dur=13;return a}
-let lobNow=null;   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
+let lobNow=null;
+// THROWS: a runner going for a base the defence can throw to (home on a hit or sac fly, 3rd on a tag-up)
+// runs with footsteps for his last 0.5 s and the answer comes when he gets there: safe (chime) or out.
+let throws=[];
+function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();
+  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!')}
+function throwStep(){for(const P of throws.slice()){P.f++;if(P.f===Math.max(1,P.T-30))sfx.steps();
+    for(const [fr,fn] of P.at||[])if(P.f===fr)fn();
+    if(P.f<P.T)continue;throws.splice(throws.indexOf(P),1);P.anim.hold=false;
+    if(P.out){P.anim.out=true;innOuts++;hrOK=false;sfx.wallOut();P.onOut()}else{sfx.fcSafe();P.onSafe()}
+    if(P.post)setTimeout(()=>runCall(P.post),250);checkInning()}}
+// baserunning callouts: one after another on the inning row, down by the base paths (wall → result → runners)
+function runCall(msgs){msgs.forEach((m,i)=>setTimeout(()=>showLbl('innLbl',m,m.startsWith('RUNNER HOLDS')?'#c9cfdc':'#e8f6ff',800),450+i*850))}
+// the batter leaves the box at contact but at HALF speed (normal run to 1st = 22 frames); the lead runner is out
+// at 20, the footsteps start 0.5 s (30 frames) before the batter reaches the bag, and the answer comes at the bag
+const FC_OUT_FR=20,FC_RUN_FR=44,FC_STEPS_FR=FC_RUN_FR-30;
+let fcPlay=null;
+function fcStep(){const P=fcPlay;P.f++;
+  if(P.f===FC_STEPS_FR)sfx.steps();
+  if(P.f===FC_OUT_FR)sfx.wallOut();
+  if(P.f<FC_RUN_FR)return;
+  fcPlay=null;P.ba.hold=false;basePending[0]=false;
+  if(P.dp){P.ba.out=true;innOuts++;
+    sfx.wallOut();sfx.strike();showLbl('resLbl',OUT_LBL.DP[0],OUT_LBL.DP[1],1100);
+    spawnP(P.wx,P.wy+6,8,['#aa2222','#661111','#ff6666'],2)}
+  else{bases[0]=batterSk;sfx.fcSafe();showLbl('resLbl',OUT_LBL.FC[0],OUT_LBL.FC[1],1100);
+    spawnP(P.wx,P.wy+6,5,['#ffaa44','#ffd8a0'],1.5)}
+  if(P.sc>0&&innOuts<3){for(let i=0;i<P.sc;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();
+    if(runs>=target&&runs-P.sc<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
+    runLbl(P.sc,P.sc===1?'RUN SCORED!':P.sc+' RUNS!')}
+  checkInning()}   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
 function resolveOutPlay(type,wx,wy){
   const o0=innOuts;let res=type==='GB'?'GO':type==='FB'?'FO':'K',moves=type==='GB'?[['B',1,1]]:[];
   if(type!=='K'&&o0<2){const T=(type==='GB'?GB_T:FB_T)[baseKey()];let r=Math.random()*T.reduce((a,o)=>a+o[0],0);
@@ -593,9 +634,14 @@ function resolveOutPlay(type,wx,wy){
     if(bases[0]&&bases[1])moves.unshift([1,3,0]);
     if(bases[0]&&bases[1]&&bases[2])moves.unshift([2,4,0]);
     if(bases[0]&&res!=='FC')moves.unshift([0,2,0])}
-  const outs=(type==='GB'?0:1)+moves.filter(m=>m[2]).length,ends=o0+outs>=3;
+  // DOUBLE PLAY / FIELDER'S CHOICE (fewer than 2 outs) play out in two beats: the lead runner is put out
+  // first, then the batter races to 1st (footsteps) and we find out at the bag — safe (chime, FIELDER'S
+  // CHOICE) or out too (DOUBLE PLAY). Runs on the play wait for that answer (a 3rd-out DP wipes them).
+  const staged=type==='GB'&&o0<2&&!!bases[0]&&(res==='DP'||res==='FC');let bMove=null,stSc=0;
+  if(staged){bMove=moves.find(m=>m[0]==='B');moves=moves.filter(m=>m[0]!=='B')}
+  const outs=(type==='GB'&&!staged?0:type==='GB'?0:1)+moves.filter(m=>m[2]).length,ends=o0+outs>=3;
   if(type==='FB')runnerAnims.push(batterHalf({out:true}));   // fly ball: he gets about halfway up the line before it's caught
-  const BP=[null,B1,B2,B3,{x:HOME.x,y:HOME.y}],old=[...bases],nb=[...bases];let sc=0;
+  const BP=[null,B1,B2,B3,{x:HOME.x,y:HOME.y}],old=[...bases],nb=[...bases];let sc=0,plateTag=false;
   basePending=[false,false,false];
   for(const [f] of moves)if(f!=='B')nb[f]=false;
   for(const [f,t,out] of moves){const sk=f==='B'?batterSk:old[f];
@@ -609,8 +655,30 @@ function resolveOutPlay(type,wx,wy){
     if(ends){const forced=type==='GB'&&(f===0||(f===1&&old[0])||(f===2&&old[0]&&old[1]));
       if(!forced){nb[f]=old[f];continue}
       runnerAnims.push(halfRun(a,b,sk));continue}
-    runnerAnims.push({sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,dur:20,sk});
-    if(t===4){pendingRuns++;sc++}else{nb[t-1]=sk;basePending[t-1]=true}}
+    // fly ball, inning still on: the runner tagging from 3rd races the throw home; a runner tagging from
+    // 2nd races the throw to 3rd (only when nobody's going home). He leaves when the ball's caught.
+    if(type==='FB'&&!simpleMode&&(t===4||(t===3&&!moves.some(m=>m[0]===2)))){
+      const an={sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,delay:14,dur:t===4?30:28,sk,hold:true,noRun:true};runnerAnims.push(an);
+      if(t===4){plateTag=true;throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT,
+        onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
+        onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
+      else{nb[2]=sk;basePending[2]=true;
+        throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG3_OUT,
+          onSafe:()=>{basePending[2]=false;showLbl('innLbl','SAFE AT 3RD!','#e8f6ff',900)},
+          onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
+      continue}
+    runnerAnims.push({sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,dur:20,sk,noRun:staged&&t===4});
+    if(t===4){if(staged)stSc++;else{pendingRuns++;sc++}}else{nb[t-1]=sk;basePending[t-1]=true}}
+  // baserunning callouts on outs (FULL mode, inning still going): tag-ups on fly balls, and a runner on
+  // 3rd who stays put (HOLDS! with an exclamation when the play was the 2nd out)
+  if(!ends&&!simpleMode&&o0<2&&!staged&&type!=='K'){const mv=f=>moves.find(m=>m[0]===f),msgs=[];
+    if(type==='FB'){const t3=old[2]&&mv(2),t2=old[1]&&mv(1);
+      if(t3&&t2)msgs.push('RUNNERS TAG!');else if(t3)msgs.push('RUNNER TAGS!');
+      else{if(old[2])msgs.push('RUNNER HOLDS');if(t2)msgs.push('RUNNER TAGS')}}
+    else if(old[2]&&!mv(2))msgs.push(o0+outs===2?'RUNNER HOLDS!':'RUNNER HOLDS');
+    runCall(msgs)}
+  if(staged){const ba=batterRun(1,{dur:FC_RUN_FR,hold:true});runnerAnims.push(ba);basePending[0]=true;
+    fcPlay={f:0,dp:!!bMove[2],ba,sc:stSc,wx,wy}}
   // fly ball with 2 outs: everyone was running on contact; show each runner heading for the next
   // base (the inning's over, so nothing counts)
   if(type==='FB'&&o0>=2){const P=[B1,B2,B3,{x:HOME.x,y:HOME.y}];
@@ -618,8 +686,9 @@ function resolveOutPlay(type,wx,wy){
   // left on base for an inning-ending play: everyone who was on and wasn't put out, plus a safe batter
   if(ends)lobNow=old.filter((r,i)=>r&&!moves.some(m=>m[0]===i&&m[2])).length+(moves.some(m=>m[0]==='B'&&!m[2])?1:0);
   bases=nb;innOuts=Math.min(3,o0+outs);hitStreak=0;endStreak();
-  const [txt,col]=OUT_LBL[res];
-  if(res==='DP'){sfx.wallOut();sfx.strike()}else if(res==='SF')sfx.crack();else if(res==='K')sfx.strike();else sfx.wallOut();
+  if(staged)return;   // sounds, label and runs come from fcStep()
+  const [txt,col]=OUT_LBL[plateTag?'FO':res];   // a sac fly waits for the play at the plate
+  if(res==='DP'){sfx.wallOut();sfx.strike()}else if(res==='SF'&&!plateTag)sfx.crack();else if(res==='K')sfx.strike();else sfx.wallOut();
   showLbl('resLbl',txt,col,res==='DP'||res==='FC'?1100:900);
   spawnP(wx,wy+6,res==='DP'?8:6,res==='DP'?['#aa2222','#661111','#ff6666']:['#aa4444','#882222','#ffaaaa'],res==='DP'?2:1.8);
   if(sc>0)runLbl(sc,sc===1?'RUN SCORED!':sc+' RUNS!')}
@@ -636,7 +705,7 @@ function renderZones(){
     grp.appendChild(svgEl('path',{d:s.d}));
     const lab=svgEl('g',{transform:`translate(${s.lx.toFixed(2)} ${s.ly.toFixed(2)}) rotate(${s.rot.toFixed(2)})`});
     // ground ball / fly ball zones are just a solid arrow: ↓ for GB, ↑ for FB (no letters)
-    if(arrow)lab.appendChild(svgEl('polygon',{class:'zArr',points:z==='GB'
+    if(arrow)lab.appendChild(svgEl('polygon',{class:'zArr '+(z==='GB'?'aGB':'aFB'),points:z==='GB'
       ?'-1.3,-4 1.3,-4 1.3,0.4 3.6,0.4 0,4 -3.6,0.4 -1.3,0.4'      // ↓ ground ball
       :'-1.3,4 1.3,4 1.3,-0.4 3.6,-0.4 0,-4 -3.6,-0.4 -1.3,-0.4'}));  // ↑ fly ball
     const t=svgEl('text',{x:0,'text-anchor':'middle',dy:'0.4em'});
@@ -723,7 +792,10 @@ loadModeScores();
 // EXTRA BASES (FULL mode): on a single the runner from 2nd may score and the runner from 1st may go
 // first-to-third (only if 3rd ends up open); on a double the runner from 1st may score. Rates are MLB
 // attempt × success by outs (Tango, 2000-06), so runners are more aggressive with two outs.
-const XB={score2on1B:[.41,.53,.76],first3rd1B:[.25,.27,.34],score1on2B:[.34,.36,.55]};
+// score2on1B / score1on2B are how often the runner is SENT home (MLB attempt rates); he can then be thrown
+// out at the plate (PLATE_OUT, about twice MLB's 3-7% for drama). first3rd1B is attempt × success (no throw).
+const XB={score2on1B:[.42,.55,.81],first3rd1B:[.25,.27,.34],score1on2B:[.35,.39,.60]};
+const PLATE_OUT={'1B':[.06,.09,.12],'2B':[.07,.13,.15]},BAT_ON_THROW=[.15,.175,.155],SF_OUT=.10,TAG3_OUT=.08;
 let xb=[0,0,0];   // extra bases for the runner on 1st/2nd/3rd on the current hit
 function planExtra(type){xb=[0,0,0];if(simpleMode)return;const o=Math.min(innOuts,2);
   if(type==='1B'){let thirdOpen=true;   // the runner from 3rd scores; the one from 2nd stops at 3rd unless he goes home
@@ -746,6 +818,7 @@ function processWalk(){
 
 function clearBases(){bases=[false,false,false]}
 
+let sendIdx=-1,sendAnim=null;   // the runner sent home on this hit (index into bases) and his animation
 function spawnRunners(type){
   const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;if(!adv)return;
   const bp=[HOME,B1,B2,B3];basePending=[false,false,false];
@@ -757,7 +830,9 @@ function spawnRunners(type){
     if(p.length===2)runnerAnims.push({sx:p[0].x,sy:p[0].y,ex:p[1].x,ey:p[1].y,t:0,dur:20,sk});
     else runnerAnims.push({path:p,t:0,dur:(p.length-1)*18,isPath:true,sk})}
   for(let i=2;i>=0;i--){if(bases[i]){
-    const fi=i+1,to=fi+adv+xb[i];addA(mkPath(fi,to),bases[i]);if(to<4)basePending[to-1]=true}}
+    const fi=i+1,to=fi+adv+xb[i];
+    if(i===sendIdx){const p=mkPath(fi,to);sendAnim={path:p,t:0,dur:(p.length-1)*18+18,isPath:true,sk:bases[i],hold:true,noRun:true};runnerAnims.push(sendAnim);continue}
+    addA(mkPath(fi,to),bases[i]);if(to<4)basePending[to-1]=true}}
   if(adv<4)basePending[adv-1]=true;
   runnerAnims.push(batterRun(adv))}
 
@@ -1124,7 +1199,7 @@ function basePitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;
-  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
+  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
   clearBases();particles=[];trail=[];hide('goScr');newZones();
   isNewRound=true;isNewInning=true;
@@ -1329,9 +1404,29 @@ function resolveHit(){
   }else{
     totalHits++;hitStreak++;innHits[Math.min(inning,MAX_INN)-1]++;
     const isGrand=hitRes==='HR'&&bases[0]&&bases[1]&&bases[2];
-    planExtra(hitRes);const firstToThird=hitRes==='1B'&&xb[0]===1;
+    planExtra(hitRes);
+    // FULL mode baserunning callouts: the runner from 2nd on a single / from 1st on a double either goes
+    // home or holds at 3rd; a runner from 1st can also go first-to-third on a single
+    const HOLD=innOuts>=2?'RUNNER HOLDS!':'RUNNER HOLDS';   // only an exclamation with two outs, when he'd usually be running
+    const runMsgs=[];if(!simpleMode){
+      if(hitRes==='1B'){if(bases[1])runMsgs.push(xb[1]?'WAVED HOME!':HOLD);if(bases[0]&&xb[0])runMsgs.push('1ST TO 3RD!')}
+      else if(hitRes==='2B'&&bases[0])runMsgs.push(xb[0]?'WAVED HOME!':HOLD)}
+    // a runner sent home becomes a play at the plate; the batter may take 2nd on the throw
+    sendIdx=simpleMode?-1:hitRes==='1B'&&bases[1]&&xb[1]?1:hitRes==='2B'&&bases[0]&&xb[0]?0:-1;sendAnim=null;
+    const oo=Math.min(innOuts,2),secondOpen=!(bases[0]&&!xb[0]);
+    const batOnThrow=sendIdx===1&&secondOpen&&Math.random()<BAT_ON_THROW[oo];
+    const plateOut=sendIdx>=0&&Math.random()<PLATE_OUT[hitRes][oo];
     spawnRunners(hitRes);
-    const scored=processHit(hitRes);
+    let scored=processHit(hitRes);
+    if(sendIdx>=0){scored--;pendingRuns--;
+      const fromTxt=hitRes==='1B'?'SCORES FROM 2ND!':'SCORES FROM 1ST!',T=sendAnim.dur,post=[];
+      if(runMsgs.includes('1ST TO 3RD!')){runMsgs.splice(runMsgs.indexOf('1ST TO 3RD!'),1);post.push('1ST TO 3RD!')}
+      const at=[];if(batOnThrow){post.push('TAKES 2ND ON THE THROW!');
+        at.push([T-9,()=>{if(bases[0]===batterSk&&!bases[1]){bases[0]=false;bases[1]=batterSk;basePending[1]=true;
+          runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:batterSk})}}])}
+      throws.push({f:0,T,anim:sendAnim,out:plateOut,at,post,
+        onSafe:()=>{showLbl('innLbl',fromTxt,'#e8f6ff',900);addRunsNow(1)},
+        onOut:()=>showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000)});sendIdx=-1}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
       if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}
       showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);
@@ -1342,7 +1437,7 @@ function resolveHit(){
       sfx[hitRes==='3B'?'hit3B':hitRes==='2B'?'hit2B':'hit1B']();
       const hitName=hitRes==='3B'?'TRIPLE':hitRes==='2B'?'DOUBLE':'SINGLE';
       showLbl('resLbl',hitName+'!',hc,900);
-      if(firstToThird)setTimeout(()=>showLbl('streakLbl','1ST TO 3RD!','#e8f6ff',900),450);
+      runCall(runMsgs);
       spawnP(wx,wy+6,8,[hc,'#fff'],1.8)}
     if(scored>0)runLbl(scored,scored===1?'RUN SCORED!':scored+' RUNS!');
   }
@@ -1411,7 +1506,9 @@ const _t={};
 function hideLblAfter(id,ms){clearTimeout(_t[id]);_t[id]=setTimeout(()=>document.getElementById(id).classList.remove('show'),ms)}
 function showLbl(id,txt,col,dur,glow){const e=document.getElementById(id);e.textContent=txt;if(txt.includes('\u1D9C'))e.innerHTML=nmHTML(txt);e.style.color=col;e.style.textShadow=glow||'';
   e.style.fontSize='';
-  if(txt.length>13&&txt.includes(' ')){   // long two-word labels (CAUGHT STEALING!, FIELDER'S CHOICE) wrap to two full-size lines
+  if(id==='streakLbl'||id==='innLbl'){e.style.whiteSpace='nowrap';let fs=parseFloat(getComputedStyle(e).fontSize);   // upper slot: one line, shrunk only if it must
+    while(e.scrollWidth>e.clientWidth&&fs>8){fs-=.5;e.style.fontSize=fs+'px'}}
+  else if(txt.length>13&&txt.includes(' ')){   // long two-word labels (CAUGHT STEALING!, FIELDER'S CHOICE) wrap to two full-size lines
     const sp=[...txt.matchAll(/ /g)].map(m=>m.index).sort((a,b)=>Math.abs(a-txt.length/2)-Math.abs(b-txt.length/2))[0];
     e.textContent=txt.slice(0,sp)+'\n'+txt.slice(sp+1)}
   else if(txt.replace('\u1D9C','').length>12)e.style.fontSize=(parseFloat(getComputedStyle(e).fontSize)*12/txt.length).toFixed(1)+'px';
@@ -1424,7 +1521,7 @@ function runLbl(scored,txt){const before=runs+pendingRuns-scored,hit=before<targ
 /* ===== update ===== */
 function update(){
   updP();if(tgtFlash>0)tgtFlash--;
-  if(steal&&--steal.T<=0)stealReveal();if(shakeAmt>0)shakeAmt-=.7;if(shakeAmt<0)shakeAmt=0;
+  if(steal&&--steal.T<=0)stealReveal();if(fcPlay)fcStep();if(throws.length)throwStep();if(shakeAmt>0)shakeAmt-=.7;if(shakeAmt<0)shakeAmt=0;
   if(walkT>0)walkT--;if(batBlinkT>0)batBlinkT--;
   if(state==='ready'){readyT--;
     if(openInnAt&&readyT===openInnAt){showLbl('innLbl','1ST INNING','#fff',OPEN_INNING_MS);sfx.inn();openInnAt=0}
@@ -1449,11 +1546,11 @@ function update(){
       flashZone(hitZI);hitZI=-1}
     if(hitFlyT>=1.15)resolveHit()}
   if(state==='result'){resultT--;
-    if(resultT<=0&&innOuts<3&&runnerAnims.length===0){
+    if(resultT<=0&&innOuts<3&&runnerAnims.length===0&&!throws.length){
       if(sameBatter){sameBatter=false;newZones();readyT=48;state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}
       else{batFr=0;newZones();nextPitch()}}}
   if(state==='innbreak'){innBreakT--;if(innBreakT<=0)doInnBreak()}
-  runnerAnims=runnerAnims.filter(r=>{r.t+=1/r.dur;
+  runnerAnims=runnerAnims.filter(r=>{if(r.delay>0){r.delay--;return true}r.t+=1/r.dur;
     if(r.t>=1&&!r.done){r.done=true;
       const endX=r.isPath?r.path[r.path.length-1].x:r.ex;
       const endY=r.isPath?r.path[r.path.length-1].y:r.ey;
