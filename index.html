@@ -244,7 +244,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
     </div>
     <div class="gH">ON THE WALL</div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#4477cc;color:#fff">1</span><span class="gC" style="background:#2952a3;color:#fff">2</span><span class="gC" style="background:#1a2d77;color:#fff">3</span></div><div class="gV">Single, double, triple. The batter takes that base and every runner moves up the same number of bases. In FULL, runners can take an extra base (1st to 3rd, or scoring from 2nd on a single or from 1st on a double), and a runner waved home can be thrown out at the plate.</div></div>
-    <div class="gR"><div class="gK"><span class="gC" style="background:#e8b830;color:#1a0e00">HR</span></div><div class="gV">Home run. Everybody scores. With the bases loaded it's a GRAND SLAM.</div></div>
+    <div class="gR"><div class="gK"><span class="gC" style="background:#e8b830;color:#1a0e00">HR</span></div><div class="gV">Home run. Everybody scores. It isn't on every wall, so grab it when it shows up. With the bases loaded it's a GRAND SLAM.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#6699dd;color:#fff">BB</span></div><div class="gV">Walk. The batter takes 1st. Runners only move up if they're forced.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"><svg viewBox="0 0 7.2 8" class="gA" aria-label="ground ball" style="fill:#f2c27a"><polygon points="2.3,0 4.9,0 4.9,4.4 7.2,4.4 3.6,8 0,4.4 2.3,4.4"/></svg></span></div><div class="gV">Ground ball. An out, but runners can move up or score. With a runner on 1st and fewer than 2 outs the box is striped: it's always a double play or a fielder's choice.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#bb3333;color:#fff"><svg viewBox="0 0 7.2 8" class="gA" aria-label="fly ball" style="fill:#a8e2ff"><polygon points="2.3,8 4.9,8 4.9,3.6 7.2,3.6 3.6,0 0,3.6 2.3,3.6"/></svg></span></div><div class="gV">Fly ball. An out. A runner on 3rd can tag up and score (a sac fly), and a runner on 2nd can tag up to 3rd. If the throw beats him, it's a double play.</div></div>
@@ -267,8 +267,8 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
     <div class="gR"><div class="gK">LOB</div><div class="gV">Left on base: runners still on when the inning ends.</div></div>
     <div class="gR"><div class="gK">TGT</div><div class="gV">Target: the runs you need to beat the level. HI is your best score.</div></div>
     <div class="gR"><div class="gK">MPH</div><div class="gV">The radar gun. Heaters are fastest, then fastballs, curves and knuckleballs; the changeup is slowest.</div></div>
-    <div class="gR"><div class="gK">HR STREAK</div><div class="gV">Back-to-back homers turn some out zones into hits.</div></div>
-    <div class="gR"><div class="gK">LEGEND</div><div class="gV">On the last level, HR only shows up right after a hit or a walk.</div></div>
+    <div class="gR"><div class="gK">HR STREAK</div><div class="gV">Hit a homer and the next wall always has an HR box. Back-to-back homers turn some out zones into hits.</div></div>
+    <div class="gR"><div class="gK">LEVELS</div><div class="gV">ROOKIE 5 runs, VETERAN 6, ALL-STAR 8, MVP 10, LEGEND 12. Each level adds out boxes to the wall and mixes in faster pitches.</div></div>
   </div>
   <div class="tBtns" style="margin-top:12px"><div id="glossBack" class="tBtn">BACK</div></div>
 </div>
@@ -442,9 +442,9 @@ let round=0,nextRound=0,exhibitionMode=false;
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
-const NEW_T=[5,6,8,10,12];   // (test) targets for NEW ODDS: matched by simulation to today's win rates (ROOKIE kept at 5)
+const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
-  // (test) NEW ODDS challenge = the same levels with every pitch one notch faster
+  // CHALLENGE = the same levels and targets with every pitch one notch faster
   // out boxes per inning: ROOKIEᶜ 3/3/3, VETERANᶜ 3/3/4, ALL-STARᶜ 3/4/4, MVPᶜ 4/4/4, LEGENDᶜ 4/4/5
   if(newOdds)return{...r,name:r.name+'\u1D9C',...[{baseOuts:3},{inn3Outs:4},{inn2Outs:4,inn3Outs:4},{},{inn3Outs:5}][i]};
   return{...r,name:r.name+'\u1D9C',target:r.target,baseOuts:Math.min(6,r.baseOuts+1),
@@ -481,10 +481,10 @@ function pickHitZone(){
     for(const e of ZWEIGHTS){r-=e.w;if(r<=0){z=e.z;break}}
     if(!(simpleMode&&z==='BB'))return z}}   // no walks in simple mode
 
-// NEW ODDS (test builds only so far): every non-out slot drawn from MLB's mix of ways on base
+// WALL MIX: every non-out slot drawn from MLB's mix of ways on base
 // (1B 47% · BB 28% · 2B 14% · HR 10% · 3B 1%), with triples boosted a lot and homers a little; one HR max
 const MIX_NEW=[['1B',.42],['BB',.24],['2B',.14],['3B',.08],['HR',.12]];
-let newOdds=false;
+let newOdds=true;   // shipped: MLB-shaped walls, random HRs, targets 5-6-8-10-12, Challenge = faster pitches + its own out boxes
 function pickNew(allowHR){for(;;){let r=Math.random(),z='1B';for(const [k,w] of MIX_NEW){if((r-=w)<0){z=k;break}}
   if(z==='BB'&&simpleMode)continue;if(z==='HR'&&!allowHR)continue;return z}}
 function pickStreakZone(){const r=Math.random();
@@ -802,7 +802,7 @@ try{chalUnlocked=localStorage.getItem('bbChalUnlk')==='1';
   if(chalUnlocked)localStorage.setItem('bbChalUnlk','1')}catch(e){}
 if(DEV)chalUnlocked=true;
 try{challenge=chalUnlocked&&localStorage.getItem('bbChal')==='1'}catch(e){}
-if(DEV)try{newOdds=localStorage.getItem('bbDevOdds')==='1';devAllSF=localStorage.getItem('bbDevAllSF')==='1';const v=+localStorage.getItem('bbDevSF');if(v>=2&&v<=5)SF_PLUS=v}catch(e){}
+if(DEV)try{const od=localStorage.getItem('bbDevOdds');if(od!==null)newOdds=od==='1';devAllSF=localStorage.getItem('bbDevAllSF')==='1';const v=+localStorage.getItem('bbDevSF');if(v>=2&&v<=5)SF_PLUS=v}catch(e){}
 loadModeScores();
 
 /* ===== base logic ===== */
