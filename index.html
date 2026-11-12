@@ -399,6 +399,7 @@ const sfx={
     o.connect(g).connect(out);o.start(t);o.stop(t+.42)}catch(e){}
     setTimeout(()=>tn(1047,.07,'square',.11),400);setTimeout(()=>tn(1319,.07,'square',.11),470);setTimeout(()=>tn(1568,.2,'square',.12),540)},
   // steal attempt: four footsteps over the 0.5s run, then a ta-da if he's safe (caught uses wallOut)
+  steps2(){for(let i=0;i<2;i++){noiseHit(i*125,.045,.38,'lowpass',700);vc(70,i*125,.05,'triangle',.18)}},   // the last two strides
   steps(){for(let i=0;i<4;i++){noiseHit(i*125,.045,.38,'lowpass',700);vc(70,i*125,.05,'triangle',.18)}},   // crunch + a low thud per step
   fcSafe(){tn(988,.08,'triangle',.09);setTimeout(()=>tn(1319,.16,'triangle',.08),80)},   // soft "safe" chime
   tada(){tn(1047,.07,'square',.11);setTimeout(()=>tn(1568,.22,'square',.12),80)},
@@ -535,14 +536,15 @@ function newZones(){
   // one steal zone (striped blue/red): 70% of the time it takes a hit's place, 30% an out's.
   // Taking a hit must still leave two other ways on base (HR counts as one); if not, it takes an out.
   const hitCount=zones.filter(z=>z!=='HR'&&z!=='OUT').length;
-  if(!simpleMode&&sbElig&&(!cautious()||isKeyRun(1))){
+  if(!simpleMode&&sbElig&&(!cautious()||isKeyRun(bases.filter(Boolean).length))){   // short in the 3rd: only if a runner going is the target run (double steal: either one)
     const hitOK=hitCount>=(zones.includes('HR')?2:3);
     const si=Math.random()<.7&&hitOK?randIdx(z=>z!=='HR'&&z!=='OUT'):randIdx(z=>z==='OUT');
     if(si>=0)zones[si]='SB'}
   // Collect eligible OUT-replacements: SF, BNT, DP (each max 1)
   const outPool=[];
   // (double plays and sac flies now come out of ↓GB / ↑FB, depending on the situation)
-  if(!simpleMode&&bases[0]&&bases[1]&&innOuts===0)outPool.push('BNT');
+  // trailing in the 3rd, no sac bunt unless one of the runners it moves up is the target run
+  if(!simpleMode&&bases[0]&&bases[1]&&innOuts===0&&(!cautious()||isKeyRun(bases.filter(Boolean).length)))outPool.push('BNT');
   // Fill available OUT slots (keep at least 1 regular OUT)
   if(outPool.length>0){shuf(outPool);
     for(const sz of outPool){const rem=zones.filter(z=>z==='OUT').length;
@@ -586,7 +588,7 @@ const GB_T={
          [.06,'DP',[[2,4,0],[1,3,1],[0,2,0],['B',1,1]]],[.09,'FC',[[2,4,0],[1,3,1],[0,2,0],['B',1,0]]]],
 };
 const FB_T={
-  '---':[[1,'FO',[]]],'1--':[[1,'FO',[]]],
+  '---':[[1,'FO',[]]],'1--':[[.95,'FO',[]],[.05,'FO',[[0,2,0]]]],   // a runner on 1st tags on 1 fly in 20
   '-2-':[[.4,'FO',[[1,3,0]]],[.6,'FO',[]]],
   '--3':[[.75,'SF',[[2,4,0]]],[.25,'FO',[]]],
   '12-':[[.3,'FO',[[1,3,0]]],[.7,'FO',[]]],
@@ -606,18 +608,37 @@ const halfRun=(a,b,sk)=>({sx:a.x,sy:a.y,ex:(a.x+b.x)/2,ey:(a.y+b.y)/2,t:0,dur:12
 function batterHalf(extra){const a=batterRun(1,extra),q=a.path;q[2]={x:(q[1].x+B1.x)/2,y:(q[1].y+B1.y)/2};
   a.wt=[0];for(let i=1;i<q.length;i++)a.wt.push(a.wt[i-1]+Math.hypot(q[i].x-q[i-1].x,q[i].y-q[i-1].y));a.dur=13;return a}
 let lobNow=null;
+// SCORED RUNNERS jog off down and to the right at 1/3 running speed instead of vanishing at the plate.
+// On a home run the runners ahead line up past the plate and wait, then everyone jogs off with the batter.
+let exits=[];
+const EXIT_V=2.2,EXIT_DX=.55,EXIT_DY=.835;
+// the line past the plate: slot 4 is home plate itself, slots 3/2/1 run down from it 12 px apart. The runners
+// ahead of a homer fill it so the last one ends up right next to the plate: a 2-run homer uses slot 3, a 3-run
+// homer 2 then 3, a grand slam 1, 2, 3. The batter is slot 4: when he touches home they all jog off.
+function addExit(sk,wait,d=0){exits.push({x:HOME.x,y:HOME.y,sk,f:0,wait,tx:HOME.x+EXIT_DX*d,ty:HOME.y+EXIT_DY*d})}
+function scoredExit(r){const ex=r.isPath?r.path[r.path.length-1].x:r.ex,ey=r.isPath?r.path[r.path.length-1].y:r.ey;
+  if(Math.abs(ex-HOME.x)>=5||Math.abs(ey-HOME.y)>=5)return;
+  if(r.hrBat){addExit(r.sk,false);exits.forEach(e=>e.wait=false);return}   // batter touches home: the line jogs off with him
+  const hr=runnerAnims.find(a=>a.hrBat&&a!==r);
+  if(!hr){addExit(r.sk,false);return}
+  const i=exits.filter(e=>e.wait).length;addExit(r.sk,true,(hr.hrAhead-i)*12)}                               // a homer's still rounding: wait in line
+function updExits(){for(const e of exits){e.f++;
+    if(e.wait){const dx=e.tx-e.x,dy=e.ty-e.y,L=Math.hypot(dx,dy);if(L>EXIT_V){e.x+=dx/L*EXIT_V;e.y+=dy/L*EXIT_V}else{e.x=e.tx;e.y=e.ty;e.f=0;
+}}
+    else{e.x+=EXIT_DX*EXIT_V;e.y+=EXIT_DY*EXIT_V}}
+  exits=exits.filter(e=>e.y<385&&e.x<205)}
 // THROWS: a runner going for a base the defence can throw to (home on a hit or sac fly, 3rd on a tag-up)
 // runs with footsteps for his last 0.5 s and the answer comes when he gets there: safe (chime) or out.
 let throws=[];
 function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();
   if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!')}
-function throwStep(){for(const P of throws.slice()){P.f++;if(P.f===Math.max(1,P.T-30))sfx.steps();
+function throwStep(){for(const P of throws.slice()){P.f++;if(!P.quiet&&P.f===(P.stepsAt??Math.max(1,P.T-30)))(P.stepsFn||sfx.steps)();
     for(const [fr,fn] of P.at||[])if(P.f===fr)fn();
     if(P.f<P.T)continue;throws.splice(throws.indexOf(P),1);P.anim.hold=false;
-    if(P.out){P.anim.out=true;innOuts++;hrOK=false;sfx.wallOut();P.onOut()}else{sfx.fcSafe();P.onSafe()}
+    if(P.out){P.anim.out=true;innOuts++;hrOK=false;sfx.wallOut();P.onOut()}else{if(!P.quiet)sfx.fcSafe();P.onSafe()}
     if(P.post)setTimeout(()=>runCall(P.post),250);checkInning()}}
 // baserunning callouts: one after another on the inning row, down by the base paths (wall → result → runners)
-function runCall(msgs){msgs.forEach((m,i)=>setTimeout(()=>showLbl('innLbl',m,m.startsWith('RUNNER HOLDS')?'#c9cfdc':'#e8f6ff',800),450+i*850))}
+function runCall(msgs){msgs.forEach((m,i)=>setTimeout(()=>showLbl('innLbl',m,m.startsWith('RUNNER HOLDS')?'#c9cfdc':m.startsWith('OUT')?'#ff4444':'#e8f6ff',800),450+i*850))}
 // the batter leaves the box at contact but at HALF speed (normal run to 1st = 22 frames); the lead runner is out
 // at 20, the footsteps start 0.5 s (30 frames) before the batter reaches the bag, and the answer comes at the bag
 const FC_OUT_FR=20,FC_RUN_FR=44,FC_STEPS_FR=FC_RUN_FR-30;
@@ -651,7 +672,8 @@ function resolveOutPlay(type,wx,wy){
   // a runner tags from 2nd only if he'd be it (nobody risks the out otherwise)
   if(type==='FB'&&o0<2&&!simpleMode&&cautious()){
     if(moves.some(m=>m[0]===2)&&!isKeyRun(1)){moves=moves.filter(m=>m[0]!==2&&m[0]!==1);res='FO'}
-    else if(moves.some(m=>m[0]===1)&&!moves.some(m=>m[0]===2)&&!isKeyRun((bases[2]?1:0)+1))moves=moves.filter(m=>m[0]!==1)}
+    else if(moves.some(m=>m[0]===1)&&!moves.some(m=>m[0]===2)&&!isKeyRun((bases[2]?1:0)+1))moves=moves.filter(m=>m[0]!==1);
+    if(moves.some(m=>m[0]===0)&&!isKeyRun((bases[2]?1:0)+(bases[1]?1:0)+1))moves=moves.filter(m=>m[0]!==0)}
   // DOUBLE PLAY / FIELDER'S CHOICE (fewer than 2 outs) play out in two beats: the lead runner is put out
   // first, then the batter races to 1st (footsteps) and we find out at the bag — safe (chime, FIELDER'S
   // CHOICE) or out too (DOUBLE PLAY). Runs on the play wait for that answer (a 3rd-out DP wipes them).
@@ -675,8 +697,12 @@ function resolveOutPlay(type,wx,wy){
       runnerAnims.push(halfRun(a,b,sk));continue}
     // fly ball, inning still on: the runner tagging from 3rd races the throw home; a runner tagging from
     // 2nd races the throw to 3rd (only when nobody's going home). He leaves when the ball's caught.
-    if(type==='FB'&&!simpleMode&&(t===4||(t===3&&!moves.some(m=>m[0]===2)))){
+    if(type==='FB'&&!simpleMode&&(t===4||(t===3&&!moves.some(m=>m[0]===2))||(t===2&&moves.length===1))){
       const an={sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,delay:14,dur:t===4?30:28,sk,hold:true,noRun:true};runnerAnims.push(an);
+      if(t===2){nb[1]=sk;basePending[1]=true;   // tagging from 1st to 2nd
+        throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG2_OUT,
+          onSafe:()=>{basePending[1]=false;showLbl('innLbl','SAFE AT 2ND!','#e8f6ff',900)},
+          onOut:()=>{bases[1]=false;basePending[1]=false;showLbl('innLbl','OUT AT 2ND!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}});continue}
       if(t===4){plateTag=true;setTimeout(sfx.ooh,450);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT,
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
@@ -691,9 +717,9 @@ function resolveOutPlay(type,wx,wy){
   // baserunning callouts on outs (FULL mode, inning still going): tag-ups on fly balls, and a runner on
   // 3rd who stays put (HOLDS! with an exclamation when the play was the 2nd out)
   if(!ends&&!simpleMode&&o0<2&&!staged&&type!=='K'){const mv=f=>moves.find(m=>m[0]===f),msgs=[];
-    if(type==='FB'){const t3=old[2]&&mv(2),t2=old[1]&&mv(1);
+    if(type==='FB'){const t3=old[2]&&mv(2),t2=old[1]&&mv(1),t1=old[0]&&mv(0);
       if(t3)msgs.push('RUNNER SENT!');
-      else{if(old[2])msgs.push('RUNNER HOLDS');if(t2)msgs.push('RUNNER TAGS')}}
+      else{if(old[2])msgs.push('RUNNER HOLDS');if(t2||t1)msgs.push('RUNNER TAGS')}}
     else if(old[2]&&!mv(2))msgs.push(o0+outs===2?'RUNNER HOLDS!':'RUNNER HOLDS');
     runCall(msgs)}
   if(staged){const ba=batterRun(1,{dur:FC_RUN_FR,hold:true});runnerAnims.push(ba);basePending[0]=true;
@@ -813,8 +839,12 @@ loadModeScores();
 // attempt × success by outs (Tango, 2000-06), so runners are more aggressive with two outs.
 // score2on1B / score1on2B are how often the runner is SENT home (MLB attempt rates); he can then be thrown
 // out at the plate (PLATE_OUT, about twice MLB's 3-7% for drama). first3rd1B is attempt × success (no throw).
-const XB={score2on1B:[.42,.55,.81],first3rd1B:[.25,.27,.34],score1on2B:[.35,.39,.60]};
-const PLATE_OUT={'1B':[.06,.09,.12],'2B':[.07,.13,.15]},BAT_ON_THROW=[.15,.175,.155],SF_OUT=.10,TAG3_OUT=.08;
+const XB={score2on1B:[.42,.55,.81],first3rd1B:[.256,.28,.352],score1on2B:[.35,.39,.60]};   // attempt rates
+const PLATE_OUT={'1B':[.06,.09,.12],'2B':[.07,.13,.15]},BAT_ON_THROW=[.15,.175,.155],SF_OUT=.10,TAG3_OUT=.05;
+// smaller risks at (or below) real rates: 1st-to-3rd thrown out at 3rd (Tango 2000-06), batter thrown out
+// taking 2nd on the throw home, a runner tagging from 1st thrown out at 2nd
+const FIRST3RD_OUT=[.039,.046,.030],   // 2 outs: running on contact, so a better jump and fewer outs at 3rd
+      BAT_THROW_OUT=[.08,.08,.08],TAG2_OUT=.04;
 // FINAL INNING and still short of the target: no risky baserunning (sends home, tag-ups that can be thrown
 // out, steals) unless that runner is the run that reaches the target
 const cautious=()=>inning>=MAX_INN&&runs+pendingRuns<target;
@@ -823,7 +853,7 @@ let xb=[0,0,0];   // extra bases for the runner on 1st/2nd/3rd on the current hi
 function planExtra(type){xb=[0,0,0];if(simpleMode)return;const o=Math.min(innOuts,2);
   if(type==='1B'){let thirdOpen=true;   // the runner from 3rd scores; the one from 2nd stops at 3rd unless he goes home
     if(bases[1]){const may=!cautious()||isKeyRun((bases[2]?1:0)+1);if(may&&Math.random()<XB.score2on1B[o])xb[1]=1;else thirdOpen=false}
-    if(bases[0]&&thirdOpen&&Math.random()<XB.first3rd1B[o])xb[0]=1}
+    if(bases[0]&&thirdOpen&&(!cautious()||isKeyRun((bases[2]?1:0)+(bases[1]?1:0)+1))&&Math.random()<XB.first3rd1B[o])xb[0]=1}
   else if(type==='2B'&&bases[0]&&(!cautious()||isKeyRun((bases[1]?1:0)+(bases[2]?1:0)+1))&&Math.random()<XB.score1on2B[o])xb[0]=1}
 function processHit(type){
   const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;let sc=0;
@@ -841,7 +871,7 @@ function processWalk(){
 
 function clearBases(){bases=[false,false,false]}
 
-let sendIdx=-1,sendAnim=null;   // the runner sent home on this hit (index into bases) and his animation
+let sendIdx=-1,sendAnim=null,x3Anim=null;   // x3Anim: a runner going 1st to 3rd that the defence throws at   // the runner sent home on this hit (index into bases) and his animation
 function spawnRunners(type){
   const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;if(!adv)return;
   const bp=[HOME,B1,B2,B3],n0=runnerAnims.length;basePending=[false,false,false];
@@ -854,11 +884,14 @@ function spawnRunners(type){
     else runnerAnims.push({path:p,t:0,dur:(p.length-1)*18,isPath:true,sk})}
   for(let i=2;i>=0;i--){if(bases[i]){
     const fi=i+1,to=fi+adv+xb[i];
+    if(i===0&&type==='1B'&&xb[0]&&sendIdx<0){const p=mkPath(fi,to);x3Anim={path:p,t:0,dur:(p.length-1)*18+12,isPath:true,sk:bases[i],hold:true};
+      runnerAnims.push(x3Anim);basePending[2]=true;continue}
     if(i===sendIdx){const p=mkPath(fi,to);sendAnim={path:p,t:0,dur:(p.length-1)*18+18,isPath:true,sk:bases[i],hold:true,noRun:true};runnerAnims.push(sendAnim);continue}
     addA(mkPath(fi,to),bases[i]);if(to<4)basePending[to-1]=true}}
   if(adv<4)basePending[adv-1]=true;
-  runnerAnims.push(batterRun(adv));
+  runnerAnims.push(batterRun(adv,adv===4?{hrBat:true,hrAhead:bases.filter(Boolean).length}:null));
   // a runner sent home runs at reveal pace; everyone behind him slows to match so they don't bunch up
+  if(x3Anim&&!sendAnim){const f=x3Anim.dur/((x3Anim.path.length-1)*18);for(const a of runnerAnims.slice(n0))if(a!==x3Anim)a.dur=Math.round(a.dur*f)}
   if(sendAnim){const f=sendAnim.dur/((sendAnim.path.length-1)*18);for(const a of runnerAnims.slice(n0))if(a!==sendAnim)a.dur=Math.round(a.dur*f)}}
 
 function spawnWalkRunners(){
@@ -1120,13 +1153,14 @@ function drawOnDeck(){   // the kneeling next batter (both circles are drawn wit
   cx.restore();
 }
 // (x,y) is where his feet are: standing on a bag they're on its middle, running they're on the path
-function drawBaseRunner(x,y,sk){y-=3;
+// left=true: runner facing left (out of the box, on 1st, on 2nd, on the way to 3rd), ear flap shows on our right
+function drawBaseRunner(x,y,sk,left){y-=3;
   cx.fillStyle='#f0f0f0';cx.fillRect(x-2,y-5,5,5);
   cx.fillStyle='#d8d8d8';cx.fillRect(x-2,y-5,5,1);
   cx.fillStyle='#999';cx.fillRect(x-2,y,5,4);
   cx.fillStyle='#333';cx.fillRect(x-2,y+3,5,2);
-  cx.fillStyle=sk||SKIN[0][0];cx.fillRect(x-1,y-9,4,4);
-  cx.fillStyle='#222258';cx.fillRect(x-2,y-10,5,3);
+  cx.fillStyle=sk||SKIN[0][0];cx.fillRect(left?x-2:x-1,y-9,4,4);
+  cx.fillStyle='#222258';cx.fillRect(x-2,y-10,5,3);cx.fillRect(left?x+2:x-2,y-7,1,1);   // batting helmet + ear flap
 }
 
 /* ===== scoreboard (drawn on canvas) ===== */
@@ -1224,7 +1258,7 @@ function basePitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;
-  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
+  inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
   clearBases();particles=[];trail=[];hide('goScr');newZones();
   isNewRound=true;isNewInning=true;
@@ -1437,22 +1471,31 @@ function resolveHit(){
       if(hitRes==='1B'){if(bases[1])runMsgs.push(xb[1]?'WAVED HOME!':HOLD);if(bases[0]&&xb[0])runMsgs.push('1ST TO 3RD!')}
       else if(hitRes==='2B'&&bases[0])runMsgs.push(xb[0]?'WAVED HOME!':HOLD)}
     // a runner sent home becomes a play at the plate; the batter may take 2nd on the throw
-    sendIdx=simpleMode?-1:hitRes==='1B'&&bases[1]&&xb[1]?1:hitRes==='2B'&&bases[0]&&xb[0]?0:-1;sendAnim=null;
+    sendIdx=simpleMode?-1:hitRes==='1B'&&bases[1]&&xb[1]?1:hitRes==='2B'&&bases[0]&&xb[0]?0:-1;sendAnim=null;x3Anim=null;
     const oo=Math.min(innOuts,2),secondOpen=!(bases[0]&&!xb[0]);
-    const batOnThrow=sendIdx===1&&secondOpen&&Math.random()<BAT_ON_THROW[oo];
+    const batOnThrow=sendIdx===1&&secondOpen&&(!cautious()||isKeyRun(bases.filter(Boolean).length+1))&&Math.random()<BAT_ON_THROW[oo];   // short in the 3rd: only if the batter is the target run
     const plateOut=sendIdx>=0&&Math.random()<PLATE_OUT[hitRes][oo];
     spawnRunners(hitRes);
     let scored=processHit(hitRes);
     if(sendIdx>=0){scored--;pendingRuns--;
       const fromTxt=hitRes==='1B'?'SCORES FROM 2ND!':'SCORES FROM 1ST!',T=sendAnim.dur,post=[];
       if(runMsgs.includes('1ST TO 3RD!')){runMsgs.splice(runMsgs.indexOf('1ST TO 3RD!'),1);post.push('1ST TO 3RD!')}
-      const at=[];if(batOnThrow){post.push('TAKES 2ND ON THE THROW!');
-        at.push([T-9,()=>{if(bases[0]===batterSk&&!bases[1]){bases[0]=false;bases[1]=batterSk;basePending[1]=true;
-          runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:batterSk})}}])}
+      const at=[];if(batOnThrow){
+        // he breaks for 2nd as the play at the plate happens (halfway at the call); his own footsteps start at the call
+        at.push([T-15,()=>{if(bases[0]===batterSk&&!bases[1]){bases[0]=false;bases[1]=batterSk;basePending[1]=true;
+          const ba={sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:30,sk:batterSk,hold:true};runnerAnims.push(ba);
+          throws.push({f:0,T:30,anim:ba,stepsAt:15,stepsFn:()=>sfx.steps2(),out:Math.random()<BAT_THROW_OUT[oo],
+            onSafe:()=>{basePending[1]=false;runCall(['TAKES 2ND ON THE THROW!'])},
+            onOut:()=>{bases[1]=false;basePending[1]=false;runCall(['OUT AT 2ND!'])}})}}])}
       setTimeout(sfx.ooh,450);
       throws.push({f:0,T,anim:sendAnim,out:plateOut,at,post,
         onSafe:()=>{showLbl('innLbl',fromTxt,'#e8f6ff',900);addRunsNow(1)},
         onOut:()=>showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000)});sendIdx=-1}
+    if(x3Anim){const A=x3Anim;x3Anim=null;if(runMsgs.includes('1ST TO 3RD!'))runMsgs.splice(runMsgs.indexOf('1ST TO 3RD!'),1);
+      runMsgs.push('GOING FOR 3RD!');
+      throws.push({f:0,T:A.dur,anim:A,out:Math.random()<FIRST3RD_OUT[oo],
+        onSafe:()=>{basePending[2]=false;showLbl('innLbl','1ST TO 3RD!','#e8f6ff',900)},
+        onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
       if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}
       showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);
@@ -1587,7 +1630,8 @@ function update(){
         sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;
         if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
 }}
-    return r.t<(r.out?1+10/r.dur:1.05)});   // out: holds ~10 frames blinking, then gone
+    const keep=r.t<(r.out?1+10/r.dur:1.05);if(!keep&&!r.out)scoredExit(r);return keep});   // out: holds ~10 frames blinking, then gone
+  updExits();
   if(!runnerAnims.length)basePending=[false,false,false];
   // show SKIP button once target is met
   const sb=document.getElementById('skipBtn');
@@ -1608,19 +1652,23 @@ function draw(){
 
   // runners on bases
   const bpos=[B1,B2,B3];
-  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]);drawBaseRunner(c.x,c.y,bases[i])}}
+  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]);drawBaseRunner(c.x,c.y,bases[i],i<2)}}
 
   // runner animations
-  runnerAnims.forEach(r=>{if(r.t<0)return;if(r.out&&r.t>1&&Math.floor((r.t-1)*r.dur/3)%2)return;const t=Math.min(r.t,1);let rx,ry;
+  // he faces left from the batter's box until just before 3rd; from 3rd on he faces right (toward home)
+  const near=(q,b,d=6)=>Math.abs(q.x-b.x)<d&&Math.abs(q.y-b.y)<d;
+  const facesL=(a,b,x,y)=>!(near(b,HOME)||near(a,B3)||near(b,B3)&&near({x,y},B3,4));
+  runnerAnims.forEach(r=>{if(r.t<0)return;if(r.out&&r.t>1&&Math.floor((r.t-1)*r.dur/3)%2)return;const t=Math.min(r.t,1);let rx,ry,lf;
     if(r.wt){const L=r.wt,d=t*L[L.length-1];let sg=0;while(sg<L.length-2&&d>L[sg+1])sg++;
       const st=(d-L[sg])/(L[sg+1]-L[sg]),hop=Math.min(1,(L[sg+1]-L[sg])/40);
-      rx=r.path[sg].x+(r.path[sg+1].x-r.path[sg].x)*st;
+      rx=r.path[sg].x+(r.path[sg+1].x-r.path[sg].x)*st;lf=facesL(r.path[sg],r.path[sg+1],rx,ry);
       ry=r.path[sg].y+(r.path[sg+1].y-r.path[sg].y)*st-6*hop*Math.sin(st*Math.PI);
     }else if(r.isPath){const pl=r.path.length-1,pt=t*pl,sg=Math.min(Math.floor(pt),pl-1),st=pt-sg;
-      rx=r.path[sg].x+(r.path[sg+1].x-r.path[sg].x)*st;
+      rx=r.path[sg].x+(r.path[sg+1].x-r.path[sg].x)*st;lf=facesL(r.path[sg],r.path[sg+1],rx,ry);
       ry=r.path[sg].y+(r.path[sg+1].y-r.path[sg].y)*st-6*Math.sin(t*Math.PI*pl);
-    }else{rx=r.sx+(r.ex-r.sx)*t;ry=r.sy+(r.ey-r.sy)*t-8*Math.sin(t*Math.PI)}
-    drawBaseRunner(rx|0,ry|0,r.sk)});
+    }else{rx=r.sx+(r.ex-r.sx)*t;ry=r.sy+(r.ey-r.sy)*t-8*Math.sin(t*Math.PI);lf=facesL({x:r.sx,y:r.sy},{x:r.ex,y:r.ey},rx,ry)}
+    drawBaseRunner(rx|0,ry|0,r.sk,lf)});
+  exits.forEach(e=>drawBaseRunner(e.x|0,(e.y|0)-(e.f>0&&Math.floor(e.f/5)%2?1:0),e.sk));   // little jog bob
 
   // guide line
   if(state==='pitch'&&showGuide){
