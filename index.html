@@ -483,9 +483,10 @@ function pickHitZone(){
 
 // WALL MIX: every non-out slot drawn from MLB's mix of ways on base
 // (1B 47% · BB 28% · 2B 14% · HR 10% · 3B 1%), with triples boosted a lot and homers a little; one HR max
-const MIX_NEW=[['1B',.42],['BB',.24],['2B',.14],['3B',.08],['HR',.12]];
+const MIX_NEW=[['1B',.46],['BB',.20],['2B',.16],['3B',.06],['HR',.12]];
+const MIX_SIMPLE=[['1B',.62],['2B',.18],['3B',.07],['HR',.13]];   // SIMPLE has no walks; tuned by simulation so its win rates match FULL's
 let newOdds=true;   // shipped: MLB-shaped walls, random HRs, targets 5-6-8-10-12, Challenge = faster pitches + its own out boxes
-function pickNew(allowHR){for(;;){let r=Math.random(),z='1B';for(const [k,w] of MIX_NEW){if((r-=w)<0){z=k;break}}
+function pickNew(allowHR){const M=simpleMode?MIX_SIMPLE:MIX_NEW;for(;;){let r=Math.random(),z='1B';for(const [k,w] of M){if((r-=w)<0){z=k;break}}
   if(z==='BB'&&simpleMode)continue;if(z==='HR'&&!allowHR)continue;return z}}
 function pickStreakZone(){const r=Math.random();
   if(r<.425)return'1B';if(r<.60)return'BB';if(r<.75)return'2B';if(r<.85)return'3B';return'HR'}
