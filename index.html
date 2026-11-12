@@ -43,7 +43,8 @@ body{background:var(--bg);color:var(--fg);font-family:'Press Start 2P',monospace
    never stretched — a flex-grown box with width:100% ignores aspect-ratio. */
 #wrap{position:relative;width:100%;flex:1;min-height:0;display:flex;align-items:center;
   justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#stage{position:relative;width:180px;height:360px;border:2px solid #181830;border-radius:6px;
+#stage{container-type:inline-size;   /* labels size to the field (cqw), not the window — desktop stays phone-proportioned */
+  position:relative;width:180px;height:360px;border:2px solid #181830;border-radius:6px;
   overflow:hidden;box-shadow:0 0 40px rgba(60,80,200,.12)}
 canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 /* HUD */
@@ -82,12 +83,12 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .ol.show{opacity:1}
 /* overlay labels: soft drop shadow */
 .ol{text-shadow:0 2px 8px rgba(0,0,0,.7)}
-#resLbl{top:30%;font-size:clamp(14px,4.5vw,28px);white-space:pre-line;line-height:1.35}
+#resLbl{top:30%;font-size:clamp(12px,5.1cqw,28px);white-space:pre-line;line-height:1.35}
 #resLbl.gsl{animation:gsl .3s steps(1) infinite}
 @keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
-#innLbl{top:44%;font-size:clamp(14px,4.5vw,28px);color:#fff}
-#scorLbl{top:58.37%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(10px,3vw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
-#streakLbl{top:25%;font-size:clamp(14px,4.4vw,27px)}
+#innLbl{top:44%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
+#scorLbl{top:58.37%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(9px,3.4cqw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
+#streakLbl{top:25%;font-size:clamp(12px,5cqw,27px)}
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;background:rgba(10,10,30,.82);gap:clamp(8px,2.5vw,16px);
   pointer-events:none;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;z-index:6}
@@ -363,7 +364,14 @@ function noiseHit(at,d,v,type,freq){try{aud();const t=ac.currentTime+at/1000,len
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
   const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=ac.createGain();
   g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);src.connect(f).connect(g).connect(out);src.start(t);src.stop(t+d)}catch(e){}}
+// crowd "ooh": band-passed noise that swells and fades (runner sent home)
+function crowdOoh(){try{aud();const t=ac.currentTime,d=.95,len=Math.ceil(ac.sampleRate*d),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+  for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
+  const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=700;bp.Q.value=.6;const g=ac.createGain();
+  g.gain.setValueAtTime(.0001,t);[[.25,.2],[.7,.14],[.9,.0001]].forEach(([s2,v])=>g.gain.linearRampToValueAtTime(v,t+s2));
+  src.connect(bp).connect(g).connect(out);src.start(t);src.stop(t+d)}catch(e){}}
 const sfx={
+  ooh:crowdOoh,
   pitch(){tn(260,.06,'square',.05)},swing(){tn(130,.04,'sawtooth',.06)},
   crack(){tn(880,.04,'sawtooth',.15);tn(440,.08,'square',.08)},
   hr(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tn(f,.14,'square',.12),i*70))},
@@ -430,13 +438,16 @@ const ROUNDS=[
 ];
 let round=0,nextRound=0,exhibitionMode=false;
 // CHALLENGE MODE (unlocked by beating LEGEND in either style): the same five rounds, marked with a
-// superscript c, with target +2, one more out on the wall (6 max) and LEGEND's HR rule from the start.
+// superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
-const NEW_T=[5,6,8,9,12];   // (test) targets for NEW ODDS: matched by simulation to today's win rates (ROOKIE kept at 5)
-function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i]};if(!challenge)return r;
-  return{...r,name:r.name+'\u1D9C',target:r.target+2,baseOuts:Math.min(6,r.baseOuts+1),
+const NEW_T=[5,6,8,10,12];   // (test) targets for NEW ODDS: matched by simulation to today's win rates (ROOKIE kept at 5)
+function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
+  // (test) NEW ODDS challenge = the same levels with every pitch one notch faster
+  // out boxes per inning: ROOKIEᶜ 3/3/3, VETERANᶜ 3/3/4, ALL-STARᶜ 3/4/4, MVPᶜ 4/4/4, LEGENDᶜ 4/4/5
+  if(newOdds)return{...r,name:r.name+'\u1D9C',...[{baseOuts:3},{inn3Outs:4},{inn2Outs:4,inn3Outs:4},{},{inn3Outs:5}][i]};
+  return{...r,name:r.name+'\u1D9C',target:r.target,baseOuts:Math.min(6,r.baseOuts+1),
     inn3Outs:r.inn3Outs?Math.min(6,r.inn3Outs+1):0,conditionalHR:true}}
 // a name ending in the modifier letter ᶜ is shown with a real superscript c
 // challenge rounds carry a little pixel trophy after the name (the same 7×6 drawing on the
@@ -496,7 +507,7 @@ function endStreak(){
   hrStreak=0}
 
 function newZones(){
-  const rd=RD(round),bo=rd.inn3Outs&&inning>=3?rd.inn3Outs:rd.baseOuts;
+  const rd=RD(round),bo=rd.inn3Outs&&inning>=3?rd.inn3Outs:rd.inn2Outs&&inning>=2?rd.inn2Outs:rd.baseOuts;   // out boxes an inning starts with
   const numOuts=Math.min(6,bo+Math.floor(innBatters/3));
   const pool=[];
   // HR is always on the wall, except in conditionalHR rounds (Legend): there it shows only right after
@@ -522,7 +533,7 @@ function newZones(){
   // one steal zone (striped blue/red): 70% of the time it takes a hit's place, 30% an out's.
   // Taking a hit must still leave two other ways on base (HR counts as one); if not, it takes an out.
   const hitCount=zones.filter(z=>z!=='HR'&&z!=='OUT').length;
-  if(!simpleMode&&sbElig){
+  if(!simpleMode&&sbElig&&(!cautious()||isKeyRun(1))){
     const hitOK=hitCount>=(zones.includes('HR')?2:3);
     const si=Math.random()<.7&&hitOK?randIdx(z=>z!=='HR'&&z!=='OUT'):randIdx(z=>z==='OUT');
     if(si>=0)zones[si]='SB'}
@@ -584,7 +595,7 @@ const FB_T={
 const baseKey=()=>(bases[0]?'1':'-')+(bases[1]?'2':'-')+(bases[2]?'3':'-');
 // zone shade for the current situation: can a run score (other than on a DP)? is a DP possible?
 function outShade(z){if(innOuts>=2||z==='K')return 'zOUT';
-  const dp=z==='GB'&&!!bases[0],run=!!bases[2];
+  const dp=z==='GB'&&!!bases[0],run=!!bases[2]&&(z!=='FB'||!cautious()||isKeyRun(1));   // a held sac fly can't score
   return dp&&run?'zOBOTH':dp?'zODP':run?'zORUN':'zOUT'}
 const OUT_LBL={GO:['GROUNDOUT!','#ff4444'],FO:['FLYOUT!','#ff4444'],DP:['DOUBLE PLAY!','#ff2222'],
   FC:["FIELDER'S CHOICE",'#ffaa44'],SF:['SAC FLY!','#ffaa44'],K:['STRIKEOUT!','#ff4444']};
@@ -634,6 +645,11 @@ function resolveOutPlay(type,wx,wy){
     if(bases[0]&&bases[1])moves.unshift([1,3,0]);
     if(bases[0]&&bases[1]&&bases[2])moves.unshift([2,4,0]);
     if(bases[0]&&res!=='FC')moves.unshift([0,2,0])}
+  // last inning, short of the target: a fly ball only sends the runner from 3rd if he's the target run, and
+  // a runner tags from 2nd only if he'd be it (nobody risks the out otherwise)
+  if(type==='FB'&&o0<2&&!simpleMode&&cautious()){
+    if(moves.some(m=>m[0]===2)&&!isKeyRun(1)){moves=moves.filter(m=>m[0]!==2&&m[0]!==1);res='FO'}
+    else if(moves.some(m=>m[0]===1)&&!moves.some(m=>m[0]===2)&&!isKeyRun((bases[2]?1:0)+1))moves=moves.filter(m=>m[0]!==1)}
   // DOUBLE PLAY / FIELDER'S CHOICE (fewer than 2 outs) play out in two beats: the lead runner is put out
   // first, then the batter races to 1st (footsteps) and we find out at the bag — safe (chime, FIELDER'S
   // CHOICE) or out too (DOUBLE PLAY). Runs on the play wait for that answer (a 3rd-out DP wipes them).
@@ -659,7 +675,7 @@ function resolveOutPlay(type,wx,wy){
     // 2nd races the throw to 3rd (only when nobody's going home). He leaves when the ball's caught.
     if(type==='FB'&&!simpleMode&&(t===4||(t===3&&!moves.some(m=>m[0]===2)))){
       const an={sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,delay:14,dur:t===4?30:28,sk,hold:true,noRun:true};runnerAnims.push(an);
-      if(t===4){plateTag=true;throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT,
+      if(t===4){plateTag=true;setTimeout(sfx.ooh,450);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT,
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       else{nb[2]=sk;basePending[2]=true;
@@ -667,13 +683,14 @@ function resolveOutPlay(type,wx,wy){
           onSafe:()=>{basePending[2]=false;showLbl('innLbl','SAFE AT 3RD!','#e8f6ff',900)},
           onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       continue}
-    runnerAnims.push({sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,dur:20,sk,noRun:staged&&t===4});
+    const tagBehind=type==='FB'&&!simpleMode&&t===3&&moves.some(m=>m[0]===2);   // tags behind a runner sent home: same pace
+    runnerAnims.push({sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,dur:tagBehind?30:20,delay:tagBehind?14:0,sk,noRun:staged&&t===4});
     if(t===4){if(staged)stSc++;else{pendingRuns++;sc++}}else{nb[t-1]=sk;basePending[t-1]=true}}
   // baserunning callouts on outs (FULL mode, inning still going): tag-ups on fly balls, and a runner on
   // 3rd who stays put (HOLDS! with an exclamation when the play was the 2nd out)
   if(!ends&&!simpleMode&&o0<2&&!staged&&type!=='K'){const mv=f=>moves.find(m=>m[0]===f),msgs=[];
     if(type==='FB'){const t3=old[2]&&mv(2),t2=old[1]&&mv(1);
-      if(t3&&t2)msgs.push('RUNNERS TAG!');else if(t3)msgs.push('RUNNER TAGS!');
+      if(t3)msgs.push('RUNNER SENT!');
       else{if(old[2])msgs.push('RUNNER HOLDS');if(t2)msgs.push('RUNNER TAGS')}}
     else if(old[2]&&!mv(2))msgs.push(o0+outs===2?'RUNNER HOLDS!':'RUNNER HOLDS');
     runCall(msgs)}
@@ -796,12 +813,16 @@ loadModeScores();
 // out at the plate (PLATE_OUT, about twice MLB's 3-7% for drama). first3rd1B is attempt × success (no throw).
 const XB={score2on1B:[.42,.55,.81],first3rd1B:[.25,.27,.34],score1on2B:[.35,.39,.60]};
 const PLATE_OUT={'1B':[.06,.09,.12],'2B':[.07,.13,.15]},BAT_ON_THROW=[.15,.175,.155],SF_OUT=.10,TAG3_OUT=.08;
+// FINAL INNING and still short of the target: no risky baserunning (sends home, tag-ups that can be thrown
+// out, steals) unless that runner is the run that reaches the target
+const cautious=()=>inning>=MAX_INN&&runs+pendingRuns<target;
+const isKeyRun=k=>runs+pendingRuns+k>=target;   // k = runs this play would score up to and including him
 let xb=[0,0,0];   // extra bases for the runner on 1st/2nd/3rd on the current hit
 function planExtra(type){xb=[0,0,0];if(simpleMode)return;const o=Math.min(innOuts,2);
   if(type==='1B'){let thirdOpen=true;   // the runner from 3rd scores; the one from 2nd stops at 3rd unless he goes home
-    if(bases[1]){if(Math.random()<XB.score2on1B[o])xb[1]=1;else thirdOpen=false}
+    if(bases[1]){const may=!cautious()||isKeyRun((bases[2]?1:0)+1);if(may&&Math.random()<XB.score2on1B[o])xb[1]=1;else thirdOpen=false}
     if(bases[0]&&thirdOpen&&Math.random()<XB.first3rd1B[o])xb[0]=1}
-  else if(type==='2B'&&bases[0]&&Math.random()<XB.score1on2B[o])xb[0]=1}
+  else if(type==='2B'&&bases[0]&&(!cautious()||isKeyRun((bases[1]?1:0)+(bases[2]?1:0)+1))&&Math.random()<XB.score1on2B[o])xb[0]=1}
 function processHit(type){
   const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;let sc=0;
   for(let i=2;i>=0;i--){if(bases[i]){const r=bases[i],a=adv+xb[i];bases[i]=false;if(i+a>=3)sc++;else bases[i+a]=r}}
@@ -821,7 +842,7 @@ function clearBases(){bases=[false,false,false]}
 let sendIdx=-1,sendAnim=null;   // the runner sent home on this hit (index into bases) and his animation
 function spawnRunners(type){
   const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;if(!adv)return;
-  const bp=[HOME,B1,B2,B3];basePending=[false,false,false];
+  const bp=[HOME,B1,B2,B3],n0=runnerAnims.length;basePending=[false,false,false];
   function mkPath(fi,ti){
     const p=[{x:bp[fi].x,y:bp[fi].y}];
     for(let b=fi+1;b<=Math.min(ti,3);b++)p.push({x:bp[b].x,y:bp[b].y});
@@ -834,7 +855,9 @@ function spawnRunners(type){
     if(i===sendIdx){const p=mkPath(fi,to);sendAnim={path:p,t:0,dur:(p.length-1)*18+18,isPath:true,sk:bases[i],hold:true,noRun:true};runnerAnims.push(sendAnim);continue}
     addA(mkPath(fi,to),bases[i]);if(to<4)basePending[to-1]=true}}
   if(adv<4)basePending[adv-1]=true;
-  runnerAnims.push(batterRun(adv))}
+  runnerAnims.push(batterRun(adv));
+  // a runner sent home runs at reveal pace; everyone behind him slows to match so they don't bunch up
+  if(sendAnim){const f=sendAnim.dur/((sendAnim.path.length-1)*18);for(const a of runnerAnims.slice(n0))if(a!==sendAnim)a.dur=Math.round(a.dur*f)}}
 
 function spawnWalkRunners(){
   const bp=[HOME,B1,B2,B3];basePending=[false,false,false];
@@ -1424,6 +1447,7 @@ function resolveHit(){
       const at=[];if(batOnThrow){post.push('TAKES 2ND ON THE THROW!');
         at.push([T-9,()=>{if(bases[0]===batterSk&&!bases[1]){bases[0]=false;bases[1]=batterSk;basePending[1]=true;
           runnerAnims.push({sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:18,sk:batterSk})}}])}
+      setTimeout(sfx.ooh,450);
       throws.push({f:0,T,anim:sendAnim,out:plateOut,at,post,
         onSafe:()=>{showLbl('innLbl',fromTxt,'#e8f6ff',900);addRunsNow(1)},
         onOut:()=>showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000)});sendIdx=-1}
