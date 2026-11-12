@@ -659,7 +659,11 @@ function fcStep(){const P=fcPlay;P.f++;
   checkInning()}   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
 function resolveOutPlay(type,wx,wy){
   const o0=innOuts;let res=type==='GB'?'GO':type==='FB'?'FO':'K',moves=type==='GB'?[['B',1,1]]:[];
-  if(type!=='K'&&o0<2){const T=(type==='GB'?GB_T:FB_T)[baseKey()];let r=Math.random()*T.reduce((a,o)=>a+o[0],0);
+  if(type!=='K'&&o0<2){let T=(type==='GB'?GB_T:FB_T)[baseKey()];
+    // runner on 3rd, fly ball: he goes 70% of the time when the catch is the 1st out, 80% when it's the 2nd
+    // (tables are written for 75/25; MLB sends ~78% overall and more readily with 1 out)
+    if(type==='FB'&&bases[2])T=T.map(o=>[o[0]*(o[1]==='SF'?SF_GO[o0]/.75:(1-SF_GO[o0])/.25),o[1],o[2]]);
+    let r=Math.random()*T.reduce((a,o)=>a+o[0],0);
     for(const o of T){if((r-=o[0])<0){res=o[1];moves=o[2];break}}}
   // 2 outs, grounder: the third out is either the batter at 1st or (with a runner on 1st) the force
   // at 2nd, 50/50. Forced runners are shown running either way (see below).
@@ -703,7 +707,7 @@ function resolveOutPlay(type,wx,wy){
         throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG2_OUT,
           onSafe:()=>{basePending[1]=false;showLbl('innLbl','SAFE AT 2ND!','#e8f6ff',900)},
           onOut:()=>{bases[1]=false;basePending[1]=false;showLbl('innLbl','OUT AT 2ND!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}});continue}
-      if(t===4){plateTag=true;setTimeout(sfx.ooh,450);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT,
+      if(t===4){plateTag=true;setTimeout(sfx.ooh,450);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT[o0],
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       else{nb[2]=sk;basePending[2]=true;
@@ -840,7 +844,7 @@ loadModeScores();
 // score2on1B / score1on2B are how often the runner is SENT home (MLB attempt rates); he can then be thrown
 // out at the plate (PLATE_OUT, about twice MLB's 3-7% for drama). first3rd1B is attempt × success (no throw).
 const XB={score2on1B:[.42,.55,.81],first3rd1B:[.256,.28,.352],score1on2B:[.35,.39,.60]};   // attempt rates
-const PLATE_OUT={'1B':[.06,.09,.12],'2B':[.07,.13,.15]},BAT_ON_THROW=[.15,.175,.155],SF_OUT=.10,TAG3_OUT=.05;
+const PLATE_OUT={'1B':[.06,.09,.12],'2B':[.07,.13,.15]},BAT_ON_THROW=[.15,.175,.155],SF_OUT=[.06,.08],SF_GO=[.70,.80],TAG3_OUT=.05;
 // smaller risks at (or below) real rates: 1st-to-3rd thrown out at 3rd (Tango 2000-06), batter thrown out
 // taking 2nd on the throw home, a runner tagging from 1st thrown out at 2nd
 const FIRST3RD_OUT=[.039,.046,.030],   // 2 outs: running on contact, so a better jump and fewer outs at 3rd
