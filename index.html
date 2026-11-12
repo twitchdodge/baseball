@@ -371,6 +371,7 @@ function crowdOoh(){try{aud();const t=ac.currentTime,d=.95,len=Math.ceil(ac.samp
   const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=700;bp.Q.value=.6;const g=ac.createGain();
   g.gain.setValueAtTime(.0001,t);[[.25,.2],[.7,.14],[.9,.0001]].forEach(([s2,v])=>g.gain.linearRampToValueAtTime(v,t+s2));
   src.connect(bp).connect(g).connect(out);src.start(t);src.stop(t+d)}catch(e){}}
+let OOH_SF=0,OOH_SEND=200;   // crowd ooh: on a sac fly it starts as the ball hits the wall; on a runner sent home, 200 ms in
 const sfx={
   ooh:crowdOoh,
   pitch(){tn(260,.06,'square',.05)},swing(){tn(130,.04,'sawtooth',.06)},
@@ -638,7 +639,7 @@ function throwStep(){for(const P of throws.slice()){P.f++;if(!P.quiet&&P.f===(P.
     if(P.out){P.anim.out=true;innOuts++;hrOK=false;sfx.wallOut();P.onOut()}else{if(!P.quiet)sfx.fcSafe();P.onSafe()}
     if(P.post)setTimeout(()=>runCall(P.post),250);checkInning()}}
 // baserunning callouts: one after another on the inning row, down by the base paths (wall → result → runners)
-function runCall(msgs){msgs.forEach((m,i)=>setTimeout(()=>showLbl('innLbl',m,m.startsWith('RUNNER HOLDS')?'#c9cfdc':m.startsWith('OUT')?'#ff4444':'#e8f6ff',800),450+i*850))}
+function runCall(msgs){msgs.forEach((m,i)=>setTimeout(()=>showLbl('innLbl',m,m.startsWith('RUNNER HOLDS')?'#c9cfdc':/\bOUT\b/.test(m)?'#ff4444':'#e8f6ff',800),450+i*850))}
 // the batter leaves the box at contact but at HALF speed (normal run to 1st = 22 frames); the lead runner is out
 // at 20, the footsteps start 0.5 s (30 frames) before the batter reaches the bag, and the answer comes at the bag
 const FC_OUT_FR=20,FC_RUN_FR=44,FC_STEPS_FR=FC_RUN_FR-30;
@@ -707,7 +708,7 @@ function resolveOutPlay(type,wx,wy){
         throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG2_OUT,
           onSafe:()=>{basePending[1]=false;showLbl('innLbl','SAFE AT 2ND!','#e8f6ff',900)},
           onOut:()=>{bases[1]=false;basePending[1]=false;showLbl('innLbl','OUT AT 2ND!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}});continue}
-      if(t===4){plateTag=true;setTimeout(sfx.ooh,450);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT[o0],
+      if(t===4){plateTag=true;setTimeout(sfx.ooh,OOH_SF);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT[o0],
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       else{nb[2]=sk;basePending[2]=true;
@@ -1483,15 +1484,15 @@ function resolveHit(){
     let scored=processHit(hitRes);
     if(sendIdx>=0){scored--;pendingRuns--;
       const fromTxt=hitRes==='1B'?'SCORES FROM 2ND!':'SCORES FROM 1ST!',T=sendAnim.dur,post=[];
-      if(runMsgs.includes('1ST TO 3RD!')){runMsgs.splice(runMsgs.indexOf('1ST TO 3RD!'),1);post.push('1ST TO 3RD!')}
+      if(runMsgs.includes('1ST TO 3RD!'))runMsgs.splice(runMsgs.indexOf('1ST TO 3RD!'),1);   // the play at the plate is the story; no separate 1st-to-3rd call
       const at=[];if(batOnThrow){
         // he breaks for 2nd as the play at the plate happens (halfway at the call); his own footsteps start at the call
         at.push([T-15,()=>{if(bases[0]===batterSk&&!bases[1]){bases[0]=false;bases[1]=batterSk;basePending[1]=true;
           const ba={sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:30,sk:batterSk,hold:true};runnerAnims.push(ba);
           throws.push({f:0,T:30,anim:ba,stepsAt:15,stepsFn:()=>sfx.steps2(),out:Math.random()<BAT_THROW_OUT[oo],
-            onSafe:()=>{basePending[1]=false;runCall(['TAKES 2ND ON THE THROW!'])},
-            onOut:()=>{bases[1]=false;basePending[1]=false;runCall(['OUT AT 2ND!'])}})}}])}
-      setTimeout(sfx.ooh,450);
+            onSafe:()=>{basePending[1]=false},   // no call: you can see him make it
+            onOut:()=>{bases[1]=false;basePending[1]=false;runCall(['THROWN OUT AT 2ND!'])}})}}])}
+      setTimeout(sfx.ooh,OOH_SEND);
       throws.push({f:0,T,anim:sendAnim,out:plateOut,at,post,
         onSafe:()=>{showLbl('innLbl',fromTxt,'#e8f6ff',900);addRunsNow(1)},
         onOut:()=>showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000)});sendIdx=-1}
