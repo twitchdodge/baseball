@@ -129,6 +129,9 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 #glossBox{pointer-events:auto;width:90%;max-height:72%;overflow-y:auto;-webkit-overflow-scrolling:touch;
   text-align:left;font-size:clamp(7px,2.1vw,11px);line-height:1.7;color:#d8dbe6;padding-bottom:8px;touch-action:pan-y}
 #glossBox .gT{text-align:center;color:var(--gold);font-size:1.5em;margin:4px 0 10px}
+#glossBox .gL div{position:relative;padding-left:1.3em;margin:6px 0}
+#glossBox .gL div::before{content:'';position:absolute;left:.15em;top:.5em;width:.45em;height:.45em;background:var(--gold)}
+#glossBox .gL b{font-weight:normal;color:var(--gold)}
 #glossBox .gH{color:#7f8aa8;margin:14px 0 6px;border-bottom:1px solid #2a3150;padding-bottom:3px;letter-spacing:.08em}
 #glossBox .gR{display:flex;gap:10px;margin:7px 0;align-items:flex-start}
 #glossBox .gK{flex:0 0 32%;color:#fff;display:flex;flex-wrap:wrap;gap:3px}
@@ -175,7 +178,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 <div id="pauseScr" class="scr"><div class="sT" style="opacity:.6">PAUSED</div>
   <div class="sS blink">TAP TO RESUME</div>
   <div class="tBtns" style="position:absolute;bottom:9%">
-    <div id="glossBtnP" class="tBtn">GLOSSARY</div>
+    <div id="glossBtnP" class="tBtn">HOW TO PLAY</div>
     <div id="resetBtn" class="tBtn" style="border-color:#955;color:#e99;background:rgba(255,80,80,.1)">RESET GAME</div></div></div>
 <div id="skipBtn" style="position:absolute;bottom:2%;right:2%;font-size:clamp(13px,3.6vw,22px);
   padding:7px 16px;border:1px solid #888;border-radius:3px;cursor:pointer;z-index:4;
@@ -202,7 +205,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
-    <div id="glossBtn" class="tBtn">GLOSSARY</div></div>
+    <div id="glossBtn" class="tBtn">HOW TO PLAY</div></div>
 </div>
 <div class="scr" id="exhScr">
   <div class="sS" style="color:var(--gold);margin-bottom:12px">PRACTICE</div>
@@ -225,7 +228,15 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 </div>
 <div class="scr" id="glossScr">
   <div id="glossBox">
-    <div class="gT">GLOSSARY</div>
+    <div class="gT">HOW TO PLAY</div>
+    <div class="gL">
+      <div><b>Tap anywhere to swing.</b> Every batter gets one pitch.</div>
+      <div>Your timing decides where on the wall the ball lands. Aim for the hits, dodge the outs.</div>
+      <div>Whiff, foul it off, or let it go by and you're out.</div>
+      <div>3 outs an inning, 3 innings a game.</div>
+      <div>Score the target (TGT) to unlock the next level. Fall short and it's back to ROOKIE.</div>
+      <div>Replay any level you've unlocked in PRACTICE MODE. Scores there don't count.</div>
+    </div>
     <div class="gH">ON THE WALL</div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#4477cc;color:#fff">1</span><span class="gC" style="background:#2952a3;color:#fff">2</span><span class="gC" style="background:#1a2d77;color:#fff">3</span></div><div class="gV">Single, double, triple. The batter takes that base and every runner moves up the same number of bases.</div></div>
     <div class="gR"><div class="gK"><span class="gC" style="background:#e8b830;color:#1a0e00">HR</span></div><div class="gV">Home run. Everybody scores. With the bases loaded it's a GRAND SLAM.</div></div>
