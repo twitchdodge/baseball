@@ -490,7 +490,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v367';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v368';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -622,13 +622,14 @@ const GB_T={
   // Same outs per grounder as MLB-ish 40% DP / 60% one out; the old plain groundout became the FC.
   '1--':[[.4,'DP',[[0,2,1],['B',1,1]]],[.6,'FC',[[0,2,1],['B',1,0]]]],
   '-2-':[[.5,'GO',[[1,3,0],['B',1,1]]],[.5,'GO',[['B',1,1]]]],
-  '--3':[[.5,'GO',[[2,4,0],['B',1,1]]],[.5,'GO',[['B',1,1]]]],
+  // runner on 3rd: scores 50%, holds 42%, thrown out at home 8% (the batter reaches on the fielder's choice)
+  '--3':[[.5,'GO',[[2,4,0],['B',1,1]]],[.42,'GO',[['B',1,1]]],[.08,'FC',[[2,4,1],['B',1,0]]]],
   // 1st & 2nd: the force is taken at 2nd 70% / at 3rd 30%, the SAME split for DP and FC, so where the
   // first out happens never gives away the batter's fate
   '12-':[[.28,'DP',[[1,3,0],[0,2,1],['B',1,1]]],[.12,'DP',[[1,3,1],[0,2,0],['B',1,1]]],
          [.42,'FC',[[1,3,0],[0,2,1],['B',1,0]]],[.18,'FC',[[1,3,1],[0,2,0],['B',1,0]]]],
   '1-3':[[.4,'DP',[[2,4,0],[0,2,1],['B',1,1]]],[.6,'FC',[[2,4,0],[0,2,1],['B',1,0]]]],
-  '-23':[[.5,'GO',[[2,4,0],[1,3,0],['B',1,1]]],[.3,'GO',[['B',1,1]]],[.2,'FC',[[2,4,1],[1,3,0],['B',1,0]]]],
+  '-23':[[.5,'GO',[[2,4,0],[1,3,0],['B',1,1]]],[.42,'GO',[['B',1,1]]],[.08,'FC',[[2,4,1],[1,3,0],['B',1,0]]]],
   // bases loaded: force at home 45% / at 2nd 40% (the run crosses) / at 3rd 15% (the run crosses), the
   // same split for DP and FC. Runs wait for the reveal; a DP for the 3rd out wipes them.
   '123':[[.18,'DP',[[2,4,1],[1,3,0],[0,2,0],['B',1,1]]],[.27,'FC',[[2,4,1],[1,3,0],[0,2,0],['B',1,0]]],
