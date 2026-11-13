@@ -284,6 +284,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="sX g" id="goN" style="margin-top:4px"></div>
   <div class="sX g blink" id="goHi" style="margin-top:4px;display:none"></div>
   <div class="sS blink" style="margin-top:8px" id="goPlay">TAP TO PLAY AGAIN</div>
+  <div class="tBtns" style="position:absolute;bottom:9%"><div id="goMenu" class="tBtn">BACK TO MAIN MENU</div></div>
 </div>
 </div></div>
 
@@ -1289,7 +1290,9 @@ function basePitch(){
   }else if(rule==='allFrom1'){idx=[0,1,2,3,4];
   }else{idx=PITCHES.map((_,i)=>i).filter(i=>PITCHES[i].inn<=inning)}
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
-function startGame(){musicStop();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+// drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
+function cancelPlay(){steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
+function startGame(){musicStop();cancelPlay();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1874,9 +1877,10 @@ document.getElementById('pauseBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();
   if(state==='title'||state==='gameover')return;
   paused=!paused;if(paused){show('pauseScr');sfx.pause()}else{hide('pauseScr');sfx.unpause()}});
-document.getElementById('resetBtn').addEventListener('pointerdown',e=>{
-  e.stopPropagation();e.preventDefault();aud();musicStop();hide('goScr');hide('exhScr');
-  document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;chalJustUnlocked=false;paused=false;hide('pauseScr');state='title';paintChal();show('titleScr')});
+function toMenu(){aud();musicStop();cancelPlay();hide('goScr');hide('exhScr');
+  document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;chalJustUnlocked=false;paused=false;hide('pauseScr');state='title';paintChal();show('titleScr')}
+tap('resetBtn',toMenu);
+tap('goMenu',toMenu);   // game over: back to the title menu instead of straight into the next game
 document.getElementById('skipBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();
   if(state!=='title'&&state!=='gameover'){
