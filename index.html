@@ -392,6 +392,23 @@ const ROARS={
   pr:{v:.21,a:390,L:1.15,f:550,hz:600,sh:'steady'}};   // ...and the cheer when he's called safe
 // crowd roar (the ooh): plays at the plate, homers, multi-run plays and the play that reaches the target.
 // One at a time: a roar that would start while another is still sounding is skipped.
+// crowd "awww" (Sound Board's Crowd Aww Lab): noise through two vowel-ish band filters sliding down in pitch,
+// with a little flutter. Plays on a reveal that goes the wrong way and on a game-ending out with the winning run
+// at the plate or on base. One at a time.
+const AWW={v:.26,a:90,L:1.3,hz0:520,hz1:90,vow:1,flut:2};
+let awwEnd=-1e9;
+function crowdAww(p=AWW){const now=performance.now();if(now<awwEnd)return;awwEnd=now+p.L*1000;
+  try{aud();const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+  for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
+  const a=Math.min(p.a/1000,L*.5),g=ac.createGain();g.gain.setValueAtTime(.0001,t);
+  [[a,p.v],[a+(L-a)*.35,p.v*.75],[L,.0001]].forEach(([s2,v])=>g.gain.linearRampToValueAtTime(v,t+s2));
+  const band=(f0,f1,q,gain)=>{const bp=ac.createBiquadFilter();bp.type='bandpass';bp.Q.value=q;bp.frequency.setValueAtTime(f0,t);
+    bp.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+L);const k=ac.createGain();k.gain.value=gain;src.connect(bp).connect(k).connect(g)};
+  band(p.hz0,p.hz1,p.vow?2.2:.8,p.vow?1.4:1);if(p.vow)band(p.hz0*1.55,p.hz1*1.55,2.6,.8);
+  if(p.flut>0){const lfo=ac.createOscillator(),d=ac.createGain(),m=ac.createGain();lfo.frequency.value=p.flut;d.gain.value=.25;m.gain.value=1;
+    lfo.connect(d).connect(m.gain);g.connect(m).connect(out);lfo.start(t);lfo.stop(t+L+.05)}else g.connect(out);
+  src.start(t);src.stop(t+L+.05)}catch(e){}}
+let awwSnap=null;   // runs in + runners on base when the pitch was thrown, for the game-ending-out check
 let roarEnd=-1e9;
 // one size up (reaching the target): 1 → 2 → 3 runs → 3-run homer → grand slam
 const ROAR_UP={r1:'r2',r2:'r3',r3:'h3',pr:'r3',h1:'h2',h2:'h3',h3:'h4',h4:'h4'};
@@ -532,7 +549,7 @@ function stealReveal(){const st=steal;steal=null;
     spawnP(st.wx,st.wy+6,5,['#7ff0e0','#bffff5'],1.2);resultT=30;return}
   // caught: the lead runner is out at the bag he was going for; a trailing runner still makes it
   st.lead.out=true;bases[st.lead.dest]=false;basePending[st.lead.dest]=false;innOuts++;hrOK=false;
-  sfx.wallOut();showLbl('resLbl','CAUGHT STEALING!','#ff6b5e',1000);
+  sfx.wallOut();crowdAww();showLbl('resLbl','CAUGHT STEALING!','#ff6b5e',1000);
   spawnP(st.wx,st.wy+6,4,['#aa4444','#882222'],1.5);checkInning()}
 let streakT=0; // pending STREAK OVER! (a third out shows it at once instead — see checkInning)
 function endStreak(){
@@ -665,7 +682,7 @@ function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;in
 function throwStep(){for(const P of throws.slice()){P.f++;if(!P.quiet&&P.f===(P.stepsAt??Math.max(1,P.T-30)))(P.stepsFn||sfx.steps)();
     for(const [fr,fn] of P.at||[])if(P.f===fr)fn();
     if(P.f<P.T)continue;throws.splice(throws.indexOf(P),1);P.anim.hold=false;
-    if(P.out){P.anim.out=true;innOuts++;hrOK=false;sfx.wallOut();P.onOut()}else{if(!P.quiet)sfx.fcSafe();P.onSafe()}
+    if(P.out){P.anim.out=true;innOuts++;hrOK=false;sfx.wallOut();crowdAww();P.onOut()}else{if(!P.quiet)sfx.fcSafe();P.onSafe()}
     if(P.post)setTimeout(()=>runCall(P.post),250);checkInning()}}
 // baserunning callouts: one after another on the inning row, down by the base paths (wall → result → runners)
 function runCall(msgs){msgs.forEach((m,i)=>setTimeout(()=>showLbl('innLbl',m,m.startsWith('RUNNER HOLDS')?'#c9cfdc':/\bOUT\b/.test(m)?'#ff4444':'#e8f6ff',800),450+i*850))}
@@ -679,7 +696,7 @@ function fcStep(){const P=fcPlay;P.f++;
   if(P.f<FC_RUN_FR)return;
   fcPlay=null;P.ba.hold=false;basePending[0]=false;
   if(P.dp){P.ba.out=true;innOuts++;
-    sfx.wallOut();sfx.strike();showLbl('resLbl',OUT_LBL.DP[0],OUT_LBL.DP[1],1100);
+    sfx.wallOut();sfx.strike();crowdAww();showLbl('resLbl',OUT_LBL.DP[0],OUT_LBL.DP[1],1100);
     spawnP(P.wx,P.wy+6,8,['#aa2222','#661111','#ff6666'],2)}
   else{bases[0]=batterSk;sfx.fcSafe();showLbl('resLbl',OUT_LBL.FC[0],OUT_LBL.FC[1],1100);
     spawnP(P.wx,P.wy+6,5,['#ffaa44','#ffd8a0'],1.5)}
@@ -767,7 +784,7 @@ function resolveOutPlay(type,wx,wy){
   bases=nb;innOuts=Math.min(3,o0+outs);hitStreak=0;endStreak();
   if(staged)return;   // sounds, label and runs come from fcStep()
   const [txt,col]=OUT_LBL[plateTag?'FO':res];   // a sac fly waits for the play at the plate
-  if(res==='DP'){sfx.wallOut();sfx.strike()}else if(res==='SF'&&!plateTag)sfx.crack();else if(res==='K')sfx.strike();else sfx.wallOut();
+  if(res==='DP'){sfx.wallOut();sfx.strike();crowdAww()}else if(res==='SF'&&!plateTag)sfx.crack();else if(res==='K')sfx.strike();else sfx.wallOut();
   showLbl('resLbl',txt,col,res==='DP'||res==='FC'?1100:900);
   spawnP(wx,wy+6,res==='DP'?8:6,res==='DP'?['#aa2222','#661111','#ff6666']:['#aa4444','#882222','#ffaaaa'],res==='DP'?2:1.8);
   if(sc>0)runLbl(sc,sc===1?'RUN SCORED!':sc+' RUNS!')}
@@ -1338,7 +1355,7 @@ function nextPitch(){
   readyT=Math.round(delayMs/16.67);
   state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}
 function beginWindup(){state='windup';windupT=14;pFr=1;sfx.pitch();radar=0}
-function launchBall(){state='pitch';pFr=2;ballT=0;pitchCt++;setTimeout(()=>pFr=0,180);
+function launchBall(){state='pitch';awwSnap={r:runs+pendingRuns,on:bases.filter(Boolean).length};pFr=2;ballT=0;pitchCt++;setTimeout(()=>pFr=0,180);
   {const m=MPH[pitch.n]||[90,94];radar=m[0]+Math.floor(Math.random()*(m[1]-m[0]+1))}
   if(pitch.n!=='FASTBALL')showLbl('resLbl',pitch.n,pitch.color,450)}
 
@@ -1473,7 +1490,7 @@ function resolveHit(){
       if(bases[2]){runnerAnims.push({sx:B3.x,sy:B3.y,ex:HOME.x,ey:HOME.y,t:0,dur:20,sk:bases[2]});bases[2]=false;pendingRuns++}
       if(bases[1]){runnerAnims.push({sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:20,sk:bases[1]});bases[2]=bases[1];bases[1]=false;basePending[2]=true}
     }
-    sfx.wallOut();sfx.strike();showLbl('resLbl','DOUBLE PLAY!','#ff2222',1100);
+    sfx.wallOut();sfx.strike();crowdAww();showLbl('resLbl','DOUBLE PLAY!','#ff2222',1100);
     if(sc)runLbl(1,'RUN SCORED!');
     spawnP(wx,wy+6,8,['#aa2222','#661111','#ff6666'],2);
   }else if(hitRes==='E'){
@@ -1552,6 +1569,8 @@ function resolveHit(){
 
 function checkInning(){
   if(innOuts>=3){
+    // the game's last out with the winning run at the plate or on base
+    if(inning>=MAX_INN&&runs<target&&awwSnap&&awwSnap.r+awwSnap.on+1>=target){crowdAww();awwSnap=null}
     if(streakT){clearTimeout(streakT);streakT=0;showLbl('streakLbl','STREAK OVER!','#ff4444',INN_NEXT_AT)}
     if(inning<MAX_INN)hideLblAfter('resLbl',INN_RESULT_MS);
     state='innbreak';innBreakT=inning>=MAX_INN?42:msF(INN_NEXT_AT)}
