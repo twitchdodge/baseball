@@ -366,11 +366,38 @@ function noiseHit(at,d,v,type,freq){try{aud();const t=ac.currentTime+at/1000,len
   const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=ac.createGain();
   g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);src.connect(f).connect(g).connect(out);src.start(t);src.stop(t+d)}catch(e){}}
 // crowd "ooh": band-passed noise that swells and fades (runner sent home)
-function crowdOoh(){try{aud();const t=ac.currentTime,d=.95,len=Math.ceil(ac.sampleRate*d),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+// crowd roar: band-passed noise with a volume envelope (same maths as the Sound Board's Crowd Roar Lab).
+// v peak volume, a ms to peak, L length (s), f fade (ms), hz band centre, sh steady | burst | double
+function roarPts(p){const L=p.L,a=Math.min(p.a/1000,L*.6),f=Math.min(p.f/1000,L-a),v=p.v,hold=Math.max(a,L-f);
+  if(p.sh==='burst'){const s2=Math.min(a+.18,hold);return [[0,0],[a,v],[s2,v*.62],[hold,v*.58],[L,0]]}
+  if(p.sh==='double'){const d1=Math.min(a+.3,hold),d2=Math.min(a+.65,hold);return [[0,0],[a,v*.85],[d1,v*.6],[d2,v],[hold,v*.85],[L,0]]}
+  return [[0,0],[a,v],[hold,v*.8],[L,0]]}
+function crowdOoh(p=ROARS.pp){try{aud();const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
-  const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=700;bp.Q.value=.6;const g=ac.createGain();
-  g.gain.setValueAtTime(.0001,t);[[.25,.2],[.7,.14],[.9,.0001]].forEach(([s2,v])=>g.gain.linearRampToValueAtTime(v,t+s2));
-  src.connect(bp).connect(g).connect(out);src.start(t);src.stop(t+d)}catch(e){}}
+  const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=p.hz;bp.Q.value=.6;const g=ac.createGain();
+  g.gain.setValueAtTime(.0001,t);roarPts(p).slice(1).forEach(([s2,v])=>g.gain.linearRampToValueAtTime(Math.max(v,.0001),t+s2));
+  src.connect(bp).connect(g).connect(out);src.start(t);src.stop(t+L+.05)}catch(e){}}
+// David's roars from the lab (2026-11-12)
+const ROARS={
+  r1:{v:.19,a:270,L:1.35,f:1300,hz:525,sh:'steady'},     // a play that scores 1 run
+  r2:{v:.22,a:260,L:1.35,f:800,hz:500,sh:'steady'},     // 2 runs
+  r3:{v:.2,a:250,L:1.7,f:550,hz:525,sh:'double'},     // 3 runs
+  h1:{v:.14,a:200,L:2.1,f:1600,hz:500,sh:'steady'},    // solo homer
+  h2:{v:.17,a:250,L:2.1,f:800,hz:500,sh:'double'},     // 2-run homer
+  h3:{v:.2,a:550,L:2.25,f:700,hz:475,sh:'double'},    // 3-run homer
+  h4:{v:.32,a:300,L:2.45,f:1050,hz:475,sh:'double'},   // grand slam
+  pp:{v:.21,a:140,L:.8,f:600,hz:450,sh:'steady'},     // play at the plate: the "ooh" while he's going
+  pr:{v:.21,a:390,L:1.15,f:550,hz:600,sh:'steady'}};   // ...and the cheer when he's called safe
+// crowd roar (the ooh): plays at the plate, homers, multi-run plays and the play that reaches the target.
+// One at a time: a roar that would start while another is still sounding is skipped.
+let roarEnd=-1e9;
+// one size up (reaching the target): 1 → 2 → 3 runs → 3-run homer → grand slam
+const ROAR_UP={r1:'r2',r2:'r3',r3:'h3',pr:'r3',h1:'h2',h2:'h3',h3:'h4',h4:'h4'};
+// ms until the first runner on this play touches home (runners sent home on a throw don't count: theirs is a reveal)
+function homeArrivalMs(){let m=Infinity;for(const a of runnerAnims){if(a.hold||a.noRun||a.hrBat)continue;
+  const e=a.path?a.path[a.path.length-1]:{x:a.ex,y:a.ey};if(Math.abs(e.x-HOME.x)>3||Math.abs(e.y-HOME.y)>3)continue;
+  m=Math.min(m,((a.delay||0)+(1-a.t)*a.dur)*1000/60)}return m}
+function roar(at=0,p=ROARS.pp,force){const t=performance.now()+at;if(t<roarEnd&&!force)return;roarEnd=t+p.L*1000;setTimeout(()=>sfx.ooh(p),at)}
 let OOH_SF=0,OOH_SEND=200;   // crowd ooh: on a sac fly it starts as the ball hits the wall; on a runner sent home, 200 ms in
 const sfx={
   ooh:crowdOoh,
@@ -499,7 +526,7 @@ const STEAL_OK=.7,STEAL_FR=30;let steal=null;   // 0.5s run to the bag
 function stealReveal(){const st=steal;steal=null;
   if(!st.ok)st.lead.out=true;
   for(const a of runnerAnims)if(a.hold){a.hold=false;if(!a.out)basePending[a.dest]=false}
-  if(st.ok){sfx.tada();showLbl('resLbl',st.dbl?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
+  if(st.ok){sfx.tada();roar(0,ROARS.r1,true);showLbl('resLbl',st.dbl?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
     spawnP(st.wx,st.wy+6,5,['#7ff0e0','#bffff5'],1.2);resultT=30;return}
   // caught: the lead runner is out at the bag he was going for; a trailing runner still makes it
   st.lead.out=true;bases[st.lead.dest]=false;basePending[st.lead.dest]=false;innOuts++;hrOK=false;
@@ -632,7 +659,7 @@ function updExits(){for(const e of exits){e.f++;
 // runs with footsteps for his last 0.5 s and the answer comes when he gets there: safe (chime) or out.
 let throws=[];
 function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();
-  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!')}
+  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!',true)}
 function throwStep(){for(const P of throws.slice()){P.f++;if(!P.quiet&&P.f===(P.stepsAt??Math.max(1,P.T-30)))(P.stepsFn||sfx.steps)();
     for(const [fr,fn] of P.at||[])if(P.f===fr)fn();
     if(P.f<P.T)continue;throws.splice(throws.indexOf(P),1);P.anim.hold=false;
@@ -708,7 +735,7 @@ function resolveOutPlay(type,wx,wy){
         throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG2_OUT,
           onSafe:()=>{basePending[1]=false;showLbl('innLbl','SAFE AT 2ND!','#e8f6ff',900)},
           onOut:()=>{bases[1]=false;basePending[1]=false;showLbl('innLbl','OUT AT 2ND!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}});continue}
-      if(t===4){plateTag=true;setTimeout(sfx.ooh,OOH_SF);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT[o0],
+      if(t===4){plateTag=true;roar(OOH_SF);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT[o0],
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       else{nb[2]=sk;basePending[2]=true;
@@ -1158,7 +1185,7 @@ function drawOnDeck(){   // the kneeling next batter (both circles are drawn wit
   cx.restore();
 }
 // (x,y) is where his feet are: standing on a bag they're on its middle, running they're on the path
-// left=true: runner facing left (out of the box, on 1st, on 2nd, on the way to 3rd), ear flap shows on our right
+// left=true: runner facing left (on 1st, on 2nd, on the way to 3rd), ear flap shows on our right
 function drawBaseRunner(x,y,sk,left){y-=3;
   cx.fillStyle='#f0f0f0';cx.fillRect(x-2,y-5,5,5);
   cx.fillStyle='#d8d8d8';cx.fillRect(x-2,y-5,5,1);
@@ -1467,7 +1494,8 @@ function resolveHit(){
     if(scored>0)runLbl(scored,'RUN SCORED!');
   }else{
     totalHits++;hitStreak++;innHits[Math.min(inning,MAX_INN)-1]++;
-    const isGrand=hitRes==='HR'&&bases[0]&&bases[1]&&bases[2];
+    const isGrand=hitRes==='HR'&&bases[0]&&bases[1]&&bases[2],hrRuns=bases.filter(Boolean).length+1,
+      hrTgt=runs+pendingRuns<target&&runs+pendingRuns+hrRuns>=target;
     planExtra(hitRes);
     // FULL mode baserunning callouts: the runner from 2nd on a single / from 1st on a double either goes
     // home or holds at 3rd; a runner from 1st can also go first-to-third on a single
@@ -1492,7 +1520,7 @@ function resolveHit(){
           throws.push({f:0,T:30,anim:ba,stepsAt:15,stepsFn:()=>sfx.steps2(),out:Math.random()<BAT_THROW_OUT[oo],
             onSafe:()=>{basePending[1]=false},   // no call: you can see him make it
             onOut:()=>{bases[1]=false;basePending[1]=false;runCall(['THROWN OUT AT 2ND!'])}})}}])}
-      setTimeout(sfx.ooh,OOH_SEND);
+      if(scored<=0)roar(OOH_SEND);   // if runs are already coming in on the play, their cheer covers it
       throws.push({f:0,T,anim:sendAnim,out:plateOut,at,post,
         onSafe:()=>{showLbl('innLbl',fromTxt,'#e8f6ff',900);addRunsNow(1)},
         onOut:()=>showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000)});sendIdx=-1}
@@ -1502,7 +1530,7 @@ function resolveHit(){
         onSafe:()=>{basePending[2]=false;showLbl('innLbl','1ST TO 3RD!','#e8f6ff',900)},
         onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
-      if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}
+      if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}{const k='h'+Math.min(4,Math.max(hrRuns,hrStreak));roar(0,ROARS[hrTgt?ROAR_UP[k]:k])}   // back-to-back homers: 2nd = 2-run roar, 3rd = 3-run, 4th+ = grand slam
       showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);
       if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
@@ -1589,7 +1617,11 @@ function showLbl(id,txt,col,dur,glow){const e=document.getElementById(id);e.text
   e.classList.add('show');clearTimeout(_t[id]);_t[id]=setTimeout(()=>e.classList.remove('show'),dur)}
 
 // run label for a play: TARGET!! for the whole play if this play's runs take the total to the target
-function runLbl(scored,txt){const before=runs+pendingRuns-scored,hit=before<target&&before+scored>=target;
+function runLbl(scored,txt,force){const before=runs+pendingRuns-scored,hit=before<target&&before+scored>=target;
+  // the cheer peaks as the first runner touches home (it starts while he's coming in); skipped while a homer's roar is going.
+  // force: a run revealed on a play at the plate gets its own, bigger cheer, right at the call
+  if(scored>0){const k=force?'pr':'r'+Math.min(3,scored),p=ROARS[hit?ROAR_UP[k]:k];
+    if(force)roar(0,p,true);else{const t=homeArrivalMs();roar(t<Infinity?Math.max(0,t-p.a):350,p)}}
   setTimeout(()=>hit?showLbl('scorLbl','TARGET!!',TGT_GRN,1100,'0 0 12px rgba(94,224,94,.5)'):showLbl('scorLbl',txt,'#ffd642',1100),350)}
 
 /* ===== update ===== */
@@ -1662,7 +1694,10 @@ function draw(){
   // runner animations
   // he faces left from the batter's box until just before 3rd; from 3rd on he faces right (toward home)
   const near=(q,b,d=6)=>Math.abs(q.x-b.x)<d&&Math.abs(q.y-b.y)<d;
-  const facesL=(a,b,x,y)=>!(near(b,HOME)||near(a,B3)||near(b,B3)&&near({x,y},B3,4));
+  // out of the box he faces 1st (flap on our left); from the moment he reaches 1st he faces left (flap on our right)
+  // until just before 3rd; from 3rd on he faces home again
+  const inBox=q=>Math.abs(q.y-(HOME.y+10))<5&&Math.abs(q.x-HOME.x)<16;
+  const facesL=(a,b,x,y)=>near(b,B1)?near({x,y},B1,4):!(inBox(a)||near(b,HOME)||near(a,B3)||near(b,B3)&&near({x,y},B3,4));
   runnerAnims.forEach(r=>{if(r.t<0)return;if(r.out&&r.t>1&&Math.floor((r.t-1)*r.dur/3)%2)return;const t=Math.min(r.t,1);let rx,ry,lf;
     if(r.wt){const L=r.wt,d=t*L[L.length-1];let sg=0;while(sg<L.length-2&&d>L[sg+1])sg++;
       const st=(d-L[sg])/(L[sg+1]-L[sg]),hop=Math.min(1,(L[sg+1]-L[sg])/40);
