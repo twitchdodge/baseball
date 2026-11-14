@@ -203,9 +203,9 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div id="musicSpacer"></div>
   <div class="sT" id="tTitle">BASEBALL</div>
   <div class="sS" id="tSub" style="color:var(--gold)">Score 5+ runs in 3 innings</div>
-  <div class="sS blink">TAP TO PLAY</div>
-  <!-- menu sits low so the middle of the screen is free to tap and play -->
-  <div class="tBtns" style="position:absolute;bottom:11%">
+  <div class="sS blink">TAP ANYWHERE TO PLAY</div>
+  <!-- menu sits low so the middle of the screen is free to tap and play; hidden until the first game (hasPlayed) -->
+  <div class="tBtns" id="tMenu" style="position:absolute;bottom:11%">
     <div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
@@ -490,7 +490,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v368';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v370';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1311,7 +1311,7 @@ function basePitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 // drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
 function cancelPlay(){steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
-function startGame(){musicStop();cancelPlay();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+function startGame(){musicStop();cancelPlay();markPlayed();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1812,7 +1812,13 @@ document.getElementById('modeRow').addEventListener('pointerdown',e=>{e.stopProp
   loadModeScores();paintMode()});
 paintMode();
 // CHALLENGE MODE toggle (only once unlocked). The title's subtitle and scoreboard follow it.
-function paintChal(){setTimeout(()=>fitLine(document.getElementById('tSub')));const b=document.getElementById('chalBtn');b.style.display=chalUnlocked?'':'none';b.classList.toggle('on',challenge);
+// first-timers see only the title and TAP ANYWHERE TO PLAY; the menu shows up once they've started a game.
+// Anyone with saved scores, unlocks or Challenge counts as having played.
+let hasPlayed=false;
+try{hasPlayed=localStorage.getItem('bbPlayed')==='1'||localStorage.getItem('bbChalUnlk')==='1'||
+  Object.keys(localStorage).some(k=>/^ds(Hi2|Unlk)/.test(k))}catch(e){}
+function markPlayed(){if(hasPlayed)return;hasPlayed=true;try{localStorage.setItem('bbPlayed','1')}catch(e){}}
+function paintChal(){document.getElementById('tMenu').style.display=hasPlayed?'':'none';setTimeout(()=>fitLine(document.getElementById('tSub')));const b=document.getElementById('chalBtn');b.style.display=chalUnlocked?'':'none';b.classList.toggle('on',challenge);
   if(state==='title'){round=0;nextRound=0;target=RD(0).target}
   document.getElementById('tSub').textContent='Score '+RD(0).target+'+ runs in 3 innings'}
 function setChallenge(on){challenge=on&&chalUnlocked;try{localStorage.setItem('bbChal',challenge?'1':'0')}catch(e){}loadModeScores();paintChal()}
