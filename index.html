@@ -91,20 +91,20 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 #scorLbl{top:58.37%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(9px,3.4cqw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
 #streakLbl{top:25%;font-size:clamp(12px,5cqw,27px)}
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;background:rgba(10,10,30,.82);gap:clamp(8px,2.5vw,16px);
+  justify-content:center;background:rgba(10,10,30,.82);gap:clamp(8px,2.73cqw,16px);
   pointer-events:none;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;z-index:6}
 .scr.show{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .25s}
-.sT{font-size:clamp(17px,5.5vw,34px);color:var(--gold);
+.sT{font-size:clamp(17px,6cqw,34px);color:var(--gold);
   text-shadow:2px 2px 0 #7a4e00,0 0 20px rgba(255,214,66,.3);line-height:1.4}
 /* title wordmark: same as the link-preview art — gold with a brick-red then black block shadow */
-#tTitle{font-size:clamp(21px,6.9vw,42px);line-height:1.25;margin-bottom:.15em;text-shadow:.055em .055em 0 #b8322a,.11em .11em 0 #000}
-.sS{font-size:clamp(11px,3vw,18px);color:var(--fg);opacity:.8}
-.sG{font-size:clamp(20px,6vw,40px);text-shadow:2px 2px 0 rgba(0,0,0,.5)}
-.sX{font-size:clamp(14px,3.5vw,22px)}.sX.g{color:var(--gold)}
+#tTitle{font-size:clamp(21px,7.52cqw,42px);line-height:1.25;margin-bottom:.15em;text-shadow:.055em .055em 0 #b8322a,.11em .11em 0 #000}
+.sS{font-size:clamp(11px,3.27cqw,18px);color:var(--fg);opacity:.8}
+.sG{font-size:clamp(20px,6.54cqw,40px);text-shadow:2px 2px 0 rgba(0,0,0,.5)}
+.sX{font-size:clamp(14px,3.82cqw,22px)}.sX.g{color:var(--gold)}
 .blink{animation:bl 1s step-end infinite}@keyframes bl{50%{opacity:0}}
 /* menu buttons on the title and pause screens: big, boxed tap targets (the rest of the screen means "play") */
 .tBtns{display:flex;flex-direction:column;align-items:stretch;gap:8px;pointer-events:auto;min-width:50%}
-.tBtn{font-size:clamp(10px,2.65vw,15px);padding:10px 13px;border:2px solid #556;border-radius:4px;color:#c6c9d6;
+.tBtn{font-size:clamp(10px,2.89cqw,15px);padding:10px 13px;border:2px solid #556;border-radius:4px;color:#c6c9d6;
   background:rgba(10,12,26,.6);cursor:pointer;text-align:center;pointer-events:auto}
 .tBtn.seg{flex:1;color:#7c8094}.tBtn.seg+.tBtn.seg{margin-left:-2px}
 .tBtn.on{border-color:#8a8fa6;color:#e4e6ee;background:rgba(255,255,255,.08);position:relative}   /* quiet selection, not a call to action */
@@ -115,24 +115,24 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 #goScr .chalTxt,#wipeScr .chalTxt{text-align:center;color:#5aa2ff;text-shadow:0 0 12px rgba(61,139,255,.55);line-height:1.5}
 /* dev panel (test builds only) */
 .devP{position:absolute;top:1%;left:2%;right:2%;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;justify-content:center;
-  font-size:clamp(6px,1.7vw,9px);color:#9fe;background:rgba(0,40,30,.85);border:1px dashed #3a8;border-radius:3px;padding:5px;pointer-events:auto;z-index:9}
+  font-size:clamp(6px,1.85cqw,9px);color:#9fe;background:rgba(0,40,30,.85);border:1px dashed #3a8;border-radius:3px;padding:5px;pointer-events:auto;z-index:9}
 .devP b{color:#6c9;font-weight:normal}
 .devP span{border:1px solid #3a8;border-radius:2px;padding:3px 5px;cursor:pointer;color:#8ba}
 .devP span.on{background:#3a8;color:#021}
 /* high scores */
 #hiList{pointer-events:auto;width:86%;display:flex;flex-direction:column;gap:6px;margin:4px 0}
-.hiRow{display:flex;align-items:center;gap:8px;font-size:clamp(9px,2.5vw,14px);padding:7px 10px;border-radius:4px;background:rgba(255,255,255,.07);color:#fff}
+.hiRow{display:flex;align-items:center;gap:8px;font-size:clamp(9px,2.73cqw,14px);padding:7px 10px;border-radius:4px;background:rgba(255,255,255,.07);color:#fff}
 .hiRow.lock{background:rgba(255,255,255,.03);color:#555}
 .hiRow .hN{flex:1;white-space:nowrap}.hiRow .hS{min-width:3.2em;text-align:right;color:var(--gold)}.hiRow.lock .hS{color:#555}
 .hiR{font-size:.75em;padding:5px 6px;border:1px solid #556;border-radius:3px;color:#8a8fa6;cursor:pointer;min-width:5.2em;text-align:center}
 .hiR.off{visibility:hidden}.hiR.sure{border-color:#b33;color:#ff6b5e;background:rgba(187,51,51,.15)}
 .tBtn.danger{border-color:#7a2a2a;color:#ff6b5e}
 #wipeScr{background:rgba(6,8,18,.95)}
-.wipeTxt{width:82%;text-align:center;font-size:clamp(8px,2.3vw,13px);line-height:1.7;color:#d8dbe6}
+.wipeTxt{width:82%;text-align:center;font-size:clamp(8px,2.51cqw,13px);line-height:1.7;color:#d8dbe6}
 /* glossary */
 #glossScr{justify-content:flex-start;padding:5% 0 0;background:rgba(6,8,18,.94)}
 #glossBox{pointer-events:auto;width:90%;max-height:72%;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  text-align:left;font-size:clamp(7px,2.1vw,11px);line-height:1.7;color:#d8dbe6;padding-bottom:8px;touch-action:pan-y}
+  text-align:left;font-size:clamp(7px,2.29cqw,11px);line-height:1.7;color:#d8dbe6;padding-bottom:8px;touch-action:pan-y}
 #glossBox .gT{text-align:center;color:var(--gold);font-size:1.5em;margin:4px 0 10px}
 #glossBox .gL div{position:relative;padding-left:1.3em;margin:6px 0}
 #glossBox .gL div::before{content:'';position:absolute;left:.15em;top:.5em;width:.45em;height:.45em;background:var(--gold)}
@@ -145,9 +145,9 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 #glossBox .gA{height:1.3em;fill:currentColor}
 #glossBox .gB{text-align:center;color:#888;text-decoration:underline;margin:16px 0 4px;cursor:pointer}
 /* title-screen music toggle */
-#musicBtn{position:absolute;left:50%;top:29.6%;width:clamp(38px,11.2vw,62px);height:clamp(35px,10.15vw,56px);
-  margin:calc(clamp(35px,10.15vw,56px)/-2) 0 0 calc(clamp(38px,11.2vw,62px)/-2);cursor:pointer;pointer-events:auto}
-#musicSpacer{width:clamp(54px,16vw,88px);height:clamp(50px,14.5vw,80px);margin-bottom:3%}
+#musicBtn{position:absolute;left:50%;top:29.6%;width:clamp(38px,12.21cqw,62px);height:clamp(35px,11.06cqw,56px);
+  margin:calc(clamp(35px,11.06cqw,56px)/-2) 0 0 calc(clamp(38px,12.21cqw,62px)/-2);cursor:pointer;pointer-events:auto}
+#musicSpacer{width:clamp(54px,17.44cqw,88px);height:clamp(50px,15.81cqw,80px);margin-bottom:3%}
 #musicBtn svg{width:100%;height:100%;display:block;fill:#6a6a80;transition:fill .15s}
 #musicBtn.on svg{fill:var(--gold);filter:drop-shadow(0 0 10px rgba(255,214,66,.45));animation:bob .5s steps(2) infinite}
 @keyframes bob{50%{transform:translateY(-1px)}}
@@ -159,24 +159,24 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <defs><pattern id="zStripeBR" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#bb3333"/><rect width="2.5" height="5" fill="#4477cc"/></pattern><pattern id="zStripeDP" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#bb3333"/><rect width="2" height="4" fill="#7a1818"/></pattern><pattern id="zStripe" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#d9655b"/><rect width="2" height="4" fill="#7a1818"/></pattern><clipPath id="zclip"><rect id="zclipR" x="0" y="0" width="180" height="360"/></clipPath></defs>
   <g id="zg" clip-path="url(#zclip)"></g><g id="poles"></g></svg>
 <!-- guide commented out
-<div id="guideBtn" style="position:absolute;bottom:2%;left:2%;font-size:clamp(7px,1.8vw,11px);
+<div id="guideBtn" style="position:absolute;bottom:2%;left:2%;font-size:clamp(7px,1.96cqw,11px);
   padding:3px 8px;border:1px solid #444;border-radius:3px;cursor:pointer;z-index:4;
   color:#555;background:rgba(255,255,255,.05);pointer-events:auto">GUIDE</div> -->
 <div id="guideBtn" style="display:none"></div>
 <!-- bottom-left controls share one row so they're all the same height -->
-<div id="ctlRow" style="position:absolute;bottom:2%;left:2%;display:flex;align-items:stretch;gap:clamp(5px,1.8vw,8px);z-index:7"><!-- above the overlays, so sound can be toggled on the title screen too -->
-<div id="fsBtn" style="display:flex;align-items:center;font-size:clamp(7px,1.8vw,11px);
+<div id="ctlRow" style="position:absolute;bottom:2%;left:2%;display:flex;align-items:stretch;gap:clamp(5px,1.96cqw,8px);z-index:7"><!-- above the overlays, so sound can be toggled on the title screen too -->
+<div id="fsBtn" style="display:flex;align-items:center;font-size:clamp(7px,1.96cqw,11px);
   padding:0 8px;border:1px solid #444;border-radius:3px;cursor:pointer;
   color:#778;background:rgba(10,12,26,.55);pointer-events:auto">[ ]</div>
 <div id="sndBtn" title="Sound on/off" style="display:flex;align-items:center;padding:0 7px;border:1px solid #444;border-radius:3px;cursor:pointer;
   color:#778;background:rgba(10,12,26,.55);pointer-events:auto">
-  <svg viewBox="0 0 11 8" shape-rendering="crispEdges" style="height:clamp(8px,2.4vw,13px);display:block;fill:currentColor" aria-hidden="true">
+  <svg viewBox="0 0 11 8" shape-rendering="crispEdges" style="height:clamp(8px,2.62cqw,13px);display:block;fill:currentColor" aria-hidden="true">
     <rect x="0" y="2" width="2" height="4"/><rect x="2" y="1" width="1" height="6"/><rect x="3" y="0" width="1" height="8"/>
     <g class="sOn"><rect x="6" y="2" width="1" height="4"/><rect x="8" y="1" width="1" height="1"/><rect x="9" y="2" width="1" height="4"/><rect x="8" y="6" width="1" height="1"/></g>
     <g class="sOff" style="display:none"><rect x="6" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="9" y="3" width="1" height="1"/>
       <rect x="8" y="4" width="1" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="9" y="5" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/></g>
   </svg></div>
-<div id="pauseBtn" style="font-size:clamp(9px,2.4vw,14px);
+<div id="pauseBtn" style="font-size:clamp(9px,2.62cqw,14px);
   padding:8px 12px;border:1px solid #667;border-radius:3px;cursor:pointer;
   color:#aab;background:rgba(10,12,26,.55);pointer-events:auto">PAUSE</div>
 </div>
@@ -185,7 +185,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="tBtns" style="position:absolute;bottom:9%">
     <div id="glossBtnP" class="tBtn">HOW TO PLAY</div>
     <div id="resetBtn" class="tBtn" style="border-color:#955;color:#e99;background:rgba(255,80,80,.1)">RESET GAME</div></div></div>
-<div id="skipBtn" style="position:absolute;bottom:2%;right:2%;font-size:clamp(13px,3.6vw,22px);
+<div id="skipBtn" style="position:absolute;bottom:2%;right:2%;font-size:clamp(13px,3.92cqw,22px);
   padding:7px 16px;border:1px solid #888;border-radius:3px;cursor:pointer;z-index:4;
   color:#bbb;background:rgba(10,12,26,.55);pointer-events:auto;display:none">SKIP</div>
 <div class="ol" id="resLbl"></div>
@@ -193,7 +193,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 <div class="ol" id="scorLbl"></div>
 <div class="ol" id="streakLbl"></div>
 <div class="scr show" id="titleScr" style="justify-content:flex-start">
-  <div style="flex:none;height:calc(24.5% - clamp(8px,2.5vw,16px))"></div><!-- keeps the title block where it sat before the menu moved down -->
+  <div style="flex:none;height:calc(24.5% - clamp(8px,2.73cqw,16px))"></div><!-- keeps the title block where it sat before the menu moved down -->
   <div id="musicBtn" title="Play 'Take Me Out to the Ball Game'">
     <svg viewBox="0 0 11 10" shape-rendering="crispEdges" aria-hidden="true">
       <rect x="4" y="0" width="7" height="2"/><rect x="4" y="2" width="1" height="4"/><rect x="10" y="2" width="1" height="4"/>
@@ -490,7 +490,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v370';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v371';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1794,7 +1794,7 @@ function showExh(){
   const list=document.getElementById('exhList');list.innerHTML='';
   ROUNDS.forEach((_,i)=>{const d=document.createElement('div'),r=RD(i);
     const ok=i<=maxUnlocked;
-    d.style.cssText='font:clamp(10px,2.8vw,16px) "Press Start 2P",monospace;padding:8px 12px;border-radius:4px;cursor:'+(ok?'pointer':'default')+';text-align:center;'+
+    d.style.cssText='font:clamp(10px,3.05cqw,16px) "Press Start 2P",monospace;padding:8px 12px;border-radius:4px;cursor:'+(ok?'pointer':'default')+';text-align:center;'+
       (ok?'color:#fff;background:rgba(255,255,255,.1)':'color:#444;background:rgba(255,255,255,.03)');
     d.innerHTML=nmHTML(r.name)+' · '+r.target+' RUNS';
     if(ok)d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();aud();
