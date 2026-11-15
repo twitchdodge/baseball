@@ -490,7 +490,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v371';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v372';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1613,7 +1613,8 @@ function doInnBreak(){
         goN.innerHTML='NEXT: '+nmHTML(RD(nextRound).name)+' · '+RD(nextRound).target+' RUNS';
         gp.textContent='TAP TO CONTINUE';
       }else if(won){nextRound=round;goN.textContent=challenge?'YOU BEAT CHALLENGE MODE!':'YOU BEAT THE GAME!';gp.textContent='TAP TO PLAY AGAIN';
-      }else{nextRound=0;goN.innerHTML='BACK TO '+nmHTML(RD(0).name);gp.textContent='TAP TO CONTINUE'}}
+      }else{nextRound=Math.max(0,round-1);   // a loss drops you one level (Rookie stays Rookie)
+        goN.innerHTML=(round>0?'BACK TO ':'TRY AGAIN · ')+nmHTML(RD(nextRound).name);gp.textContent='TAP TO CONTINUE'}}
     document.getElementById('goHi').textContent=isHi?'HIGH SCORE!!':'';
     document.getElementById('goHi').style.display=isHi?'':'none';
     show('goScr');fitLine(goN);
