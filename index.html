@@ -184,7 +184,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="sS blink">TAP TO RESUME</div>
   <div class="tBtns" style="position:absolute;bottom:9%">
     <div id="glossBtnP" class="tBtn">HOW TO PLAY</div>
-    <div id="resetBtn" class="tBtn" style="border-color:#955;color:#e99;background:rgba(255,80,80,.1)">RESET GAME</div></div></div>
+    <div id="resetBtn" class="tBtn" style="border-color:#955;color:#e99;background:rgba(255,80,80,.1)">BACK TO MAIN MENU</div></div></div>
 <div id="skipBtn" style="position:absolute;bottom:2%;right:2%;font-size:clamp(13px,3.92cqw,22px);
   padding:7px 16px;border:1px solid #888;border-radius:3px;cursor:pointer;z-index:4;
   color:#bbb;background:rgba(10,12,26,.55);pointer-events:auto;display:none">SKIP</div>
@@ -490,7 +490,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v372';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v373';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
