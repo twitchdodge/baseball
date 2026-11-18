@@ -86,6 +86,37 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .ol{text-shadow:0 2px 8px rgba(0,0,0,.7)}
 #resLbl{top:30%;font-size:clamp(12px,5.1cqw,28px);white-space:pre-line;line-height:1.35}
 #resLbl.gsl{animation:gsl .3s steps(1) infinite}
+/* matchup at the start of a game: two same-width chips, the "at"/"vs" gap centred over 2nd base */
+#muLbl{top:34.2%;display:grid;grid-template-columns:1fr 8.4cqw 1fr;align-items:center;text-shadow:none}
+#muLbl .mc{width:17.3cqw;font-size:clamp(9px,3.07cqw,17px);color:#fff;padding:1.7cqw 0 1.4cqw;letter-spacing:.3cqw;text-shadow:1px 1px 0 rgba(0,0,0,.55);box-shadow:0 .6cqw 0 rgba(0,0,0,.45)}
+#muLbl .l{justify-self:end}#muLbl .r{justify-self:start}
+#muLbl .at{font-size:clamp(7px,2.2cqw,12px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+/* team picker */
+#teamScr{justify-content:flex-start;padding-top:2.2cqw;gap:0;background:#0a0c1a}
+#tmGrid{width:100%;display:flex;flex-direction:column;align-items:center}
+#teamScr .tt{font-size:clamp(9px,3.07cqw,17px);color:var(--gold)}
+#tmTog{display:flex;margin-top:1.7cqw}#tmTog span{font-size:clamp(8px,2.5cqw,14px);padding:1.9cqw 3.4cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
+#tmTog span.on{background:var(--gold);color:#0a0c1a;border-color:var(--gold)}
+#tmPv{display:flex;gap:5cqw;margin-top:1.7cqw}
+.tmP{display:flex;flex-direction:column;align-items:center;gap:1.4cqw;font-size:clamp(6px,1.95cqw,11px);color:#aab;cursor:pointer}
+.tmP .bx{width:36.9cqw;height:30cqw;border:1px solid #2a2f48;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.tmP.on .bx{border:2px solid var(--gold)}
+.tmP canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#tmCvB{width:25.3cqw;height:27cqw}#tmCvP{width:27.4cqw;height:27.4cqw;margin-bottom:.42cqw}   /* pitcher 25% bigger, feet level with the batter's */
+.tmP b{color:#fff;font-weight:normal;font-size:clamp(7px,2.23cqw,12px)}
+/* the two switches: OPPONENT and UNIFORMS, each NEW | SAME */
+.tmSw{display:flex;width:calc(100% - 5.6cqw);margin-top:1.4cqw;align-items:stretch}
+.tmSw span{flex:1;text-align:center;font-size:clamp(7px,2.23cqw,12px);padding:1.9cqw 0 1.6cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
+.tmSw span+span{margin-left:-1px}
+.tmSw span.k{flex:1.25;border-color:transparent;color:#aab;text-align:left;cursor:default;padding-left:.6cqw}
+.tmSw span.on{background:var(--gold);color:#0a0c1a;border-color:var(--gold)}
+.tmL{font-size:clamp(7px,2.8cqw,15px);color:var(--gold);align-self:flex-start;margin:1.4cqw 0 .5cqw 3.1cqw}
+.tmR{display:flex;gap:1.7cqw;width:calc(100% - 5.6cqw)}.tmC{flex:1;display:flex;flex-direction:column;gap:.9cqw;min-width:0}
+.tmD{font-size:clamp(6px,2.23cqw,12px);color:#0a0c1a;background:#c9cfe0;text-align:center;padding:1.1cqw 0 .8cqw;margin-bottom:.6cqw}
+.tmK{height:6.9cqw;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,2.8cqw,15px);letter-spacing:.3cqw;color:#fff;cursor:pointer;
+  text-shadow:1px 1px 0 rgba(0,0,0,.45)}
+.tmK.sel{outline:2px solid var(--gold);outline-offset:1px}.tmK.nx{outline:2px dashed var(--gold);outline-offset:1px}
+#tmDone{margin-top:auto;margin-bottom:14cqw;min-width:30%;text-align:center}
 @keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
 #innLbl{top:44%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
 #scorLbl{top:58.37%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(9px,3.4cqw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
@@ -189,6 +220,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   padding:7px 16px;border:1px solid #888;border-radius:3px;cursor:pointer;z-index:4;
   color:#bbb;background:rgba(10,12,26,.55);pointer-events:auto;display:none">SKIP</div>
 <div class="ol" id="resLbl"></div>
+<div class="ol" id="muLbl"></div>
 <div class="ol" id="innLbl"></div>
 <div class="ol" id="scorLbl"></div>
 <div class="ol" id="streakLbl"></div>
@@ -207,6 +239,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <!-- menu sits low so the middle of the screen is free to tap and play; hidden until the first game (hasPlayed) -->
   <div class="tBtns" id="tMenu" style="position:absolute;bottom:11%">
     <div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div>
+    <div id="teamBtn" class="tBtn">CHOOSE TEAMS</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
@@ -216,6 +249,16 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="sS" style="color:var(--gold);margin-bottom:12px">PRACTICE</div>
   <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
   <div class="tBtns" style="margin-top:18px"><div id="exhBack" class="tBtn">BACK</div></div>
+</div>
+<div class="scr" id="teamScr">
+  <div class="tt">CHOOSE TEAMS</div>
+  <div id="tmTog"><span data-w="bat" class="on">BATTER</span><span data-w="pit">PITCHER</span></div>
+  <div id="tmPv"><div class="tmP on" data-w="bat"><div class="bx"><canvas id="tmCvB" width="30" height="32"></canvas></div><b id="tmNmB"></b><span id="tmUB"></span></div>
+    <div class="tmP" data-w="pit"><div class="bx"><canvas id="tmCvP" width="26" height="26"></canvas></div><b id="tmNmP"></b><span id="tmUP"></span></div></div>
+  <div class="tmSw" data-k="opp"><span class="k">OPPONENT</span><span data-v="new">NEW</span><span data-v="same">SAME</span></div>
+  <div class="tmSw" data-k="uni"><span class="k">UNIFORMS</span><span data-v="new">NEW</span><span data-v="same">SAME</span></div>
+  <div id="tmGrid"></div>
+  <div id="tmDone" class="tBtn">DONE</div>
 </div>
 <div class="scr" id="hiScr">
   <div class="sS" style="color:var(--gold)">HIGH SCORES</div>
@@ -490,7 +533,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v373';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v376';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -872,6 +915,94 @@ const SKIN_W=[.50,.35,.15];
 function pickSkin(){let r=Math.random(),gi=0;for(;gi<SKIN_W.length-1&&r>=SKIN_W[gi];gi++)r-=SKIN_W[gi];
   const g=SKIN[gi];return g[Math.floor(Math.random()*g.length)]}
 let batterSk=SKIN[0][0],pitcherSk=SKIN[1][0];
+let SC=cx;   // the canvas the player sprites draw into (the team picker borrows them)
+/* ===== teams (city names + colours only, NES style; no names or logos) ===== */
+// uniform: [kind, side, cap/helmet, jersey, pants, letters]   kind H home · A road · alt · city   side H/A = when it's worn
+const W_='#f4f4f0',G_='#b9bcc0',CR='#efe6cf';
+const TEAMS=[
+ // ---- AL WEST
+ {id:'HOU',lg:'AL',dv:'W',city:'HOUSTON',c:['#002d62','#eb6e1f'],u:[['H','H','#002d62',W_,W_,'#002d62'],['A','A','#002d62',G_,G_,'#002d62'],['alt','H','#002d62','#eb6e1f',W_,'#002d62'],['alt','A','#002d62','#002d62',G_,'#eb6e1f'],['city','H','#002d62',W_,W_,'#eb6e1f']]},
+ {id:'LAA',ab:'LA',lg:'AL',dv:'W',city:'LOS ANGELES AL',c:['#ba0021','#003263'],u:[['H','H','#ba0021',W_,W_,'#ba0021'],['A','A','#ba0021',G_,G_,'#ba0021'],['alt','A','#ba0021','#ba0021',G_,W_],['city','H','#ba0021','#d8c8a8','#d8c8a8','#ba0021']]},
+ {id:'OAK',lg:'AL',dv:'W',city:'OAKLAND',c:['#003831','#efb21e'],u:[['H','H','#003831',W_,W_,'#003831'],['A','A','#003831',G_,G_,'#003831'],['alt','H','#003831','#efb21e',W_,'#003831'],['alt','H','#003831','#00843d',W_,'#efb21e']]},
+ {id:'SEA',lg:'AL',dv:'W',city:'SEATTLE',c:['#0c2c56','#005c5c'],u:[['H','H','#0c2c56',W_,W_,'#0c2c56'],['A','A','#0c2c56',G_,G_,'#0c2c56'],['alt','H','#0c2c56','#005c5c',W_,W_],['alt','H','#0c2c56',CR,CR,'#0c2c56'],['city','H','#0c2c56','#1d4f91','#1a1a1a','#f5c74a']]},
+ {id:'TEX',lg:'AL',dv:'W',city:'TEXAS',c:['#003278','#c0111f'],u:[['H','H','#003278',W_,W_,'#003278'],['A','A','#003278',G_,G_,'#003278'],['alt','A','#003278','#003278',G_,W_],['alt','H','#003278',CR,CR,'#c0111f'],['city','H','#a31f34','#a31f34',W_,W_]]},
+ // ---- AL CENTRAL
+ {id:'CHW',ab:'CHI',lg:'AL',dv:'C',city:'CHICAGO AL',c:['#27251f','#c4ced4'],u:[['H','H','#27251f',W_,W_,'#27251f'],['A','A','#27251f',G_,G_,'#27251f'],['alt','H','#27251f','#27251f',W_,W_],['city','H','#c8102e','#c8102e',W_,W_],['city','H','#27251f','#3a3a3a','#3a3a3a',W_]]},
+ {id:'CLE',lg:'AL',dv:'C',city:'CLEVELAND',c:['#00385d','#e50022'],u:[['H','H','#00385d',W_,W_,'#00385d'],['A','A','#00385d',G_,G_,'#00385d'],['alt','H','#00385d','#e50022',W_,W_],['alt','A','#00385d','#00385d',G_,W_],['city','H','#13274f','#1b3a64',W_,W_]]},
+ {id:'DET',lg:'AL',dv:'C',city:'DETROIT',c:['#0c2340','#fa4616'],u:[['H','H','#0c2340',W_,W_,'#0c2340'],['A','A','#0c2340',G_,G_,'#fa4616'],['alt','H','#0c2340','#fa4616',W_,'#0c2340'],['alt','A','#0c2340','#0c2340',G_,W_],['city','H','#0c2340','#1b2a47',W_,W_]]},
+ {id:'KC',lg:'AL',dv:'C',city:'KANSAS CITY',c:['#004687','#bd9b60'],u:[['H','H','#004687',W_,W_,'#004687'],['A','A','#004687',G_,G_,'#004687'],['alt','H','#004687','#7bb2dd',W_,'#004687'],['alt','A','#004687','#004687',G_,W_],['city','H','#004687',W_,W_,'#d6338a']]},
+ {id:'MIN',lg:'AL',dv:'C',city:'MINNESOTA',c:['#002b5c','#d31145'],u:[['H','H','#002b5c',W_,W_,'#002b5c'],['A','A','#002b5c',G_,G_,'#002b5c'],['alt','A','#002b5c','#002b5c',G_,W_],['alt','A','#002b5c','#8fb8de','#8fb8de','#d31145'],['city','H','#0b3d91','#2a5caa',W_,W_]]},
+ // ---- AL EAST
+ {id:'BAL',lg:'AL',dv:'E',city:'BALTIMORE',c:['#df4601','#000000'],u:[['H','H','#1a1a1a',W_,W_,'#df4601'],['A','A','#1a1a1a',G_,G_,'#df4601'],['alt','H','#1a1a1a','#df4601',W_,'#1a1a1a'],['alt','A','#1a1a1a','#1a1a1a',G_,'#df4601'],['city','H',CR,CR,CR,'#1f4d3a']]},
+ {id:'BOS',lg:'AL',dv:'E',city:'BOSTON',c:['#bd3039','#0c2340'],u:[['H','H','#0c2340',W_,W_,'#bd3039'],['A','A','#0c2340',G_,G_,'#bd3039'],['alt','H','#0c2340','#bd3039',W_,W_],['alt','A','#0c2340','#0c2340',G_,'#bd3039'],['city','H','#19533e','#19533e',W_,W_]]},
+ {id:'NYY',ab:'NY',lg:'AL',dv:'E',city:'NEW YORK AL',c:['#0c2340','#c4ced3'],u:[['H','H','#0c2340',W_,W_,'#0c2340'],['A','A','#0c2340',G_,G_,'#0c2340']]},
+ {id:'TB',lg:'AL',dv:'E',city:'TAMPA BAY',c:['#092c5c','#8fbce6'],u:[['H','H','#092c5c',W_,W_,'#092c5c'],['A','A','#092c5c',G_,G_,'#092c5c'],['alt','H','#092c5c','#8fbce6',W_,'#092c5c'],['alt','A','#092c5c','#092c5c',G_,'#8fbce6'],['city','H','#111111','#111111','#111111','#2bd1ff']]},
+ {id:'TOR',lg:'AL',dv:'E',city:'TORONTO',c:['#134a8e','#e8291c'],u:[['H','H','#134a8e',W_,W_,'#134a8e'],['A','A','#134a8e',G_,G_,'#134a8e'],['alt','H','#134a8e','#9bc6ea',W_,'#134a8e',1],['alt','A','#134a8e','#134a8e',G_,W_],['city','H','#1b1f2b','#1b1f2b','#1b1f2b','#e8291c']]},
+ // ---- NL WEST
+ {id:'ARI',lg:'NL',dv:'W',city:'ARIZONA',c:['#a71930','#e3d4ad'],u:[['H','H','#a71930',W_,W_,'#a71930'],['A','A','#1a1a1a',G_,G_,'#a71930'],['alt','H','#a71930','#a71930',W_,W_],['alt','A','#1a1a1a','#1a1a1a',G_,'#a71930'],['city','H','#4b2a6b','#4b2a6b',W_,'#30b2b5']]},
+ {id:'COL',lg:'NL',dv:'W',city:'COLORADO',c:['#33006f','#c4ced4'],u:[['H','H','#1a1a1a',W_,W_,'#33006f'],['A','A','#1a1a1a',G_,G_,'#33006f'],['alt','H','#1a1a1a','#33006f',W_,W_],['city','H','#33006f','#8eb9de',W_,'#33006f']]},
+ {id:'LAD',ab:'LA',lg:'NL',dv:'W',city:'LOS ANGELES NL',c:['#005a9c','#ef3e42'],u:[['H','H','#005a9c',W_,W_,'#005a9c'],['A','A','#005a9c',G_,G_,'#005a9c'],['alt','A','#005a9c','#005a9c',G_,W_],['city','H','#2f4a7a',CR,CR,'#2f4a7a']]},
+ {id:'SD',lg:'NL',dv:'W',city:'SAN DIEGO',c:['#2f241d','#ffc425'],u:[['H','H','#2f241d',W_,W_,'#2f241d'],['A','A','#2f241d',G_,G_,'#2f241d'],['alt','H','#2f241d','#2f241d',W_,'#ffc425'],['alt','H','#4d4f35','#5d6141',W_,W_],['city','H','#ece4d2','#ece4d2','#ece4d2','#1f2a44']]},
+ {id:'SF',lg:'NL',dv:'W',city:'SAN FRANCISCO',c:['#fd5a1e','#27251f'],u:[['H','H','#27251f',CR,CR,'#fd5a1e'],['A','A','#27251f',G_,G_,'#fd5a1e'],['alt','H','#27251f','#fd5a1e',CR,'#27251f'],['city','H','#27251f','#1f1f1f',W_,'#fd5a1e']]},
+ // ---- NL CENTRAL
+ {id:'CHC',ab:'CHI',lg:'NL',dv:'C',city:'CHICAGO NL',c:['#0e3386','#cc3433'],u:[['H','H','#0e3386',W_,W_,'#0e3386'],['A','A','#0e3386',G_,G_,'#0e3386'],['alt','A','#0e3386','#0e3386',G_,W_],['alt','A','#0e3386','#9ecae8',G_,'#0e3386']]},
+ {id:'CIN',lg:'NL',dv:'C',city:'CINCINNATI',c:['#c6011f','#000000'],u:[['H','H','#c6011f',W_,W_,'#c6011f'],['A','A','#c6011f',G_,G_,'#c6011f'],['city','H','#111111','#111111','#111111','#c6011f'],['city','H','#c6011f','#c6011f',W_,W_]]},
+ {id:'MIL',lg:'NL',dv:'C',city:'MILWAUKEE',c:['#12284b','#ffc52f'],u:[['H','H','#12284b',CR,CR,'#12284b'],['A','A','#12284b',G_,G_,'#12284b'],['alt','A','#12284b','#12284b',G_,'#ffc52f'],['alt','A','#12284b','#8eb6dc',G_,'#12284b'],['city','H','#1f4fa3','#1f4fa3',W_,'#ffc52f']]},
+ {id:'PIT',lg:'NL',dv:'C',city:'PITTSBURGH',c:['#27251f','#fdb827'],u:[['H','H','#27251f',W_,W_,'#27251f'],['A','A','#27251f',G_,G_,'#27251f'],['alt','H','#27251f','#27251f','#27251f','#fdb827'],['city','H','#1a1a1a','#1a1a1a',W_,'#fdb827']]},
+ {id:'STL',lg:'NL',dv:'C',city:'ST. LOUIS',c:['#c41e3a','#0c2340'],u:[['H','H','#c41e3a',W_,W_,'#c41e3a'],['A','A','#0c2340',G_,G_,'#c41e3a'],['alt','H','#c41e3a',CR,CR,'#c41e3a'],['alt','A','#0c2340','#8db6de',G_,'#c41e3a'],['city','H','#c41e3a','#c41e3a',W_,W_]]},
+ // ---- NL EAST
+ {id:'ATL',lg:'NL',dv:'E',city:'ATLANTA',c:['#13274f','#ce1141'],u:[['H','H','#13274f',W_,W_,'#13274f'],['A','A','#13274f',G_,G_,'#13274f'],['alt','H','#13274f','#ce1141',W_,W_],['alt','A','#13274f','#13274f',G_,W_],['city','H','#13274f','#8db9e2',W_,'#ce1141']]},
+ {id:'MIA',lg:'NL',dv:'E',city:'MIAMI',c:['#00a3e0','#ef3340'],u:[['H','H','#111111',W_,W_,'#00a3e0'],['A','A','#111111',G_,G_,'#00a3e0'],['alt','H','#111111','#111111',W_,'#00a3e0'],['alt','H','#00a5b5','#00a5b5',W_,W_],['city','H','#111111','#111111',W_,'#ef4f8b']]},
+ {id:'NYM',ab:'NY',lg:'NL',dv:'E',city:'NEW YORK NL',c:['#002d72','#ff5910'],u:[['H','H','#002d72',W_,W_,'#002d72'],['A','A','#002d72',G_,G_,'#002d72'],['alt','H','#111111','#111111',W_,'#ff5910'],['city','H','#5b2c83','#a7a9ac',W_,'#5b2c83']]},
+ {id:'PHI',lg:'NL',dv:'E',city:'PHILADELPHIA',c:['#e81828','#002d72'],u:[['H','H','#e81828',W_,W_,'#e81828'],['A','A','#e81828',G_,G_,'#e81828'],['alt','H','#6f263d','#8fbce6','#8fbce6','#6f263d'],['alt','H','#e81828',CR,CR,'#e81828'],['city','H','#1b2e5a','#1b2e5a',W_,'#f5c74a']]},
+ {id:'WAS',lg:'NL',dv:'E',city:'WASHINGTON',c:['#ab0003','#14225a'],u:[['H','H','#ab0003',W_,W_,'#ab0003'],['A','A','#14225a',G_,G_,'#ab0003'],['alt','H','#ab0003','#ab0003',W_,W_],['alt','A','#14225a','#14225a',G_,W_],['city','H','#14225a','#a7c8e8',W_,'#14225a']]},
+];
+// interleague rivals (4 games a year); TEAMS ids
+const RIVAL={NYY:'NYM',CHW:'CHC',LAA:'LAD',OAK:'SF',CLE:'CIN',TB:'MIA',BAL:'WAS',KC:'STL',MIN:'MIL',BOS:'ATL',SEA:'SD',DET:'PIT',TOR:'PHI',HOU:'COL',TEX:'ARI'};
+for(const [a,b] of Object.entries(RIVAL))RIVAL[b]=a;
+const TM=Object.fromEntries(TEAMS.map(t=>[t.id,t]));
+TEAMS.forEach(t=>{t.ab=t.ab||t.id;   // labels: HOME, AWAY, ALT / ALT 1, ALT 2…, CITY / CITY 1, CITY 2
+  const na=t.u.filter(x=>x[0]==='alt').length,nc=t.u.filter(x=>x[0]==='city').length;let ia=0,ic=0;
+  t.lbl=t.u.map(x=>x[0]==='H'?'HOME':x[0]==='A'?'AWAY':x[0]==='alt'?(na>1?'ALT '+(++ia):'ALT'):(nc>1?'CITY '+(++ic):'CITY'))});
+const shade=(h,k)=>'#'+[1,3,5].map(i=>Math.round(parseInt(h.slice(i,i+2),16)*(1-k)).toString(16).padStart(2,'0')).join('');
+const lum=h=>{const [r,g,b]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);return .3*r+.59*g+.11*b};
+function uniOf(id,i){const x=TM[id].u[i];return {cap:x[2],jer:x[3],yoke:shade(x[3],.1),pants:x[4],pantsS:shade(x[4],.35),let:x[5]}}
+// a uniform pick of -1 is AUTO: the team dresses like it would that day (its primary for the side most of the
+// time, an alternate now and then); any other pick is worn every game, home or away
+// AUTO for a game: mostly the primary for the side, alternates less often; never the same look as `vs` (another team's uniform row)
+function autoUni(id,side,vs){const t=TM[id];
+  const clash=x=>vs&&Math.abs(lum(x[3])-lum(vs[3]))<.12;
+  let c=t.u.map((x,i)=>({i,x,w:x[1]!==side?0:x[0]===side?1:(x[6]||.25)})).filter(o=>o.w>0);
+  const ok=c.filter(o=>!clash(o.x));if(ok.length)c=ok;else c=t.u.map((x,i)=>({i,x,w:1})).filter(o=>!clash(o.x)).concat(c);
+  let r=Math.random()*c.reduce((a,o)=>a+o.w,0);for(const o of c){if((r-=o.w)<=0)return o.i}return c[0].i}
+// a schedule like the real one: 52 division games, 64 rest-of-league, 4 vs the interleague rival, 42 vs the other 14
+function schedOpp(){const me=TM[myTeam],w=[];
+  for(const t of TEAMS){if(t.id===myTeam)continue;
+    w.push([t.id,t.lg===me.lg?(t.dv===me.dv?52/4:64/10):(RIVAL[myTeam]===t.id?4:42/14)])}
+  let r=Math.random()*w.reduce((a,x)=>a+x[1],0);for(const x of w){if((r-=x[1])<=0)return x[0]}return w[0][0]}
+// Two switches on the picker:
+//   OPPONENT  NEW: a new team every game from the schedule · SAME: always the team you picked
+//   UNIFORMS  NEW: home/away changes game to game and each team dresses for the day (mostly its primary,
+//                  an alternate now and then) · SAME: one side and the same uniforms every game
+let myTeam=null,oppLock=null,uniSame=false,lockSide='H',myPick=0,oppPick=-1,nextGame=null,game=null;
+try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;oppLock=TM[t.opp]?t.opp:null;
+  uniSame=!!t.uniSame&&t.myU>=0&&t.myU<TM[t.my].u.length;if(uniSame){lockSide=t.side==='A'?'A':'H';myPick=t.myU;oppPick=oppLock&&t.oppU>=0?t.oppU:-1}}}catch(e){}
+if(!myTeam)myTeam=TEAMS[Math.floor(Math.random()*TEAMS.length)].id;   // first visit: a team of your own, change it any time
+function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTeam,opp:oppLock,uniSame,side:lockSide,myU:myPick,oppU:oppPick}))}catch(e){}}
+const primary=(id,side)=>TM[id].u.findIndex(x=>x[0]===side);
+// same-uniforms opponent: his pick if he's the fixed opponent, otherwise his primary for the side (or the next one that doesn't clash)
+function fixedOpp(id,side,vs){if(oppLock===id&&oppPick>=0)return oppPick;const t=TM[id],clash=x=>Math.abs(lum(x[3])-lum(vs[3]))<.12;
+  const p0=primary(id,side);if(!clash(t.u[p0]))return p0;const i=t.u.findIndex(x=>x[1]===side&&!clash(x));return i>=0?i:t.u.findIndex(x=>!clash(x))}
+function rollNext(keepSide){
+  const side=uniSame?lockSide:keepSide||(Math.random()<.5?'H':'A');   // side = yours
+  const opp=oppLock||schedOpp(),oSide=side==='H'?'A':'H';let mine,ou;
+  if(uniSame){mine=myPick;ou=fixedOpp(opp,oSide,TM[myTeam].u[mine])}
+  else{mine=autoUni(myTeam,side,null);ou=autoUni(opp,oSide,TM[myTeam].u[mine])}
+  nextGame={side,opp,mine,ou}}
+let BAT_U=uniOf(myTeam,0),PIT_U=uniOf('BOS',0);
+function useGame(g){BAT_U=uniOf(myTeam,g.mine);PIT_U=uniOf(g.opp,g.ou)}
+rollNext();useGame(nextGame);
+
 let hiScores=[0,0,0,0,0];
 function loadModeScores(){hiScores=[0,0,0,0,0];maxUnlocked=0;
   try{const h=JSON.parse(localStorage.getItem(modeKey('dsHi2')));if(Array.isArray(h)){while(h.length<5)h.push(0);hiScores=h}}catch(e){}
@@ -1130,57 +1261,57 @@ drawFieldStatic();drawOnDeckCircles();
 
 /* ===== sprites ===== */
 function drawPitcher(fr){
-  const px=MOUND.x,py=MOUND.y-10,sk=pitcherSk,un='#d82020',uD='#a01818'; // feet (py+9..py+10) land on the rubber
-  cx.save();if(pitchLefty){cx.translate(2*px+1,0);cx.scale(-1,1)}             // lefty: mirror about the mound centre
-  cx.fillStyle=un;cx.fillRect(px-3,py+1,7,5);cx.fillStyle=uD;cx.fillRect(px-3,py+1,7,1);
-  cx.fillStyle='#fff';cx.fillRect(px-1,py+2,1,2);cx.fillRect(px+1,py+2,1,2);
-  cx.fillStyle='#ddd';cx.fillRect(px-2,py+6,3,4);cx.fillRect(px+1,py+6,3,4);
-  cx.fillStyle='#333';cx.fillRect(px-2,py+9,3,2);cx.fillRect(px+1,py+9,3,2);
-  cx.fillStyle=sk;
-  if(fr===0){cx.fillRect(px-4,py+2,2,2);cx.fillRect(px+4,py+2,2,2);
-    cx.fillStyle=GLOVE;cx.fillRect(px+4,py+1,3,3)}
-  else if(fr===1){cx.fillRect(px-5,py-2,2,3);cx.fillRect(px+4,py+2,2,2);   // throwing hand up beside the head
-    cx.fillStyle=GLOVE;cx.fillRect(px+4,py+1,3,3)}
-  else{cx.fillRect(px-6,py+5,2,2);cx.fillRect(px+4,py+3,2,2);               // release: hand beside the hip, belt height
-    cx.fillStyle=GLOVE;cx.fillRect(px+4,py+2,3,3)}
-  cx.fillStyle=sk;cx.fillRect(px-2,py-4,5,4);                               // face
-  cx.fillStyle=un;cx.fillRect(px-2,py-5,5,3);                               // cap, same width as the face
+  const px=MOUND.x,py=MOUND.y-10,sk=pitcherSk,u=PIT_U,un=u.jer,uD=u.yoke; // feet (py+9..py+10) land on the rubber
+  SC.save();if(pitchLefty){SC.translate(2*px+1,0);SC.scale(-1,1)}             // lefty: mirror about the mound centre
+  SC.fillStyle=un;SC.fillRect(px-3,py+1,7,5);SC.fillStyle=uD;SC.fillRect(px-3,py+1,7,1);
+  SC.fillStyle=u.let;SC.fillRect(px-1,py+2,1,2);SC.fillRect(px+1,py+2,1,2);
+  SC.fillStyle=u.pants;SC.fillRect(px-2,py+6,3,4);SC.fillRect(px+1,py+6,3,4);
+  SC.fillStyle='#333';SC.fillRect(px-2,py+9,3,2);SC.fillRect(px+1,py+9,3,2);
+  SC.fillStyle=sk;
+  if(fr===0){SC.fillRect(px-4,py+2,2,2);SC.fillRect(px+4,py+2,2,2);
+    SC.fillStyle=GLOVE;SC.fillRect(px+4,py+1,3,3)}
+  else if(fr===1){SC.fillRect(px-5,py-2,2,3);SC.fillRect(px+4,py+2,2,2);   // throwing hand up beside the head
+    SC.fillStyle=GLOVE;SC.fillRect(px+4,py+1,3,3)}
+  else{SC.fillRect(px-6,py+5,2,2);SC.fillRect(px+4,py+3,2,2);               // release: hand beside the hip, belt height
+    SC.fillStyle=GLOVE;SC.fillRect(px+4,py+2,3,3)}
+  SC.fillStyle=sk;SC.fillRect(px-2,py-4,5,4);                               // face
+  SC.fillStyle=u.cap;SC.fillRect(px-2,py-5,5,3);                               // cap, same width as the face
   // ball in hand during windup
-  if(fr===1){cx.fillStyle=pitch?pitch.color:'#fff';cx.fillRect(px-6,py-5,3,3)}
-  cx.restore();
+  if(fr===1){SC.fillStyle=pitch?pitch.color:'#fff';SC.fillRect(px-6,py-5,3,3)}
+  SC.restore();
 }
 function drawBatter(fr){
   let bx=HOME.x+(batRight?-11:11),by=HOME.y+5;
   if(walkT>0&&walkFrom){   // sliding over from the on-deck circle, with a little step bob
     const k=walkT/WALK_FR,e=k*k;bx=Math.round(bx+(walkFrom.x-bx)*e);by=Math.round(by+(walkFrom.y-6-by)*e-Math.abs(Math.sin(k*Math.PI*4)))}
   const sk=batterSk,bt='#e3c487',bk=bt;   // light ash bat
-  cx.save();cx.translate(bx,by);if(!batRight)cx.scale(-1,1);
-  cx.fillStyle='#f0f0f0';cx.fillRect(-3,-7,8,7);
-  cx.fillStyle='#d8d8d8';cx.fillRect(-3,-7,8,2);
-  cx.fillStyle='#f0f0f0';cx.fillRect(-2,0,3,6);cx.fillRect(2,0,3,6);
-  cx.fillStyle='#333';cx.fillRect(-2,5,3,2);cx.fillRect(2,5,3,2);
-  cx.fillStyle=sk;
-  if(walkT>0){cx.fillRect(4,-4,3,3);                              // walking up: hand at the hip,
-    cx.fillStyle=bt;for(let i=0;i<9;i++)cx.fillRect(6+Math.floor(i*.5),-1+i,2,1)}   // bat hanging barrel-down
-  else if(fr===0){cx.fillRect(3,-5,2,3);cx.fillRect(4,-7,2,3);
-    cx.fillStyle=bt;cx.fillRect(5,-20,2,15);cx.fillStyle=bk;cx.fillRect(5,-20,2,3)}
-  else if(fr===1){cx.fillRect(-6,-6,2,3);cx.fillRect(-7,-8,2,3);
-    cx.fillStyle=bt;cx.fillRect(-9,-22,2,16);cx.fillStyle=bk;cx.fillRect(-9,-22,2,3)}
-  else if(fr===2){cx.fillRect(-4,-8,2,3);cx.fillRect(-5,-10,2,3);
-    cx.fillStyle=bt;cx.fillRect(-6,-22,2,14);cx.fillStyle=bk;cx.fillRect(-6,-22,2,3)}
-  else if(fr===3){cx.fillRect(-1,-7,2,3);cx.fillRect(0,-9,2,3);
-    cx.fillStyle=bt;for(let i=0;i<11;i++)cx.fillRect(1+i,-10+i,2,2);
-    cx.fillStyle=bk;cx.fillRect(10,-1,3,3)}
-  else if(fr===4){cx.fillRect(5,-4,2,3);cx.fillRect(7,-3,2,3);
-    cx.fillStyle=bt;cx.fillRect(8,-4,18,2);cx.fillStyle=bk;cx.fillRect(23,-4,3,2)}
-  else if(fr===5){cx.fillRect(6,-5,2,3);cx.fillRect(8,-6,2,3);
-    cx.fillStyle=bt;for(let i=0;i<11;i++)cx.fillRect(8+i,-6-i,2,2);
-    cx.fillStyle=bk;cx.fillRect(17,-15,3,3)}
-  else{cx.fillRect(5,-7,2,3);cx.fillRect(6,-9,2,3);
-    cx.fillStyle=bt;cx.fillRect(6,-20,2,13);cx.fillStyle=bk;cx.fillRect(6,-20,2,3)}
-  cx.fillStyle=sk;cx.fillRect(-2,-12,6,5);
-  cx.fillStyle='#222258';cx.fillRect(-3,-13,8,5);cx.fillRect(-4,-11,2,3);
-  cx.restore();
+  SC.save();SC.translate(bx,by);if(!batRight)SC.scale(-1,1);
+  const u=BAT_U;SC.fillStyle=u.jer;SC.fillRect(-3,-7,8,7);
+  SC.fillStyle=u.yoke;SC.fillRect(-3,-7,8,2);
+  SC.fillStyle=u.pants;SC.fillRect(-2,0,3,6);SC.fillRect(2,0,3,6);
+  SC.fillStyle='#333';SC.fillRect(-2,5,3,2);SC.fillRect(2,5,3,2);
+  SC.fillStyle=sk;
+  if(walkT>0){SC.fillRect(4,-4,3,3);                              // walking up: hand at the hip,
+    SC.fillStyle=bt;for(let i=0;i<9;i++)SC.fillRect(6+Math.floor(i*.5),-1+i,2,1)}   // bat hanging barrel-down
+  else if(fr===0){SC.fillRect(3,-5,2,3);SC.fillRect(4,-7,2,3);
+    SC.fillStyle=bt;SC.fillRect(5,-20,2,15);SC.fillStyle=bk;SC.fillRect(5,-20,2,3)}
+  else if(fr===1){SC.fillRect(-6,-6,2,3);SC.fillRect(-7,-8,2,3);
+    SC.fillStyle=bt;SC.fillRect(-9,-22,2,16);SC.fillStyle=bk;SC.fillRect(-9,-22,2,3)}
+  else if(fr===2){SC.fillRect(-4,-8,2,3);SC.fillRect(-5,-10,2,3);
+    SC.fillStyle=bt;SC.fillRect(-6,-22,2,14);SC.fillStyle=bk;SC.fillRect(-6,-22,2,3)}
+  else if(fr===3){SC.fillRect(-1,-7,2,3);SC.fillRect(0,-9,2,3);
+    SC.fillStyle=bt;for(let i=0;i<11;i++)SC.fillRect(1+i,-10+i,2,2);
+    SC.fillStyle=bk;SC.fillRect(10,-1,3,3)}
+  else if(fr===4){SC.fillRect(5,-4,2,3);SC.fillRect(7,-3,2,3);
+    SC.fillStyle=bt;SC.fillRect(8,-4,18,2);SC.fillStyle=bk;SC.fillRect(23,-4,3,2)}
+  else if(fr===5){SC.fillRect(6,-5,2,3);SC.fillRect(8,-6,2,3);
+    SC.fillStyle=bt;for(let i=0;i<11;i++)SC.fillRect(8+i,-6-i,2,2);
+    SC.fillStyle=bk;SC.fillRect(17,-15,3,3)}
+  else{SC.fillRect(5,-7,2,3);SC.fillRect(6,-9,2,3);
+    SC.fillStyle=bt;SC.fillRect(6,-20,2,13);SC.fillStyle=bk;SC.fillRect(6,-20,2,3)}
+  SC.fillStyle=sk;SC.fillRect(-2,-12,6,5);
+  SC.fillStyle=u.cap;SC.fillRect(-3,-13,8,5);SC.fillRect(-4,-11,2,3);
+  SC.restore();
 }
 // ===== on-deck batter =====
 // the game's first batter is always a righty; in Rookie the first three are
@@ -1191,29 +1322,29 @@ function drawOnDeck(){   // the kneeling next batter (both circles are drawn wit
   const r=onDeck.right,ox=r?OD_LX:OD_RX,oy=OD_Y,sk=onDeck.sk;
   // on-deck circle: a small dirt ring like the batter's circle
   // kneeling batter, facing the plate like he will in the box; bat stood up in his front hand
-  cx.save();cx.translate(ox,oy);if(!r)cx.scale(-1,1);
-  cx.fillStyle='#333';cx.fillRect(-8,-1,2,2);                 // back foot
-  cx.fillStyle='#f0f0f0';cx.fillRect(-6,-1,5,2);cx.fillRect(-2,-5,3,5);   // back shin on the ground, thigh
-  cx.fillRect(0,-5,5,2);cx.fillRect(3,-3,2,3);                // front thigh, shin
-  cx.fillStyle='#333';cx.fillRect(3,-1,3,2);                  // front foot
-  cx.fillStyle='#f0f0f0';cx.fillRect(-3,-11,7,6);             // jersey
-  cx.fillStyle='#d8d8d8';cx.fillRect(-3,-11,7,2);
-  cx.fillStyle='#e3c487';for(let i=0;i<9;i++)cx.fillRect(5+Math.floor(i*.6),-8+i,2,1);   // bat: knob in his hands, barrel down to the dirt
-  cx.fillStyle=sk;cx.fillRect(3,-10,3,3);cx.fillRect(-2,-16,5,5);   // hands stacked on the knob, face
-  cx.fillStyle='#222258';cx.fillRect(-3,-17,7,4);cx.fillRect(-4,-15,2,3);  // helmet + ear flap
-  cx.restore();
-  cx.save();
-  cx.restore();
+  SC.save();SC.translate(ox,oy);if(!r)SC.scale(-1,1);
+  SC.fillStyle='#333';SC.fillRect(-8,-1,2,2);                 // back foot
+  const u=BAT_U;SC.fillStyle=u.pants;SC.fillRect(-6,-1,5,2);SC.fillRect(-2,-5,3,5);   // back shin on the ground, thigh
+  SC.fillRect(0,-5,5,2);SC.fillRect(3,-3,2,3);                // front thigh, shin
+  SC.fillStyle='#333';SC.fillRect(3,-1,3,2);                  // front foot
+  SC.fillStyle=u.jer;SC.fillRect(-3,-11,7,6);             // jersey
+  SC.fillStyle=u.yoke;SC.fillRect(-3,-11,7,2);
+  SC.fillStyle='#e3c487';for(let i=0;i<9;i++)SC.fillRect(5+Math.floor(i*.6),-8+i,2,1);   // bat: knob in his hands, barrel down to the dirt
+  SC.fillStyle=sk;SC.fillRect(3,-10,3,3);SC.fillRect(-2,-16,5,5);   // hands stacked on the knob, face
+  SC.fillStyle=u.cap;SC.fillRect(-3,-17,7,4);SC.fillRect(-4,-15,2,3);  // helmet + ear flap
+  SC.restore();
+  SC.save();
+  SC.restore();
 }
 // (x,y) is where his feet are: standing on a bag they're on its middle, running they're on the path
 // left=true: runner facing left (on 1st, on 2nd, on the way to 3rd), ear flap shows on our right
-function drawBaseRunner(x,y,sk,left){y-=3;
-  cx.fillStyle='#f0f0f0';cx.fillRect(x-2,y-5,5,5);
-  cx.fillStyle='#d8d8d8';cx.fillRect(x-2,y-5,5,1);
-  cx.fillStyle='#999';cx.fillRect(x-2,y,5,4);
-  cx.fillStyle='#333';cx.fillRect(x-2,y+3,5,2);
-  cx.fillStyle=sk||SKIN[0][0];cx.fillRect(left?x-2:x-1,y-9,4,4);
-  cx.fillStyle='#222258';cx.fillRect(x-2,y-10,5,3);cx.fillRect(left?x+2:x-2,y-7,1,1);   // batting helmet + ear flap
+function drawBaseRunner(x,y,sk,left){y-=3;const u=BAT_U;
+  SC.fillStyle=u.jer;SC.fillRect(x-2,y-5,5,5);
+  SC.fillStyle=u.yoke;SC.fillRect(x-2,y-5,5,1);
+  SC.fillStyle=u.pantsS;SC.fillRect(x-2,y,5,4);
+  SC.fillStyle='#333';SC.fillRect(x-2,y+3,5,2);
+  SC.fillStyle=sk||SKIN[0][0];SC.fillRect(left?x-2:x-1,y-9,4,4);
+  SC.fillStyle=u.cap;SC.fillRect(x-2,y-10,5,3);SC.fillRect(left?x+2:x-2,y-7,1,1);   // batting helmet + ear flap
 }
 
 /* ===== scoreboard (drawn on canvas) ===== */
@@ -1318,7 +1449,12 @@ function startGame(){musicStop();cancelPlay();markPlayed();pitcherSk=pickSkin();
   clearBases();particles=[];trail=[];hide('goScr');newZones();
   isNewRound=true;isNewInning=true;
   showLbl('resLbl',RD(round).name,'#ffd642',OPEN_ROUND_MS);
+  if(!nextGame)rollNext();game=nextGame;useGame(game);rollNext();showMatchup();
   nextPitch()}
+const chipBg=t=>`linear-gradient(135deg,${t.c[0]} 0 80%,${t.c[1]} 80%)`;
+function showMatchup(){const e=document.getElementById('muLbl'),me=TM[myTeam],op=TM[game.opp];
+  e.innerHTML=`<div class="mc l" style="background:${chipBg(me)}">${me.ab}</div><div class="at">${game.side==='H'?'vs':'at'}</div><div class="mc r" style="background:${chipBg(op)}">${op.ab}</div>`;
+  e.classList.add('show');hideLblAfter('muLbl',OPEN_ROUND_MS)}
 /* ===== TIMING CONSTANTS (tweak these) ===== */
 // All values in ms. Converted to frames (÷16.67) internally.
 const DELAY_ZONES    = 125;  // pause after zones appear before pitch starts (every at-bat)
@@ -1581,7 +1717,8 @@ function checkInning(){
 function doInnBreak(){
   innLOB[Math.min(inning,MAX_INN)-1]=lobNow!=null?lobNow:bases.filter(b=>b).length;lobNow=null;
   const endOuts=innOuts;
-  clearBases();runnerAnims=[];innOuts=0;innBatters=0;hrOK=false;inning++;pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+  clearBases();runnerAnims=[];innOuts=0;innBatters=0;hrOK=false;inning++;
+  if(inning<=MAX_INN){pitcherSk=pickSkin();pitchLefty=Math.random()<.3}   // new pitcher each inning; after the last one he just leaves
   if(inning>MAX_INN){
     innOuts=endOuts; // keep the out lamps lit behind the game-over screen
     state='gameover';
@@ -1703,7 +1840,11 @@ function update(){
 }
 
 /* ===== draw ===== */
-function draw(){
+// PAUSE greys out on the title and game-over screens, where it does nothing
+let pauseOff=null;
+function paintPauseBtn(){const off=state==='title'||state==='gameover';if(off===pauseOff)return;pauseOff=off;
+  const b=document.getElementById('pauseBtn');b.style.opacity=off?.35:'';b.style.cursor=off?'default':'pointer';b.setAttribute('aria-disabled',off)}
+function draw(){paintPauseBtn();
   cx.clearRect(0,0,W,H);
   const sx=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;
   const sy=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;
@@ -1763,9 +1904,9 @@ function draw(){
       :hitRes==='BB'?`rgba(170,170,170,${a*.4})`:`rgba(100,255,100,${a*.5})`;
     cx.fillRect(0|p.x,0|p.y,2,2)})}
 
-  drawPitcher(pFr);
+  if(state!=='gameover')drawPitcher(pFr);   // the field empties behind the game-over screen: scoreboard and out lamps stay
   if(state!=='title'&&state!=='gameover'&&onDeck&&walkT<=0)drawOnDeck();
-  if(batterUp||(batBlinkT>0&&Math.floor(batBlinkT/3)%2===0))drawBatter(batFr);
+  if(state!=='gameover'&&(batterUp||(batBlinkT>0&&Math.floor(batBlinkT/3)%2===0)))drawBatter(batFr);
 
   // pitched ball
   if(state==='pitch'&&pitch){
@@ -1882,6 +2023,56 @@ document.getElementById('glossScr').addEventListener('pointerdown',e=>e.stopProp
 document.getElementById('glossBack').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();hide('glossScr');show(glossFrom)});
 document.getElementById('exhBack').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();hide('exhScr');show('titleScr')});
+
+/* ===== team picker ===== */
+let tmWho='bat';
+function drawPreview(id,who,ui){const cv=document.getElementById(who==='bat'?'tmCvB':'tmCvP'),g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);
+  const keep=[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty];SC=g;g.save();
+  if(who==='bat'){BAT_U=uniOf(id,ui);batRight=true;walkT=0;g.translate(13-(HOME.x-11),29-(HOME.y+12));drawBatter(0)}
+  else{PIT_U=uniOf(id,ui);pitchLefty=false;g.translate(13-(MOUND.x+1),24-(MOUND.y+1));drawPitcher(0)}
+  g.restore();[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty]=keep}
+function renderTeams(){
+  document.querySelectorAll('#tmTog span').forEach(b=>b.classList.toggle('on',b.dataset.w===tmWho));
+  document.querySelectorAll('.tmP').forEach(b=>b.classList.toggle('on',b.dataset.w===tmWho));
+  const me=TM[myTeam],opId=nextGame.opp,op=TM[opId],myU=nextGame.mine,opU=nextGame.ou;
+  document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=(uniSame?'':'NEXT GAME · ')+me.lbl[myU];
+  document.getElementById('tmNmP').textContent=op.city;document.getElementById('tmUP').textContent=(uniSame&&oppLock?'':'NEXT GAME · ')+op.lbl[opU];
+  drawPreview(myTeam,'bat',myU);drawPreview(opId,'pit',opU);
+  document.querySelectorAll('.tmSw').forEach(r=>r.querySelectorAll('span[data-v]').forEach(b=>
+    b.classList.toggle('on',(b.dataset.v==='same')===(r.dataset.k==='opp'?!!oppLock:uniSame))));
+
+  // West · Central · East, AL on top
+  let h='';for(const lg of ['AL','NL']){h+=`<div class="tmL">${lg}</div><div class="tmR">`;
+    for(const [dv,nm] of [['W','WEST'],['C','CENTRAL'],['E','EAST']]){h+=`<div class="tmC"><div class="tmD">${nm}</div>`;
+      for(const t of TEAMS.filter(t=>t.lg===lg&&t.dv===dv)){
+        const cls=tmWho==='bat'?(t.id===myTeam?' sel':''):(oppLock?(t.id===oppLock?' sel':''):(t.id===opId?' nx':''));
+        h+=`<div class="tmK${cls}" data-t="${t.id}" style="background:${chipBg(t)}">${t.ab}</div>`}
+      h+='</div>'}
+    h+='</div>'}
+  document.getElementById('tmGrid').innerHTML=h}
+function tmChanged(){rollNext(nextGame&&nextGame.side);saveTeams();renderTeams()}
+// freeze whatever is showing: its side and both uniforms
+function freezeUni(){uniSame=true;lockSide=nextGame.side;myPick=nextGame.mine;oppPick=oppLock?nextGame.ou:-1}
+function tmTapTeam(id){
+  if(tmWho==='bat'){if(id===myTeam){if(!uniSame)freezeUni();myPick=(myPick+1)%TM[id].u.length;lockSide=TM[id].u[myPick][1]}
+    else{myTeam=id;if(oppLock===id)oppLock=null;if(uniSame)myPick=primary(id,lockSide)}}
+  else{if(id===myTeam)return;if(oppLock===id){if(!uniSame)freezeUni();oppPick=(oppPick+1)%TM[id].u.length;lockSide=TM[id].u[oppPick][1]==='H'?'A':'H'}
+    else{oppLock=id;oppPick=-1}}
+  tmChanged()}
+function tmTapPlayer(w){if(tmWho!==w){tmWho=w;renderTeams();return}
+  if(w==='bat'){tmTapTeam(myTeam);return}
+  if(!oppLock)oppLock=nextGame.opp;   // picking his uniform means facing him again
+  tmTapTeam(oppLock)}
+function tmSwitch(k,v){
+  if(k==='opp'){if(v==='new'&&oppLock){oppLock=null;oppPick=-1}else if(v==='same'&&!oppLock){oppLock=nextGame.opp;if(uniSame)oppPick=nextGame.ou}else return}
+  else{if(v==='new'&&uniSame){uniSame=false;oppPick=-1}else if(v==='same'&&!uniSame)freezeUni();else return}
+  tmChanged()}
+document.getElementById('teamScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();
+  const k=e.target.closest('.tmK'),p=e.target.closest('.tmP'),tg=e.target.closest('#tmTog span'),sw=e.target.closest('.tmSw span[data-v]');
+  if(k)tmTapTeam(k.dataset.t);else if(p)tmTapPlayer(p.dataset.w);else if(tg){tmWho=tg.dataset.w;renderTeams()}
+  else if(sw)tmSwitch(sw.parentNode.dataset.k,sw.dataset.v);
+  else if(e.target.closest('#tmDone')){hide('teamScr');show('titleScr')}});
+tap('teamBtn',()=>{tmWho='bat';hide('titleScr');renderTeams();show('teamScr')});
 
 /* ===== input ===== */
 // the time of a tap/key press: its event timestamp when that's sane, otherwise now
