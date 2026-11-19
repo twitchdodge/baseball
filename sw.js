@@ -82,6 +82,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   if (req.cache === 'only-if-cached' && req.mode !== 'same-origin') return;
   const url = new URL(req.url);
+  if (url.pathname.endsWith('.apk')) return;   // the Android download always comes straight from the site
   if (url.hostname === 'fonts.gstatic.com') { e.respondWith(cacheFirst(e)); return; }
   if (url.hostname === 'fonts.googleapis.com' ||
       (url.origin === self.location.origin && url.pathname.startsWith(SCOPE_PATH))) {
