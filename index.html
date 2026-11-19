@@ -55,6 +55,10 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 #zones{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
 #zones text{font-family:'Archivo Black','Press Start 2P',sans-serif;font-weight:400;font-size:9px;fill:#fff}   /* painted wall signage: smooth, unlike the pixel scoreboard */
 #zones path{stroke:#0a0c1a;stroke-width:1}
+#zones path.bpS{stroke:none}
+#zones path.bpTg{stroke:#fff;stroke-width:1.2}
+#zones path.bpTg.hit{stroke:#ffd642;stroke-width:2.2;animation:bpHit .55s steps(2) 2}
+@keyframes bpHit{50%{stroke:#fff}}   /* batting-practice heat slices: no outline, the zone lines are drawn separately */
 .zn{transform-box:fill-box;transform-origin:center;transition:transform .15s,filter .15s,opacity .15s}
 .zn.pop{transform:rotate(var(--r)) scaleY(1.25) rotate(calc(-1*var(--r)));filter:brightness(1.7)}
 .zn.enter{animation:zIn .25s ease-out}
@@ -86,6 +90,26 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .ol{text-shadow:0 2px 8px rgba(0,0,0,.7)}
 #resLbl{top:30%;font-size:clamp(12px,5.1cqw,28px);white-space:pre-line;line-height:1.35}
 #resLbl.gsl{animation:gsl .3s steps(1) infinite}
+#menuScr .tBtns{gap:2.4cqw}
+#stScr{justify-content:flex-start;padding-top:28cqw;gap:2.2cqw}   /* starts below the scoreboard, which shows through */
+#stTog{display:flex}#stTog .tBtn{font-size:clamp(7px,2.2cqw,12px);padding:1.7cqw 3.4cqw}
+.stT tr.tot td{border-top:1px solid #445;padding-top:1.4cqw}
+.stT{border-collapse:collapse;font-size:clamp(6px,2.1cqw,12px);color:#ddd}
+.stT th{font-weight:normal;color:#889;font-size:.85em;padding:0 1.7cqw 1.4cqw;text-align:right}.stT th:first-child{text-align:left}
+.stT td{padding:1.1cqw 1.7cqw;text-align:right}.stT td:first-child{text-align:left}
+.stH{font-size:clamp(7px,2.5cqw,14px);color:#c9cfe0;margin:3cqw 0 2.2cqw}
+.stN{font-size:clamp(5px,1.7cqw,9px);color:#778;text-align:center;line-height:1.6}
+.exhH{font-size:clamp(7px,2.5cqw,14px);color:#c9cfe0;margin-bottom:2.2cqw}
+.exhS{font-size:clamp(6px,1.95cqw,11px);color:#889;margin:-1cqw 0 2.2cqw}
+#bpN div{font:clamp(10px,3.05cqw,16px) "Press Start 2P",monospace;padding:2.2cqw 2.5cqw;border-radius:4px;color:#fff;background:rgba(255,255,255,.1);cursor:pointer}
+#bpScr{justify-content:flex-start;padding-top:6cqw;gap:3cqw;background:#0a0c1a}
+.bpBig{font-size:clamp(16px,7cqw,38px);color:#7dff7d;text-align:center}.bpBig small{font-size:.45em;color:#889}
+.bpPer{font-size:clamp(7px,2.5cqw,14px);color:#c9cfe0;text-align:center;margin-top:1.4cqw}
+.bpT{border-collapse:collapse;margin-top:3cqw;font-size:clamp(6px,2.1cqw,12px);color:#ddd}
+.bpT th{font-weight:normal;color:#889;font-size:.8em;padding:0 1.4cqw 1.4cqw;line-height:1.5;vertical-align:bottom}
+.bpT td{padding:1.1cqw 1.4cqw;text-align:right}.bpT td:first-child{text-align:left}.bpT tr.sp td{padding:1cqw}
+.bpNote{font-size:clamp(5px,1.7cqw,9px);color:#778;margin-top:2.2cqw;text-align:center;line-height:1.6}
+#bpCode{width:calc(100% - 8cqw);max-height:16cqw;overflow:auto;margin:0;padding:2cqw;background:#141a30;color:#9aa;font:clamp(5px,1.7cqw,9px)/1.5 monospace;white-space:pre-wrap;word-break:break-all;user-select:text;-webkit-user-select:text}
 /* matchup at the start of a game: two same-width chips, the "at"/"vs" gap centred over 2nd base */
 #muLbl{top:34.2%;display:grid;grid-template-columns:1fr 8.4cqw 1fr;align-items:center;text-shadow:none}
 #muLbl .mc{width:17.3cqw;font-size:clamp(9px,3.07cqw,17px);color:#fff;padding:1.7cqw 0 1.4cqw;letter-spacing:.3cqw;text-shadow:1px 1px 0 rgba(0,0,0,.55);box-shadow:0 .6cqw 0 rgba(0,0,0,.45)}
@@ -237,18 +261,44 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="sS" id="tSub" style="color:var(--gold)">Score 5+ runs in 3 innings</div>
   <div class="sS blink">TAP ANYWHERE TO PLAY</div>
   <!-- menu sits low so the middle of the screen is free to tap and play; hidden until the first game (hasPlayed) -->
-  <div class="tBtns" id="tMenu" style="position:absolute;bottom:11%">
-    <div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div>
+  <div class="tBtns" id="tMenu" style="position:absolute;bottom:11%"><div id="chalBtn" class="tBtn chal" style="display:none">CHALLENGE MODE</div><div id="menuBtn" class="tBtn">MENU</div></div>
+</div>
+<div class="scr" id="menuScr">
+  <div class="sS" style="color:var(--gold);margin-bottom:4cqw">MENU</div>
+  <div class="tBtns">
     <div id="teamBtn" class="tBtn">CHOOSE TEAMS</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
-    <div id="glossBtn" class="tBtn">HOW TO PLAY</div></div>
+    <div id="stBtn" class="tBtn">STATS</div>
+    <div id="glossBtn" class="tBtn">HOW TO PLAY</div>
+    <div id="menuBack" class="tBtn" style="margin-top:9cqw">BACK</div></div>
+</div>
+<div class="scr" id="stScr">
+  <div class="sS" style="color:var(--gold)">STATS</div>
+  <div id="stTog"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
+  <div id="stBody"></div>
+  <div class="tBtns" style="margin-top:2cqw"><div id="stWipe" class="tBtn danger">RESET STATS</div><div id="stBack" class="tBtn">BACK</div></div>
+</div>
+<div class="scr" id="stWipeScr">
+  <div class="sS" style="color:#ff6b5e">ERASE ALL STATS?</div>
+  <div class="stN" style="font-size:clamp(7px,2.2cqw,12px);max-width:80%">Wins, losses, batting numbers and batting practice history, for every mode. High scores and unlocks stay.</div>
+  <div class="tBtns" style="margin-top:4cqw"><div id="stWipeYes" class="tBtn danger">ERASE STATS</div><div id="stWipeNo" class="tBtn">CANCEL</div></div>
 </div>
 <div class="scr" id="exhScr">
   <div class="sS" style="color:var(--gold);margin-bottom:12px">PRACTICE</div>
+  <div class="exhH">EXHIBITION</div>
   <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
+  <div class="exhH" style="margin-top:5cqw">BATTING PRACTICE</div>
+  <div class="exhS" id="bpSet"></div>
+  <div id="bpN" style="display:flex;gap:1.7cqw;pointer-events:auto"></div>
   <div class="tBtns" style="margin-top:18px"><div id="exhBack" class="tBtn">BACK</div></div>
+</div>
+<div class="scr" id="bpScr">
+  <div class="sS" style="color:var(--gold)">BATTING PRACTICE</div>
+  <div id="bpSum"></div>
+  <pre id="bpCode"></pre>
+  <div class="tBtns"><div id="bpCopy" class="tBtn">COPY RESULTS</div><div id="bpAgain" class="tBtn">AGAIN</div><div id="bpMenu" class="tBtn">MAIN MENU</div></div>
 </div>
 <div class="scr" id="teamScr">
   <div class="tt">CHOOSE TEAMS</div>
@@ -533,7 +583,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v376';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v379';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -600,7 +650,7 @@ function endStreak(){
   if(hrStreak>=2){clearTimeout(streakT);streakT=setTimeout(()=>{streakT=0;showLbl('streakLbl','STREAK OVER!','#ff4444',900)},400)}
   hrStreak=0}
 
-function newZones(){
+function newZones(){if(bp){zones=Array(NUM_ZONES).fill('BP');renderBP();return}
   const rd=RD(round),bo=rd.inn3Outs&&inning>=3?rd.inn3Outs:rd.inn2Outs&&inning>=2?rd.inn2Outs:rd.baseOuts;   // out boxes an inning starts with
   const numOuts=Math.min(6,bo+Math.floor(innBatters/3));
   const pool=[];
@@ -749,14 +799,23 @@ function fcStep(){const P=fcPlay;P.f++;
     if(runs>=target&&runs-P.sc<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
     runLbl(P.sc,P.sc===1?'RUN SCORED!':P.sc+' RUNS!')}
   checkInning()}   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
+let sfOutP=.06;   // this fly ball's thrown-out chance for a tagging runner (set per play)
 function resolveOutPlay(type,wx,wy){
   const o0=innOuts;let res=type==='GB'?'GO':type==='FB'?'FO':'K',moves=type==='GB'?[['B',1,1]]:[];
   if(type!=='K'&&o0<2){let T=(type==='GB'?GB_T:FB_T)[baseKey()];
     // runner on 3rd, fly ball: he goes 70% of the time when the catch is the 1st out, 80% when it's the 2nd
     // (tables are written for 75/25; MLB sends ~78% overall and more readily with 1 out)
-    if(type==='FB'&&bases[2])T=T.map(o=>[o[0]*(o[1]==='SF'?SF_GO[o0]/.75:(1-SF_GO[o0])/.25),o[1],o[2]]);
+    const win3=bases[2]&&isWinRun(1);   // the runner on 3rd is the winning run (he scores first)
+    let go=SF_GO[o0];sfOutP=SF_OUT[o0];if(type==='FB'&&win3)[go,sfOutP]=winSend(go,sfOutP,o0,true);
+    if(type==='FB'&&bases[2])T=T.map(o=>[o[0]*(o[1]==='SF'?go/.75:(1-go)/.25),o[1],o[2]]);
+    // grounder: he holds less often; 70% of those extra tries score, 30% are thrown out at home (where the table has that play)
+    if(type==='GB'&&win3){const sc=x=>x[2].some(m=>m[0]===2&&m[1]===4&&!m[2]),oh=x=>x[2].some(m=>m[0]===2&&m[1]===4&&m[2]);
+      const hold=T.filter(x=>!sc(x)&&!oh(x)),hw=hold.reduce((a,x)=>a+x[0],0),d=hw*(1-urge(o0));
+      if(hw>0&&T.some(sc)){const sw=T.filter(sc).reduce((a,x)=>a+x[0],0),ow=T.filter(oh).reduce((a,x)=>a+x[0],0),toOut=ow>0?.3*d:0;
+        T=T.map(x=>[sc(x)?x[0]+(d-toOut)*x[0]/sw:oh(x)?x[0]+toOut*x[0]/ow:x[0]*urge(o0),x[1],x[2]])}}
     let r=Math.random()*T.reduce((a,o)=>a+o[0],0);
     for(const o of T){if((r-=o[0])<0){res=o[1];moves=o[2];break}}}
+  if(type==='GB'||type==='FB')tallyPA(res==='SF'?'SFX':'ABX');
   // 2 outs, grounder: the third out is either the batter at 1st or (with a runner on 1st) the force
   // at 2nd, 50/50. Forced runners are shown running either way (see below).
   else if(type==='GB'){
@@ -799,7 +858,7 @@ function resolveOutPlay(type,wx,wy){
         throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG2_OUT,
           onSafe:()=>{basePending[1]=false;showLbl('innLbl','SAFE AT 2ND!','#e8f6ff',900)},
           onOut:()=>{bases[1]=false;basePending[1]=false;showLbl('innLbl','OUT AT 2ND!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}});continue}
-      if(t===4){plateTag=true;roar(OOH_SF);throws.push({f:0,T:14+30,anim:an,out:Math.random()<SF_OUT[o0],
+      if(t===4){plateTag=true;roar(OOH_SF);throws.push({f:0,T:14+30,anim:an,out:Math.random()<sfOutP,
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       else{nb[2]=sk;basePending[2]=true;
@@ -1033,12 +1092,23 @@ const FIRST3RD_OUT=[.039,.046,.030],   // 2 outs: running on contact, so a bette
 // out, steals) unless that runner is the run that reaches the target
 const cautious=()=>inning>=MAX_INN&&runs+pendingRuns<target;
 const isKeyRun=k=>runs+pendingRuns+k>=target;   // k = runs this play would score up to and including him
+// THE WINNING RUN runs harder: he holds less often in the final inning, with two outs in any inning, and
+// most of all with two outs in the final inning (hold chance × WIN_URGE). The extra sends are the marginal
+// ones, so they're thrown out more often (WIN_EXTRA_OUT) — the overall out rate on his sends goes up a little.
+const isWinRun=k=>runs+pendingRuns+k===target;   // he's the run that reaches the target
+const WIN_URGE={last:.7,two:.6,lastTwo:.3},WIN_EXTRA_OUT=.30;
+const urge=o=>{const L=inning>=MAX_INN,T=o>=2;return L&&T?WIN_URGE.lastTwo:T?WIN_URGE.two:L?WIN_URGE.last:1};
+// send chance and out chance for a runner whose normal odds are p (send) and out (thrown out when sent)
+function winSend(p,out,o,win){if(!win)return [p,out];const p2=1-(1-p)*urge(o);return [p2,p2>0?(p*out+(p2-p)*WIN_EXTRA_OUT)/p2:out]}
+let xbOut=.06;   // thrown-out chance for this hit's send home
 let xb=[0,0,0];   // extra bases for the runner on 1st/2nd/3rd on the current hit
 function planExtra(type){xb=[0,0,0];if(simpleMode)return;const o=Math.min(innOuts,2);
   if(type==='1B'){let thirdOpen=true;   // the runner from 3rd scores; the one from 2nd stops at 3rd unless he goes home
-    if(bases[1]){const may=!cautious()||isKeyRun((bases[2]?1:0)+1);if(may&&Math.random()<XB.score2on1B[o])xb[1]=1;else thirdOpen=false}
+    if(bases[1]){const k=(bases[2]?1:0)+1,may=!cautious()||isKeyRun(k),[p,out]=winSend(XB.score2on1B[o],PLATE_OUT['1B'][o],o,isWinRun(k));
+      if(may&&Math.random()<p){xb[1]=1;xbOut=out}else thirdOpen=false}
     if(bases[0]&&thirdOpen&&(!cautious()||isKeyRun((bases[2]?1:0)+(bases[1]?1:0)+1))&&Math.random()<XB.first3rd1B[o])xb[0]=1}
-  else if(type==='2B'&&bases[0]&&(!cautious()||isKeyRun((bases[1]?1:0)+(bases[2]?1:0)+1))&&Math.random()<XB.score1on2B[o])xb[0]=1}
+  else if(type==='2B'&&bases[0]){const k=(bases[1]?1:0)+(bases[2]?1:0)+1,[p,out]=winSend(XB.score1on2B[o],PLATE_OUT['2B'][o],o,isWinRun(k));
+    if((!cautious()||isKeyRun(k))&&Math.random()<p){xb[0]=1;xbOut=out}}}
 function processHit(type){
   const adv={HR:4,'3B':3,'2B':2,'1B':1}[type]||0;let sc=0;
   for(let i=2;i>=0;i--){if(bases[i]){const r=bases[i],a=adv+xb[i];bases[i]=false;if(i+a>=3)sc++;else bases[i+a]=r}}
@@ -1365,7 +1435,7 @@ function drawChalPaint(){cx.save();cx.globalAlpha=PAINT_A;cx.fillStyle='#ffd642'
   for(const ox of [OD_LX,OD_RX]){const x0=ox-Math.floor(w/2),y0=OD_Y-PAINT_DY-Math.floor(h/2);
     TROPHY6.forEach((row,yy)=>[...row].forEach((c,xx)=>{if(c==='#')cx.fillRect(x0+xx*PAINT_S,y0+yy*PAINT_S,PAINT_S,PAINT_S)}))}
   cx.restore()}
-function drawScoreboard(){
+function drawScoreboard(){if(bp){drawBPBoard();return}
   // Wrigley-style board in the centre-field stands:
   //   ROUND        TGT n   HI n     (HI gold + live while a new high is being set)
   //   1 2 3 R           ● ● ○     (out lamps, centred on the score line)
@@ -1425,6 +1495,7 @@ function drwP(){particles.forEach(p=>{cx.fillStyle=p.color;cx.fillRect(0|p.x,0|p
 
 /* ===== game logic ===== */
 function pickPitch(){
+  if(bp)return bpPitch();
   if(DEV&&devAllSF)return superFast();
   return challenge?levelUp(basePitch()):basePitch()}
 function basePitch(){
@@ -1441,8 +1512,8 @@ function basePitch(){
   }else{idx=PITCHES.map((_,i)=>i).filter(i=>PITCHES[i].inn<=inning)}
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 // drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
-function cancelPlay(){steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
-function startGame(){musicStop();cancelPlay();markPlayed();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+function cancelPlay(){bpClearLbl();steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
+function startGame(){bp=null;gs=newGS();musicStop();cancelPlay();markPlayed();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1464,7 +1535,7 @@ const DELAY_STREAK   = 400;  // extra pause during HR streak (to read flipped zo
 const DELAY_BASE     = 800;  // base ready time before pitch (default feel)
 // game opening, in ms from the tap: level name 0→OPEN_ROUND_MS; 1ST INNING from OPEN_INNING_AT
 // for OPEN_INNING_MS (overlapping the level name's tail); first windup at OPEN_WINDUP_AT
-const OPEN_ROUND_MS=1100,OPEN_INNING_AT=850,OPEN_INNING_MS=950,OPEN_WINDUP_AT=1925;
+const OPEN_ROUND_MS=1600,OPEN_INNING_AT=1150,OPEN_INNING_MS=950,OPEN_WINDUP_AT=2225;
 // inning change, in ms from the third-out result (the game's final out skips all this):
 //   0      result (result row) + STREAK OVER! at once if a streak just ended (streak row)
 //   500    result fades
@@ -1476,6 +1547,7 @@ const msF=ms=>Math.round(ms/16.67);
 let isNewInning=false,isNewRound=false,sameBatter=false,paused=false,openInnAt=0;
 
 function nextPitch(){
+  if(bp&&bp.i>=bp.n){bpEnd();return}
   pitch=pickPitch();innBatters++;
   knk=Math.random()*100;
   // the on-deck batter steps in and a new one kneels down (shown beside the plate, so no LEFTY! callout)
@@ -1520,8 +1592,9 @@ function doSwing(){
   // Swing animation
   batFr=2;setTimeout(()=>{batFr=3},30);setTimeout(()=>{batFr=4},55);
   setTimeout(()=>{batFr=5},85);setTimeout(()=>{batFr=6},130);
+  if(bp&&bpSwing(offset,absO))return;   // batting practice: every swing is measured; a miss is just a miss
 
-  if(absO>WHIFF){
+  if(absO>WHIFF){tallyPA('K');
     setTimeout(()=>{batFr=0},300);
     innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
     state='result';checkInning();return}
@@ -1553,11 +1626,13 @@ function doSwing(){
   hitFlyT=0;hitFlyFr=28;trail=[];state='hitfly';
 }
 
-function ballPassed(){
+function ballPassed(){if(bp){bpTake();return}
+  tallyPA('K');
   innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
   state='result';checkInning()}
 
-function resolveHit(){
+function resolveHit(){if(bp){bpLand();return}
+  tallyPA(hitRes);
   if(hitRes!=='SB')hrOK=['1B','2B','3B','HR','BB'].includes(hitRes);   // a steal keeps whatever the batter had
   if(hitRes!=='SB'&&hitRes!=='CS')batterUp=false;   // he runs (hit, walk, error, DP) or he's out; steals keep him up
   if(hitRes==='FOUL'||hitRes==='K')batBlinkT=BLINK_FR;   // out right there: blinks out in the box
@@ -1666,7 +1741,7 @@ function resolveHit(){
     sendIdx=simpleMode?-1:hitRes==='1B'&&bases[1]&&xb[1]?1:hitRes==='2B'&&bases[0]&&xb[0]?0:-1;sendAnim=null;x3Anim=null;
     const oo=Math.min(innOuts,2),secondOpen=!(bases[0]&&!xb[0]);
     const batOnThrow=sendIdx===1&&secondOpen&&(!cautious()||isKeyRun(bases.filter(Boolean).length+1))&&Math.random()<BAT_ON_THROW[oo];   // short in the 3rd: only if the batter is the target run
-    const plateOut=sendIdx>=0&&Math.random()<PLATE_OUT[hitRes][oo];
+    const plateOut=sendIdx>=0&&Math.random()<xbOut;
     spawnRunners(hitRes);
     let scored=processHit(hitRes);
     if(sendIdx>=0){scored--;pendingRuns--;
@@ -1725,6 +1800,7 @@ function doInnBreak(){
     const isHi=!exhibitionMode&&runs>hiScores[round];
     if(isHi){hiScores[round]=runs;try{localStorage.setItem(modeKey('dsHi2'),JSON.stringify(hiScores))}catch(e){}}
     const won=runs>=target;
+    recordGame(round,won);
     // beating LEGEND (either style, not in exhibition) unlocks CHALLENGE MODE for good
     const unlockNow=won&&round>=ROUNDS.length-1&&!challenge&&!chalUnlocked&&!exhibitionMode;
     if(unlockNow){chalUnlocked=true;chalJustUnlocked=true;try{localStorage.setItem('bbChalUnlk','1')}catch(e){}}
@@ -1835,7 +1911,7 @@ function update(){
   if(!runnerAnims.length)basePending=[false,false,false];
   // show SKIP button once target is met
   const sb=document.getElementById('skipBtn');
-  if(runs>=target&&state!=='gameover'&&state!=='title')sb.style.display='';
+  if(!bp&&runs>=target&&state!=='gameover'&&state!=='title')sb.style.display='';
   else sb.style.display='none';
 }
 
@@ -1931,8 +2007,131 @@ function draw(){paintPauseBtn();
   cx.restore();
 }
 
+/* ===== stats =====
+   Every finished game adds to its mode's record (classic/challenge × full/simple; exhibition kept apart), per
+   level: games, wins, runs, and the batting line — plate appearances, at-bats, hits, walks, total bases, sac flies.
+   AVG = H/AB · OBP = (H+BB)/(AB+BB+SF) · SLG = TB/AB. Bunts, steals and the box score's own oddities don't count. */
+const newGS=()=>({pa:0,ab:0,h:0,bb:0,tb:0,sf:0});
+let gs=newGS();
+function tallyPA(k){const TB={'1B':1,'2B':2,'3B':3,HR:4}[k];
+  if(TB){gs.pa++;gs.ab++;gs.h++;gs.tb+=TB}else if(k==='BB'){gs.pa++;gs.bb++}
+  else if(k==='FOUL'||k==='OUT'||k==='K'||k==='ABX'||k==='DP'||k==='E'){gs.pa++;gs.ab++}   // reaching on an error is an at-bat, not a hitelse if(k==='SF'||k==='SFX'){gs.pa++;gs.sf++}
+  else if(k==='BNT')gs.pa++}   // GB/FB are counted once the play is known (sac fly or not); SB/CS aren't plate appearances
+const ST_F=['g','w','r','pa','ab','h','bb','tb','sf'];
+function stKey(ex,c,sm){return (ex?'bbEX':'bbST')+(c?'C':'')+(sm?'S':'')}
+function getST(ex,c,sm){try{return JSON.parse(localStorage.getItem(stKey(ex,c,sm))||'null')}catch(e){return null}}
+function recordGame(r,won){try{const k=stKey(exhibitionMode,challenge,simpleMode),a=getST(exhibitionMode,challenge,simpleMode)||ROUNDS.map(()=>ST_F.map(()=>0));
+  const add=[1,won?1:0,runs,gs.pa,gs.ab,gs.h,gs.bb,gs.tb,gs.sf];a[r]=a[r].map((v,i)=>v+add[i]);localStorage.setItem(k,JSON.stringify(a))}catch(e){}}
+let stSimple=false;
+function renderStats(){
+  document.querySelectorAll('#stTog span').forEach(b=>b.classList.toggle('on',(b.dataset.m==='simple')===stSimple));
+  const f3=x=>x.toFixed(3).replace(/^0/,''),line=(nm,x,col,cls='')=>{const [g,w,r,pa,ab,h,bb,tb,sf]=x;
+    return g?`<tr class="${cls}"><td style="color:${col}">${nm}</td><td>${w}-${g-w}</td><td>${Math.round(100*w/g)}%</td><td>${(r/g).toFixed(1)}</td><td>${ab?f3(h/ab):'–'}</td><td>${ab+bb+sf?f3((h+bb)/(ab+bb+sf)):'–'}</td><td>${ab?f3(tb/ab):'–'}</td></tr>`
+      :`<tr class="${cls}"><td style="color:${col}">${nm}</td><td>–</td><td></td><td></td><td></td><td></td><td></td></tr>`};
+  const head='<tr><th></th><th>W-L</th><th>WIN</th><th>R/G</th><th>AVG</th><th>OBP</th><th>SLG</th></tr>',sum=a=>a.reduce((t,x)=>t.map((v,i)=>v+x[i]),ST_F.map(()=>0));
+  let h='';
+  for(const c of chalUnlocked?[false,true]:[false]){const a=getST(false,c,stSimple)||ROUNDS.map(()=>ST_F.map(()=>0)),col=c?SF_COLOR:'#fff';
+    h+=`<div class="stH">${c?'CHALLENGE':'CLASSIC'}</div><table class="stT">${head}${ROUNDS.map((_,i)=>line(RD(i).name.replace('ᶜ',''),a[i],col)).join('')}${line('ALL',sum(a),'#ffd642','tot')}</table>`}
+  // practice, by type
+  h+=`<div class="stH">PRACTICE</div><table class="stT">${head}`;
+  for(const c of chalUnlocked?[false,true]:[false])h+=line(c?'EXHIB CHAL':'EXHIBITION',sum(getST(true,c,stSimple)||ROUNDS.map(()=>ST_F.map(()=>0))),c?SF_COLOR:'#fff');
+  h+='</table>';
+  let bpH=[];try{bpH=JSON.parse(localStorage.getItem('bbBP')||'[]')}catch(e){}
+  const bpRow=c=>{const R=bpH.filter(x=>x.code.split(' ')[1]===(c?'CHAL':'CLASSIC'));if(!R.length)return '';
+    const sw=R.slice(-5).flatMap(x=>x.code.split(' ').slice(3)).map(q=>q.match(/^([A-Z])(\d)([RL])([+-]\d+)?([a-zA-Z])$/)).filter(m=>m&&m[4]);
+    const best=Math.max(...R.map(x=>{const n=+x.code.split(' ')[2],pts=x.pts;return pts!=null?Math.round(pts/n):-1}));
+    return `<tr><td style="color:${c?SF_COLOR:'#fff'}">BP ${c?'CHAL':'CLASSIC'}</td><td>${R.length}</td><td>${sw.length?Math.round(sw.reduce((a,m)=>a+Math.abs(+m[4]),0)/sw.length):'–'}</td><td>${sw.length?Math.round(100*sw.filter(m=>m[5]==='T').length/sw.length)+'%':'–'}</td><td>${best>=0?best:'–'}</td></tr>`};
+  const bpRows=bpRow(false)+(chalUnlocked?bpRow(true):'');
+  if(bpRows)h+=`<table class="stT" style="margin-top:2.5cqw"><tr><th></th><th>ROUNDS</th><th>MISS</th><th>ON TGT</th><th>BEST</th></tr>${bpRows}</table><div class="stN">BATTING PRACTICE · MISS (MS) AND ON TARGET: LAST 5 ROUNDS<br>BEST: YOUR TOP ROUND'S POINTS PER PITCH</div>`;
+  document.getElementById('stBody').innerHTML=h}
+function wipeStats(){try{for(const ex of [0,1])for(const c of ['','C'])for(const m of ['','S'])localStorage.removeItem((ex?'bbEX':'bbST')+c+m);
+  ['bbBP','bbWL','bbWLC','bbWLS','bbWLCS','bbWLsince'].forEach(k=>localStorage.removeItem(k))}catch(e){}}
+
+/* ===== batting practice =====
+   n pitches, an even shuffled mix of the five pitch types (classic: changeup…heater; challenge: knuckleball…super
+   fast), and the target moves around all seven wall spots (an even shuffle too). Each swing is scored 0-100 by how
+   close it lands to the target's centre, and its timing is measured in ms against the moment that would have hit
+   the centre exactly — fair, foul or whiff, so the misses aren't cut off at the poles. */
+let bp=null;
+const BP_L={CHANGEUP:'C',KNUCKLEBALL:'K',CURVEBALL:'U',FASTBALL:'F',HEATER:'H','SUPER FAST':'S'};
+const bpShuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function bpTypes(){const base=[1,4,2,0,3].map(i=>({...PITCHES[i]}));return challenge?base.map(levelUp):base}   // slowest → fastest
+function startBP(n){aud();musicStop();cancelPlay();markPlayed();
+  const ty=bpTypes(),T=bpShuf([].concat(...Array(n/5).fill(0).map(()=>ty.map((_,i)=>i))));
+  let Z=[];while(Z.length<n)Z=Z.concat(bpShuf([0,1,2,3,4,5,6]));Z=bpShuf(Z.slice(0,n));   // every spot as evenly as n allows
+  bp={n,i:0,ty,list:T.map((t,k)=>({t,z:Z[k]})),score:0,rec:[],streak:0,best:0};
+  round=0;target=0;inning=1;innOuts=0;runs=0;pitchCt=0;innBatters=0;onDeck=null;radar=0;hide('goScr');hide('bpScr');
+  if(!nextGame)rollNext();game=nextGame;useGame(game);rollNext();
+  newZones();isNewRound=true;isNewInning=false;showLbl('resLbl','BATTING PRACTICE','#ffd642',OPEN_ROUND_MS);
+  nextPitch()}
+function bpPitch(){const t=bp.ty[bp.list[bp.i].t];return t.n==='SUPER FAST'?superFast():{...t}}
+const bpCenterU=z=>(ZEDGES[z]+ZEDGES[z+1])/2;
+// heat colour by distance from the target centre, in zone widths: green on it → yellow → orange → red 2.5 zones off
+const bpHeat=d=>`hsl(${Math.round(120*(1-Math.min(d,2.5)/2.5))} 72% ${d<.5?40:44}%)`;
+function renderBP(){const g=document.getElementById('zg');g.innerHTML='';if(!bp||bp.i>=bp.n)return;
+  const z=bp.list[bp.i].z,tc=bpCenterU(z),N=42,f=n=>n.toFixed(2);   // 42 thin slices, each overlapping the next a touch (no seams)
+  for(let k=0;k<N;k++){const u0=W*k/N,u1=W*(k+1)/N+(k<N-1?.7:0),o0=wallPoint(u0,WALL_H),o1=wallPoint(u1,WALL_H),i0=wallPoint(u0,0),i1=wallPoint(u1,0);
+    const ro=f(WALL_R+WALL_H),ri=f(WALL_R),d=Math.abs((u0+u1)/2-tc)/ZBASE;
+    g.appendChild(svgEl('path',{d:`M${f(o0.x)} ${f(o0.y)}A${ro} ${ro} 0 0 1 ${f(o1.x)} ${f(o1.y)}L${f(i1.x)} ${f(i1.y)}A${ri} ${ri} 0 0 0 ${f(i0.x)} ${f(i0.y)}Z`,fill:bpHeat(d),class:'bpS'}))}
+  // fine lines between the heat slices, then the seven zones' boundaries, bold
+  for(let k=1;k<N;k++){const a=wallPoint(W*k/N,0),b=wallPoint(W*k/N,WALL_H);
+    g.appendChild(svgEl('line',{x1:f(a.x),y1:f(a.y),x2:f(b.x),y2:f(b.y),stroke:'rgba(10,12,26,.4)','stroke-width':.35}))}
+  for(let k=1;k<NUM_ZONES;k++){const a=wallPoint(ZEDGES[k],0),b=wallPoint(ZEDGES[k],WALL_H);
+    g.appendChild(svgEl('line',{x1:f(a.x),y1:f(a.y),x2:f(b.x),y2:f(b.y),stroke:'rgba(10,12,26,.9)','stroke-width':1.4}))}
+  // the target: outlined zone + a bullseye on its centre
+  g.appendChild(svgEl('path',{d:ZSECT[z].d,fill:'none',class:'bpTg'}));
+  const c=wallPoint(tc,WALL_H/2);g.appendChild(svgEl('circle',{cx:c.x,cy:c.y,r:3.2,fill:'none',stroke:'#fff','stroke-width':1}));
+  g.appendChild(svgEl('circle',{cx:c.x,cy:c.y,r:1.1,fill:'#fff'}))}
+// ms timing error vs a perfect centre hit (+ late, − early) for a swing whose ball sat `offset` px from the plate
+function bpErr(offset){const z=bp.list[bp.i].z,tAdj=(bpCenterU(z)/W)*2*FAIR-FAIR,tOff=batRight?tAdj:-tAdj;
+  return (offset-tOff)/(HOME.y-PITCH_Y)*TK*pitch.fr}
+function bpShow(sc,e,col){showLbl('resLbl',sc>0?'+'+sc:'0',col,900);
+  const a=Math.abs(e),t=a<3?'DEAD ON':(e<0?'EARLY ':'LATE ')+Math.round(a)+' ms';showLbl('innLbl',t,'#fff',900)}
+function bpRecord(r,e,sc){const c=bp.list[bp.i];bp.rec.push({t:bp.ty[c.t].n,z:c.z,h:batRight?'R':'L',e,r,s:sc});bp.score+=sc;bp.i++;if(r!=='T')bp.streak=0}
+function bpSwing(offset,absO){const e=bpErr(offset);
+  if(absO>WHIFF){setTimeout(()=>{batFr=0},300);sfx.strike();bpShow(0,e,'#ff6b5e');bpRecord('w',e,0);state='result';resultT=50;return true}
+  bp.pendE=e;bp.pendOff=offset;return false}
+function bpLand(){const e=bp.pendE;let sc=0,r='o';
+  if(hitRes!=='FOUL'){r='f';   // the landing spot in wall units, the same mapping doSwing used
+    const adj=batRight?bp.pendOff:-bp.pendOff,wu=Math.max(2,Math.min(W-2,Math.round(Math.max(0,Math.min(1,(adj+FAIR)/(2*FAIR)))*W)));
+    sc=Math.round(100*Math.max(0,1-Math.abs(wu-bpCenterU(bp.list[bp.i].z))/ZBASE/2.5));
+    if(zoneFromX(wu)===bp.list[bp.i].z){r='T';bp.streak++;bp.best=Math.max(bp.best,bp.streak);   // in the target zone: the homer sound, the frame flashes gold
+      sfx.hr();document.querySelector('#zones path.bpTg')?.classList.add('hit');
+      if(bp.streak>=2)showLbl('streakLbl',bp.streak+' IN A ROW!','#ffd642',1100)}}
+  bpShow(sc,e,sc>=80?'#7dff7d':sc>=50?'#ffd642':sc>0?'#ff9a3c':'#ff6b5e');bpRecord(r,e,sc);
+  batterUp=false;batBlinkT=0;state='result';resultT=55}
+function bpTake(){sfx.strike();showLbl('resLbl','TAKE','#aab',700);bpRecord('t',null,0);batterUp=false;state='result';resultT=45}
+function bpClearLbl(){}
+function drawBPBoard(){const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=WALL_T-bhgt-12;
+  cx.fillStyle='#0d2418';cx.fillRect(bx,by,bwid,bhgt);cx.fillStyle='#2a5a3a';cx.fillRect(bx,by,bwid,1);cx.fillRect(bx,by+bhgt-1,bwid,1);cx.fillRect(bx,by,1,bhgt);cx.fillRect(bx+bwid-1,by,1,bhgt);
+  cx.font='6px "Press Start 2P",monospace';cx.textBaseline='alphabetic';cx.textAlign='center';
+  cx.fillStyle='#ffd642';cx.fillText('BATTING PRACTICE',W/2,by+10);
+  cx.fillStyle='#fff';cx.fillText('PITCH '+Math.min(bp.rec.length+(state==='result'||bp.done?0:1),bp.n)+'/'+bp.n+(bp.streak>=2?'  ×'+bp.streak:''),W/2,by+21);
+  cx.fillStyle='#7dff7d';cx.fillText('SCORE '+bp.score,W/2,by+31);cx.textAlign='left'}
+// ---- results
+function bpStats(rec){const S=a=>a.reduce((x,y)=>x+y,0),out={};
+  const sw=rec.filter(r=>r.r!=='t');
+  const grp=(list)=>{const es=list.map(r=>r.e);const n=es.length;if(!n)return null;const m=S(es)/n;
+    return {n,lean:m,miss:S(es.map(Math.abs))/n,sd:Math.sqrt(S(es.map(x=>(x-m)**2))/n),on:list.filter(r=>r.r==='T').length/n,fair:list.filter(r=>r.r==='f'||r.r==='T').length/n,pts:S(list.map(r=>r.s))/n}};
+  out.types=bp.ty.map(t=>[t.n,grp(sw.filter(r=>r.t===t.n))]);
+  // aiming to pull (the two corner-side spots on his pull side), the middle three, or the two oppo spots
+  const side=r=>{const z=r.h==='R'?r.z:6-r.z;return z<=1?'PULL':z>=5?'OPPO':'MIDDLE'};
+  out.sides=['PULL','MIDDLE','OPPO'].map(k=>[k,grp(sw.filter(r=>side(r)===k))]);
+  out.all=grp(sw);out.takes=rec.length-sw.length;return out}
+function bpCode(){return 'BP2 '+(challenge?'CHAL':'CLASSIC')+' '+bp.n+' '+bp.rec.map(r=>BP_L[r.t]+r.z+r.h+(r.e==null?'':(r.e<0?'-':'+')+Math.round(Math.abs(r.e)))+r.r).join(' ')}
+function bpEnd(){const st=bpStats(bp.rec),code=bpCode();state='gameover';batterUp=false;
+  try{const h=JSON.parse(localStorage.getItem('bbBP')||'[]');h.push({d:Date.now(),code,pts:bp.score});localStorage.setItem('bbBP',JSON.stringify(h.slice(-60)))}catch(e){}
+  const ms=x=>x==null?'–':Math.round(Math.abs(x))===0?'0':(x<0?'−':'+')+Math.round(Math.abs(x)),pc=x=>Math.round(x*100)+'%';
+  const row=(nm,g,c)=>g?`<tr><td style="color:${c||'#fff'}">${nm}</td><td>${Math.round(g.miss)}</td><td>${ms(g.lean)}</td><td>${pc(g.on)}</td><td>${pc(g.fair)}</td></tr>`:'';
+  document.getElementById('bpSum').innerHTML=`<div class="bpBig">${bp.score.toLocaleString('en-US')}<small> / ${(bp.n*100).toLocaleString('en-US')}</small></div><div class="bpPer">${Math.round(bp.score/bp.n)} PER PITCH</div>
+    <table class="bpT"><tr><th></th><th>MISS<br>MS</th><th>LEAN<br>MS</th><th>ON<br>TGT</th><th>FAIR</th></tr>
+    ${st.types.map(([n,g])=>row(n==='SUPER FAST'?'SUPER F':n==='KNUCKLEBALL'?'KNUCKLE':n,g,n==='SUPER FAST'?SF_COLOR:PITCHES.find(q=>q.n===n)?.color)).join('')}
+    <tr class="sp"><td colspan="5"></td></tr>${st.sides.map(([n,g])=>row('AIM '+n,g)).join('')}${row('ALL',st.all,'#ffd642')}</table>
+    <div class="bpNote">BEST STREAK ${bp.best} · LEAN: − EARLY, + LATE<br>ON TGT: LANDED IN THE TARGET ZONE${st.takes?' · '+st.takes+' TAKEN':''}</div>`;
+  document.getElementById('bpCode').textContent=code;bp.done=true;show('bpScr')}
+
 /* ===== exhibition ===== */
-function showExh(){
+function showExh(){showBPSet();
   const list=document.getElementById('exhList');list.innerHTML='';
   ROUNDS.forEach((_,i)=>{const d=document.createElement('div'),r=RD(i);
     const ok=i<=maxUnlocked;
@@ -1943,7 +2142,19 @@ function showExh(){
       hide('exhScr');exhibitionMode=true;round=i;nextRound=i;startGame()});
     list.appendChild(d)})}
 document.getElementById('exhBtn').addEventListener('pointerdown',e=>{
-  e.stopPropagation();e.preventDefault();hide('titleScr');showExh();show('exhScr')});
+  e.stopPropagation();e.preventDefault();hide('menuScr');showExh();show('exhScr')});
+function onTap(id,fn){document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn()})}
+function showBPSet(){document.getElementById('bpSet').textContent=challenge?'KNUCKLEBALL TO SUPER FAST':'CHANGEUP TO HEATER';
+  const r=document.getElementById('bpN');r.innerHTML='';
+  [10,25,50,75,100].forEach(n=>{const d=document.createElement('div');d.textContent=n;
+    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();hide('exhScr');startBP(n)});r.appendChild(d)})}
+document.getElementById('bpScr').addEventListener('pointerdown',e=>{if(e.target.closest('#bpCode'))return;e.stopPropagation();e.preventDefault()});
+onTap('bpAgain',()=>{const n=bp?bp.n:25;hide('bpScr');startBP(n)});
+onTap('bpMenu',()=>toMenu());
+onTap('bpCopy',()=>{const t=document.getElementById('bpCode').textContent,b=document.getElementById('bpCopy');
+  const ok=()=>{b.textContent='COPIED!';setTimeout(()=>b.textContent='COPY RESULTS',1500)};
+  try{navigator.clipboard.writeText(t).then(ok,()=>{selCode()})}catch(e){selCode()}});
+function selCode(){const r=document.createRange();r.selectNodeContents(document.getElementById('bpCode'));const s=getSelection();s.removeAllRanges();s.addRange(r)}
 document.getElementById('exhScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 // FULL / SIMPLE switch on the title screen
 function paintMode(){document.querySelectorAll('#modeRow span').forEach(el=>{const on=(el.dataset.m==='simple')===simpleMode;
@@ -1999,7 +2210,7 @@ function renderHi(){
       const k=viewKey('dsHi2'),a=readArr(k);while(a.length<5)a.push(0);a[i]=0;
       try{localStorage.setItem(k,JSON.stringify(a))}catch(err){}loadModeScores();renderHi()});
     list.appendChild(row)})}
-function openHi(){hiView.simple=simpleMode;hiView.chal=challenge;hide('titleScr');renderHi();show('hiScr')}
+function openHi(){hiView.simple=simpleMode;hiView.chal=challenge;hide('menuScr');renderHi();show('hiScr')}
 function wipeAll(){
   try{for(const c of ['','C'])for(const m of ['','S']){localStorage.removeItem('dsHi2'+c+m);localStorage.removeItem('dsUnlk'+c+m)}
     localStorage.removeItem('bbChalUnlk');localStorage.setItem('bbChal','0')}catch(e){}
@@ -2007,7 +2218,7 @@ function wipeAll(){
   nextRound=0;loadModeScores();paintChal()}
 const tap=(id,fn)=>document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn(e)});
 tap('hiBtn',openHi);
-tap('hiBack',()=>{hide('hiScr');show('titleScr')});
+tap('hiBack',()=>{hide('hiScr');show('menuScr')});
 tap('hiChal',()=>{hiView.chal=!hiView.chal;renderHi()});
 tap('hiMode',e=>{const m=e.target.closest('span');if(!m)return;hiView.simple=m.dataset.m==='simple';renderHi()});
 tap('hiWipe',()=>{document.getElementById('wipeChal').style.display=chalUnlocked?'':'none';hide('hiScr');show('wipeScr')});
@@ -2017,12 +2228,12 @@ for(const id of ['hiScr','wipeScr'])document.getElementById(id).addEventListener
 // glossary: from the title screen or the pause menu; BACK returns to wherever it was opened from
 let glossFrom='titleScr';
 function openGloss(from){glossFrom=from;hide(from);show('glossScr');document.getElementById('glossBox').scrollTop=0}
-document.getElementById('glossBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();openGloss('titleScr')});
+document.getElementById('glossBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();openGloss('menuScr')});
 document.getElementById('glossBtnP').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();openGloss('pauseScr')});
 document.getElementById('glossScr').addEventListener('pointerdown',e=>e.stopPropagation());   // no preventDefault: the list scrolls
 document.getElementById('glossBack').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();hide('glossScr');show(glossFrom)});
 document.getElementById('exhBack').addEventListener('pointerdown',e=>{
-  e.stopPropagation();e.preventDefault();hide('exhScr');show('titleScr')});
+  e.stopPropagation();e.preventDefault();hide('exhScr');show('menuScr')});
 
 /* ===== team picker ===== */
 let tmWho='bat';
@@ -2071,8 +2282,20 @@ document.getElementById('teamScr').addEventListener('pointerdown',e=>{e.stopProp
   const k=e.target.closest('.tmK'),p=e.target.closest('.tmP'),tg=e.target.closest('#tmTog span'),sw=e.target.closest('.tmSw span[data-v]');
   if(k)tmTapTeam(k.dataset.t);else if(p)tmTapPlayer(p.dataset.w);else if(tg){tmWho=tg.dataset.w;renderTeams()}
   else if(sw)tmSwitch(sw.parentNode.dataset.k,sw.dataset.v);
-  else if(e.target.closest('#tmDone')){hide('teamScr');show('titleScr')}});
-tap('teamBtn',()=>{tmWho='bat';hide('titleScr');renderTeams();show('teamScr')});
+  else if(e.target.closest('#tmDone')){hide('teamScr');show('menuScr')}});
+tap('teamBtn',()=>{tmWho='bat';hide('menuScr');renderTeams();show('teamScr')});
+// the title has one MENU button; everything else lives on the menu screen
+tap('menuBtn',()=>{hide('titleScr');paintChal();show('menuScr')});
+tap('menuBack',()=>{hide('menuScr');show('titleScr')});
+document.getElementById('menuScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
+tap('stBtn',()=>{hide('menuScr');stSimple=simpleMode;renderStats();show('stScr')});
+tap('stBack',()=>{hide('stScr');show('menuScr')});
+tap('stWipe',()=>{hide('stScr');show('stWipeScr')});
+tap('stWipeNo',()=>{hide('stWipeScr');show('stScr')});
+tap('stWipeYes',()=>{wipeStats();hide('stWipeScr');renderStats();show('stScr')});
+document.getElementById('stWipeScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
+document.getElementById('stTog').addEventListener('pointerdown',e=>{const b=e.target.closest('span');if(!b)return;stSimple=b.dataset.m==='simple';renderStats()});
+document.getElementById('stScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 
 /* ===== input ===== */
 // the time of a tap/key press: its event timestamp when that's sane, otherwise now
@@ -2096,7 +2319,7 @@ document.getElementById('pauseBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();
   if(state==='title'||state==='gameover')return;
   paused=!paused;if(paused){show('pauseScr');sfx.pause()}else{hide('pauseScr');sfx.unpause()}});
-function toMenu(){aud();musicStop();cancelPlay();hide('goScr');hide('exhScr');
+function toMenu(){bp=null;hide('bpScr');hide('menuScr');hide('stScr');hide('stWipeScr');aud();musicStop();cancelPlay();hide('goScr');hide('exhScr');
   document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;chalJustUnlocked=false;paused=false;hide('pauseScr');state='title';paintChal();show('titleScr')}
 tap('resetBtn',toMenu);
 tap('goMenu',toMenu);   // game over: back to the title menu instead of straight into the next game
