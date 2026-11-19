@@ -52,6 +52,8 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 /* zones: an SVG overlay sharing the canvas's 180×360 coordinate space.
    Each zone is an annular sector of the wall arc; --r is its tilt, so pops and
    flips scale along the sector's own radial axis (rotate · scaleY · unrotate). */
+#c2{position:absolute;inset:0;pointer-events:none;z-index:1}   /* half-pixel details over the game canvas (jersey numbers) */
+#c3{position:absolute;pointer-events:none;z-index:1}            /* the pitcher's patch at 4×: placed by script over the mound */
 #zones{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
 #zones text{font-family:'Archivo Black','Press Start 2P',sans-serif;font-weight:400;font-size:9px;fill:#fff}   /* painted wall signage: smooth, unlike the pixel scoreboard */
 #zones path{stroke:#0a0c1a;stroke-width:1}
@@ -128,7 +130,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .tmP canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #tmCvB{width:25.3cqw;height:27cqw}#tmCvP{width:27.4cqw;height:27.4cqw;margin-bottom:.42cqw}   /* pitcher 25% bigger, feet level with the batter's */
 .tmP b{color:#fff;font-weight:normal;font-size:clamp(7px,2.23cqw,12px)}
-/* the two switches: OPPONENT and UNIFORMS, each NEW | SAME */
+/* the UNIFORMS switch, NEW | SAME */
 .tmSw{display:flex;width:calc(100% - 5.6cqw);margin-top:1.4cqw;align-items:stretch}
 .tmSw span{flex:1;text-align:center;font-size:clamp(7px,2.23cqw,12px);padding:1.9cqw 0 1.6cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
 .tmSw span+span{margin-left:-1px}
@@ -140,7 +142,9 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .tmK{height:6.9cqw;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,2.8cqw,15px);letter-spacing:.3cqw;color:#fff;cursor:pointer;
   text-shadow:1px 1px 0 rgba(0,0,0,.45)}
 .tmK.sel{outline:2px solid var(--gold);outline-offset:1px}.tmK.nx{outline:2px dashed var(--gold);outline-offset:1px}
-#tmDone{margin-top:auto;margin-bottom:14cqw;min-width:30%;text-align:center}
+#tmHd{width:calc(100% - 5.6cqw);margin-top:2.2cqw;padding-top:2cqw;border-top:1px solid #2a2f48;text-align:center;font-size:clamp(8px,2.8cqw,15px);color:var(--gold)}
+#tmRnd{width:calc(100% - 5.6cqw);margin-top:1.4cqw;box-sizing:border-box;border:1px solid #667;background:repeating-linear-gradient(135deg,#2a2f48 0 4cqw,#353b5a 4cqw 8cqw)}
+#tmDone{margin-top:auto;margin-bottom:13cqw;min-width:30%;text-align:center}
 @keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
 #innLbl{top:44%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
 #scorLbl{top:58.37%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(9px,3.4cqw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
@@ -210,6 +214,8 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 
 <div id="wrap"><div id="stage">
 <canvas id="c" width="180" height="360"></canvas>
+<canvas id="c2" width="360" height="720"></canvas>
+<canvas id="c3" width="64" height="64"></canvas>
 <svg id="zones" viewBox="0 0 180 360" preserveAspectRatio="none">
   <defs><pattern id="zStripeBR" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#bb3333"/><rect width="2.5" height="5" fill="#4477cc"/></pattern><pattern id="zStripeDP" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#bb3333"/><rect width="2" height="4" fill="#7a1818"/></pattern><pattern id="zStripe" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#d9655b"/><rect width="2" height="4" fill="#7a1818"/></pattern><clipPath id="zclip"><rect id="zclipR" x="0" y="0" width="180" height="360"/></clipPath></defs>
   <g id="zg" clip-path="url(#zclip)"></g><g id="poles"></g></svg>
@@ -303,10 +309,11 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 <div class="scr" id="teamScr">
   <div class="tt">CHOOSE TEAMS</div>
   <div id="tmTog"><span data-w="bat" class="on">BATTER</span><span data-w="pit">PITCHER</span></div>
-  <div id="tmPv"><div class="tmP on" data-w="bat"><div class="bx"><canvas id="tmCvB" width="30" height="32"></canvas></div><b id="tmNmB"></b><span id="tmUB"></span></div>
-    <div class="tmP" data-w="pit"><div class="bx"><canvas id="tmCvP" width="26" height="26"></canvas></div><b id="tmNmP"></b><span id="tmUP"></span></div></div>
-  <div class="tmSw" data-k="opp"><span class="k">OPPONENT</span><span data-v="new">NEW</span><span data-v="same">SAME</span></div>
+  <div id="tmPv"><div class="tmP on" data-w="bat"><div class="bx"><canvas id="tmCvB" width="120" height="128"></canvas></div><b id="tmNmB"></b><span id="tmUB"></span></div>
+    <div class="tmP" data-w="pit"><div class="bx"><canvas id="tmCvP" width="104" height="104"></canvas></div><b id="tmNmP"></b><span id="tmUP"></span></div></div>
   <div class="tmSw" data-k="uni"><span class="k">UNIFORMS</span><span data-v="new">NEW</span><span data-v="same">SAME</span></div>
+  <div id="tmHd"></div>
+  <div id="tmRnd" class="tmK">RANDOM</div>
   <div id="tmGrid"></div>
   <div id="tmDone" class="tBtn">DONE</div>
 </div>
@@ -383,10 +390,17 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 
 <script>
 const cv=document.getElementById('c'),cx=cv.getContext('2d'),W=180,H=360;
+// Jersey numbers are drawn in half-pixel blocks on layers over the game canvas:
+//   #c2  the whole field at 2×: batter, on-deck batter, runners (a number can sit a quarter pixel off centre)
+//   #c3  a 16×16 patch over the mound at 4×: the pitcher faces us dead on, so his number is placed to the
+//        quarter pixel and sits exactly centred (a full-field 4× layer cost ~30 MB more; this costs ~16 KB)
+const cx2=document.getElementById('c2').getContext('2d'),cx3=document.getElementById('c3').getContext('2d');let shX=0,shY=0;
 
 /* ===== layout ===== */
 const HOME={x:90,y:305};
 const MOUND={x:90,y:195};
+const PATCH={x:MOUND.x-8,y:MOUND.y-16,w:16,h:16};   // #c3's spot on the field (room for the number plus screen shake)
+Object.assign(document.getElementById('c3').style,{left:PATCH.x/1.8+'%',top:PATCH.y/3.6+'%',width:PATCH.w/1.8+'%',height:PATCH.h/3.6+'%'});
 const PITCH_Y=MOUND.y-5; // release height: belt level (he stands on the rubber at MOUND.y)
 const GLOVE='#a06a2a';   // pitcher's mitt — lighter than it was so it reads against grass
 const PITCH_HAND=5;      // release is this far to the throwing-hand side of the mound centre
@@ -583,7 +597,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v379';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v387';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1035,31 +1049,37 @@ function autoUni(id,side,vs){const t=TM[id];
   const ok=c.filter(o=>!clash(o.x));if(ok.length)c=ok;else c=t.u.map((x,i)=>({i,x,w:1})).filter(o=>!clash(o.x)).concat(c);
   let r=Math.random()*c.reduce((a,o)=>a+o.w,0);for(const o of c){if((r-=o.w)<=0)return o.i}return c[0].i}
 // a schedule like the real one: 52 division games, 64 rest-of-league, 4 vs the interleague rival, 42 vs the other 14
-function schedOpp(){const me=TM[myTeam],w=[];
-  for(const t of TEAMS){if(t.id===myTeam)continue;
-    w.push([t.id,t.lg===me.lg?(t.dv===me.dv?52/4:64/10):(RIVAL[myTeam]===t.id?4:42/14)])}
+function schedOpp(my){const me=TM[my],w=[];
+  for(const t of TEAMS){if(t.id===my)continue;
+    w.push([t.id,t.lg===me.lg?(t.dv===me.dv?52/4:64/10):(RIVAL[my]===t.id?4:42/14)])}
   let r=Math.random()*w.reduce((a,x)=>a+x[1],0);for(const x of w){if((r-=x[1])<=0)return x[0]}return w[0][0]}
-// Two switches on the picker:
-//   OPPONENT  NEW: a new team every game from the schedule · SAME: always the team you picked
+// RANDOM on either side: a new team every game (yours: any of the 30; the opponent: by the schedule's
+// odds for whoever you are that day) · a team picked: that team every game. One switch on the picker:
 //   UNIFORMS  NEW: home/away changes game to game and each team dresses for the day (mostly its primary,
 //                  an alternate now and then) · SAME: one side and the same uniforms every game
-let myTeam=null,oppLock=null,uniSame=false,lockSide='H',myPick=0,oppPick=-1,nextGame=null,game=null;
-try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;oppLock=TM[t.opp]?t.opp:null;
+let myTeam=null,myRand=true,oppLock=null,uniSame=false,lockSide='H',myPick=0,oppPick=-1,nextGame=null,game=null;
+try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;myRand=!!t.rand;oppLock=TM[t.opp]?t.opp:null;
   uniSame=!!t.uniSame&&t.myU>=0&&t.myU<TM[t.my].u.length;if(uniSame){lockSide=t.side==='A'?'A':'H';myPick=t.myU;oppPick=oppLock&&t.oppU>=0?t.oppU:-1}}}catch(e){}
 if(!myTeam)myTeam=TEAMS[Math.floor(Math.random()*TEAMS.length)].id;   // first visit: a team of your own, change it any time
-function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTeam,opp:oppLock,uniSame,side:lockSide,myU:myPick,oppU:oppPick}))}catch(e){}}
+function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTeam,rand:myRand,opp:oppLock,uniSame,side:lockSide,myU:myPick,oppU:oppPick}))}catch(e){}}
 const primary=(id,side)=>TM[id].u.findIndex(x=>x[0]===side);
 // same-uniforms opponent: his pick if he's the fixed opponent, otherwise his primary for the side (or the next one that doesn't clash)
 function fixedOpp(id,side,vs){if(oppLock===id&&oppPick>=0)return oppPick;const t=TM[id],clash=x=>Math.abs(lum(x[3])-lum(vs[3]))<.12;
   const p0=primary(id,side);if(!clash(t.u[p0]))return p0;const i=t.u.findIndex(x=>x[1]===side&&!clash(x));return i>=0?i:t.u.findIndex(x=>!clash(x))}
-function rollNext(keepSide){
+// keep: the side of the picker that didn't change ('bat' or 'pit'): that team, and its uniform when it
+// still works, stay as they were instead of being drawn again
+function rollNext(keepSide,keep){const k=keep&&nextGame;
   const side=uniSame?lockSide:keepSide||(Math.random()<.5?'H':'A');   // side = yours
-  const opp=oppLock||schedOpp(),oSide=side==='H'?'A':'H';let mine,ou;
-  if(uniSame){mine=myPick;ou=fixedOpp(opp,oSide,TM[myTeam].u[mine])}
-  else{mine=autoUni(myTeam,side,null);ou=autoUni(opp,oSide,TM[myTeam].u[mine])}
-  nextGame={side,opp,mine,ou}}
+  let me=myTeam;if(myRand){me=null;if(k&&(keep==='bat'||keep==='both')&&nextGame.me!==oppLock)me=nextGame.me;
+    if(!me){const c=TEAMS.filter(t=>t.id!==oppLock&&(!k||keep!=='pit'||t.id!==nextGame.opp));me=c[Math.floor(Math.random()*c.length)].id}}
+  let opp=oppLock;if(!opp){if(k&&(keep==='pit'||keep==='both')&&nextGame.opp!==me)opp=nextGame.opp;if(!opp)opp=schedOpp(me)}
+  const oSide=side==='H'?'A':'H',same=(a,f)=>k&&a===nextGame[f]&&nextGame.side===side,clash=(x,y)=>Math.abs(lum(x[3])-lum(y[3]))<.12;let mine,ou;
+  if(uniSame){mine=myRand?primary(me,side):myPick;ou=fixedOpp(opp,oSide,TM[me].u[mine])}
+  else{mine=same(me,'me')&&keep!=='pit'?nextGame.mine:autoUni(me,side,null);
+    ou=same(opp,'opp')&&keep!=='bat'&&!clash(TM[opp].u[nextGame.ou],TM[me].u[mine])?nextGame.ou:autoUni(opp,oSide,TM[me].u[mine])}
+  nextGame={me,side,opp,mine,ou}}
 let BAT_U=uniOf(myTeam,0),PIT_U=uniOf('BOS',0);
-function useGame(g){BAT_U=uniOf(myTeam,g.mine);PIT_U=uniOf(g.opp,g.ou)}
+function useGame(g){BAT_U=uniOf(g.me,g.mine);PIT_U=uniOf(g.opp,g.ou)}
 rollNext();useGame(nextGame);
 
 let hiScores=[0,0,0,0,0];
@@ -1334,7 +1354,6 @@ function drawPitcher(fr){
   const px=MOUND.x,py=MOUND.y-10,sk=pitcherSk,u=PIT_U,un=u.jer,uD=u.yoke; // feet (py+9..py+10) land on the rubber
   SC.save();if(pitchLefty){SC.translate(2*px+1,0);SC.scale(-1,1)}             // lefty: mirror about the mound centre
   SC.fillStyle=un;SC.fillRect(px-3,py+1,7,5);SC.fillStyle=uD;SC.fillRect(px-3,py+1,7,1);
-  SC.fillStyle=u.let;SC.fillRect(px-1,py+2,1,2);SC.fillRect(px+1,py+2,1,2);
   SC.fillStyle=u.pants;SC.fillRect(px-2,py+6,3,4);SC.fillRect(px+1,py+6,3,4);
   SC.fillStyle='#333';SC.fillRect(px-2,py+9,3,2);SC.fillRect(px+1,py+9,3,2);
   SC.fillStyle=sk;
@@ -1349,7 +1368,20 @@ function drawPitcher(fr){
   // ball in hand during windup
   if(fr===1){SC.fillStyle=pitch?pitch.color:'#fff';SC.fillRect(px-6,py-5,3,3)}
   SC.restore();
+  jerseyNum(pitcherNum,px+.5,py+2.5,u.let,true);   // on his chest; px+.5 is the middle for a lefty too
 }
+// jersey numbers: a 3×5 digit font drawn in half pixels; (x,y) = top centre, in field coords
+const DIG={0:'111101101101111',1:'010110010010111',2:'111001111100111',3:'111001011001111',4:'101101111001001',
+  5:'111100111001111',6:'111100111101111',7:'111001001001001',8:'111101111101111',9:'111101111001111'};
+function jerseyNum(n,x,y,col,fine){const live=SC===cx,g=live?(fine?cx3:cx2):SC;g.save();g.fillStyle=col;
+  if(live){if(fine)g.setTransform(4,0,0,4,4*(shX-PATCH.x),4*(shY-PATCH.y));else g.setTransform(2,0,0,2,2*shX,2*shY)}
+  const d=String(n),k=.5,q=live&&!fine?.5:.25;   // the team-picker previews are 4× canvases
+ let x0=Math.round((x-(d.length*4-1)*k/2)/q)*q;y=Math.round(y/q)*q;   // on its layer's pixel grid, or it smears
+  for(const c of d){const f=DIG[c];for(let i=0;i<15;i++)if(f[i]==='1')g.fillRect(x0+(i%3)*k,y+Math.floor(i/3)*k,k,k);x0+=4*k}
+  g.restore()}
+// a player's number: mostly 1–59 like a real roster, now and then higher; never 42 (retired across the majors)
+function pickNum(){for(;;){const n=1+Math.floor(Math.random()*99);if(n===42)continue;if(n<60||Math.random()<(n<80?.3:.12))return n}}
+let batterNum=pickNum(),pitcherNum=pickNum();
 function drawBatter(fr){
   let bx=HOME.x+(batRight?-11:11),by=HOME.y+5;
   if(walkT>0&&walkFrom){   // sliding over from the on-deck circle, with a little step bob
@@ -1382,12 +1414,13 @@ function drawBatter(fr){
   SC.fillStyle=sk;SC.fillRect(-2,-12,6,5);
   SC.fillStyle=u.cap;SC.fillRect(-3,-13,8,5);SC.fillRect(-4,-11,2,3);
   SC.restore();
+  jerseyNum(batterNum,bx+(batRight?.5:-.5),by-4.5,u.let);   // never mirrored, even for a lefty
 }
 // ===== on-deck batter =====
 // the game's first batter is always a righty; in Rookie the first three are
 let onDeck=null,walkT=0,walkFrom=null;   // walkT: frames left of the new batter's walk from the on-deck circle
 const WALK_FR=24;                            // 400ms; the next on-deck batter appears when he arrives
-const mkBatter=i=>({sk:pickSkin(),right:(inning===1&&(i===1||(round===0&&i<=3)))?true:Math.random()>.3});
+const mkBatter=i=>({sk:pickSkin(),num:pickNum(),right:(inning===1&&(i===1||(round===0&&i<=3)))?true:Math.random()>.3});
 function drawOnDeck(){   // the kneeling next batter (both circles are drawn with the static field)
   const r=onDeck.right,ox=r?OD_LX:OD_RX,oy=OD_Y,sk=onDeck.sk;
   // on-deck circle: a small dirt ring like the batter's circle
@@ -1403,6 +1436,7 @@ function drawOnDeck(){   // the kneeling next batter (both circles are drawn wit
   SC.fillStyle=sk;SC.fillRect(3,-10,3,3);SC.fillRect(-2,-16,5,5);   // hands stacked on the knob, face
   SC.fillStyle=u.cap;SC.fillRect(-3,-17,7,4);SC.fillRect(-4,-15,2,3);  // helmet + ear flap
   SC.restore();
+  jerseyNum(onDeck.num,ox+(r?.5:-.5),oy-9,u.let);
   SC.save();
   SC.restore();
 }
@@ -1415,6 +1449,7 @@ function drawBaseRunner(x,y,sk,left){y-=3;const u=BAT_U;
   SC.fillStyle='#333';SC.fillRect(x-2,y+3,5,2);
   SC.fillStyle=sk||SKIN[0][0];SC.fillRect(left?x-2:x-1,y-9,4,4);
   SC.fillStyle=u.cap;SC.fillRect(x-2,y-10,5,3);SC.fillRect(left?x+2:x-2,y-7,1,1);   // batting helmet + ear flap
+  if(sk&&sk.num)jerseyNum(sk.num,x+.5,y-3.5,u.let);
 }
 
 /* ===== scoreboard (drawn on canvas) ===== */
@@ -1513,7 +1548,7 @@ function basePitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 // drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
 function cancelPlay(){bpClearLbl();steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
-function startGame(){bp=null;gs=newGS();musicStop();cancelPlay();markPlayed();pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+function startGame(){bp=null;gs=newGS();musicStop();cancelPlay();markPlayed();pitcherSk=pickSkin();pitcherNum=pickNum();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1523,7 +1558,7 @@ function startGame(){bp=null;gs=newGS();musicStop();cancelPlay();markPlayed();pi
   if(!nextGame)rollNext();game=nextGame;useGame(game);rollNext();showMatchup();
   nextPitch()}
 const chipBg=t=>`linear-gradient(135deg,${t.c[0]} 0 80%,${t.c[1]} 80%)`;
-function showMatchup(){const e=document.getElementById('muLbl'),me=TM[myTeam],op=TM[game.opp];
+function showMatchup(){const e=document.getElementById('muLbl'),me=TM[game.me],op=TM[game.opp];
   e.innerHTML=`<div class="mc l" style="background:${chipBg(me)}">${me.ab}</div><div class="at">${game.side==='H'?'vs':'at'}</div><div class="mc r" style="background:${chipBg(op)}">${op.ab}</div>`;
   e.classList.add('show');hideLblAfter('muLbl',OPEN_ROUND_MS)}
 /* ===== TIMING CONSTANTS (tweak these) ===== */
@@ -1552,7 +1587,9 @@ function nextPitch(){
   knk=Math.random()*100;
   // the on-deck batter steps in and a new one kneels down (shown beside the plate, so no LEFTY! callout)
   if(!onDeck)onDeck=mkBatter(innBatters);
-  batterSk=onDeck.sk;batRight=onDeck.right;batterUp=true;
+  // the skin colour travels with him around the bases (bases[], runner paths, exits); as a String object it
+  // can carry his number too, and still works anywhere a colour string does
+  batterSk=Object.assign(new String(onDeck.sk),{num:onDeck.num});batRight=onDeck.right;batterNum=onDeck.num;batterUp=true;
   walkFrom={x:batRight?OD_LX:OD_RX,y:OD_Y};walkT=WALK_FR;   // he walks over in his stance from the on-deck spot
   onDeck=mkBatter(innBatters+1);
   const gameStart=isNewRound;
@@ -1793,7 +1830,7 @@ function doInnBreak(){
   innLOB[Math.min(inning,MAX_INN)-1]=lobNow!=null?lobNow:bases.filter(b=>b).length;lobNow=null;
   const endOuts=innOuts;
   clearBases();runnerAnims=[];innOuts=0;innBatters=0;hrOK=false;inning++;
-  if(inning<=MAX_INN){pitcherSk=pickSkin();pitchLefty=Math.random()<.3}   // new pitcher each inning; after the last one he just leaves
+  if(inning<=MAX_INN){pitcherSk=pickSkin();pitcherNum=pickNum();pitchLefty=Math.random()<.3}   // new pitcher each inning; after the last one he just leaves
   if(inning>MAX_INN){
     innOuts=endOuts; // keep the out lamps lit behind the game-over screen
     state='gameover';
@@ -1921,9 +1958,9 @@ let pauseOff=null;
 function paintPauseBtn(){const off=state==='title'||state==='gameover';if(off===pauseOff)return;pauseOff=off;
   const b=document.getElementById('pauseBtn');b.style.opacity=off?.35:'';b.style.cursor=off?'default':'pointer';b.setAttribute('aria-disabled',off)}
 function draw(){paintPauseBtn();
-  cx.clearRect(0,0,W,H);
+  cx.clearRect(0,0,W,H);cx2.setTransform(1,0,0,1,0,0);cx2.clearRect(0,0,2*W,2*H);cx3.setTransform(1,0,0,1,0,0);cx3.clearRect(0,0,64,64);
   const sx=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;
-  const sy=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;
+  const sy=shakeAmt>0?(Math.random()-.5)*shakeAmt*.6|0:0;shX=sx;shY=sy;
   cx.save();cx.translate(sx,sy);
 
   cx.drawImage(fCv,0,0);
@@ -2236,52 +2273,58 @@ document.getElementById('exhBack').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();hide('exhScr');show('menuScr')});
 
 /* ===== team picker ===== */
-let tmWho='bat';
-function drawPreview(id,who,ui){const cv=document.getElementById(who==='bat'?'tmCvB':'tmCvP'),g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);
-  const keep=[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty];SC=g;g.save();
-  if(who==='bat'){BAT_U=uniOf(id,ui);batRight=true;walkT=0;g.translate(13-(HOME.x-11),29-(HOME.y+12));drawBatter(0)}
-  else{PIT_U=uniOf(id,ui);pitchLefty=false;g.translate(13-(MOUND.x+1),24-(MOUND.y+1));drawPitcher(0)}
-  g.restore();[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty]=keep}
+let tmWho='bat';const PREV_NUM=pickNum(),PREV_NUM2=pickNum();
+function drawPreview(id,who,ui){const cv=document.getElementById(who==='bat'?'tmCvB':'tmCvP'),g=cv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.setTransform(4,0,0,4,0,0);   // 4×, like #c2: room for the jersey numbers
+ 
+  const keep=[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty,batterNum,pitcherNum];SC=g;g.save();
+  if(who==='bat'){BAT_U=uniOf(id,ui);batRight=true;walkT=0;batterNum=PREV_NUM;g.translate(13-(HOME.x-11),29-(HOME.y+12));drawBatter(0)}
+  else{PIT_U=uniOf(id,ui);pitchLefty=false;pitcherNum=PREV_NUM2;g.translate(13-(MOUND.x+1),24-(MOUND.y+1));drawPitcher(0)}
+  g.restore();[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty,batterNum,pitcherNum]=keep}
 function renderTeams(){
   document.querySelectorAll('#tmTog span').forEach(b=>b.classList.toggle('on',b.dataset.w===tmWho));
   document.querySelectorAll('.tmP').forEach(b=>b.classList.toggle('on',b.dataset.w===tmWho));
-  const me=TM[myTeam],opId=nextGame.opp,op=TM[opId],myU=nextGame.mine,opU=nextGame.ou;
-  document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=(uniSame?'':'NEXT GAME · ')+me.lbl[myU];
+  const myId=nextGame.me,me=TM[myId],opId=nextGame.opp,op=TM[opId],myU=nextGame.mine,opU=nextGame.ou;
+  document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=(uniSame&&!myRand?'':'NEXT GAME · ')+me.lbl[myU];
   document.getElementById('tmNmP').textContent=op.city;document.getElementById('tmUP').textContent=(uniSame&&oppLock?'':'NEXT GAME · ')+op.lbl[opU];
-  drawPreview(myTeam,'bat',myU);drawPreview(opId,'pit',opU);
-  document.querySelectorAll('.tmSw').forEach(r=>r.querySelectorAll('span[data-v]').forEach(b=>
-    b.classList.toggle('on',(b.dataset.v==='same')===(r.dataset.k==='opp'?!!oppLock:uniSame))));
+  drawPreview(myId,'bat',myU);drawPreview(opId,'pit',opU);
+  document.querySelectorAll('.tmSw span[data-v]').forEach(b=>b.classList.toggle('on',(b.dataset.v==='same')===uniSame));
+  document.getElementById('tmHd').textContent=tmWho==='bat'?"BATTER'S TEAM":"PITCHER'S TEAM";
+  document.getElementById('tmRnd').classList.toggle('sel',tmWho==='bat'?myRand:!oppLock);
 
   // West · Central · East, AL on top
   let h='';for(const lg of ['AL','NL']){h+=`<div class="tmL">${lg}</div><div class="tmR">`;
     for(const [dv,nm] of [['W','WEST'],['C','CENTRAL'],['E','EAST']]){h+=`<div class="tmC"><div class="tmD">${nm}</div>`;
       for(const t of TEAMS.filter(t=>t.lg===lg&&t.dv===dv)){
-        const cls=tmWho==='bat'?(t.id===myTeam?' sel':''):(oppLock?(t.id===oppLock?' sel':''):(t.id===opId?' nx':''));
+        const cls=tmWho==='bat'?(myRand?(t.id===myId?' nx':''):(t.id===myTeam?' sel':'')):(oppLock?(t.id===oppLock?' sel':''):(t.id===opId?' nx':''));
         h+=`<div class="tmK${cls}" data-t="${t.id}" style="background:${chipBg(t)}">${t.ab}</div>`}
       h+='</div>'}
     h+='</div>'}
   document.getElementById('tmGrid').innerHTML=h}
-function tmChanged(){rollNext(nextGame&&nextGame.side);saveTeams();renderTeams()}
+// a change on one tab leaves the other tab's team (and uniform) alone
+function tmChanged(keep){rollNext(nextGame&&nextGame.side,keep||(tmWho==='bat'?'pit':'bat'));saveTeams();renderTeams()}
 // freeze whatever is showing: its side and both uniforms
 function freezeUni(){uniSame=true;lockSide=nextGame.side;myPick=nextGame.mine;oppPick=oppLock?nextGame.ou:-1}
 function tmTapTeam(id){
-  if(tmWho==='bat'){if(id===myTeam){if(!uniSame)freezeUni();myPick=(myPick+1)%TM[id].u.length;lockSide=TM[id].u[myPick][1]}
+  if(tmWho==='bat'){if(myRand){myRand=false;myTeam=id;if(oppLock===id)oppLock=null;myPick=id===nextGame.me?nextGame.mine:primary(id,lockSide);tmChanged();return}   // off RANDOM: just pick him
+    if(id===myTeam){if(!uniSame)freezeUni();myPick=(myPick+1)%TM[id].u.length;lockSide=TM[id].u[myPick][1]}
     else{myTeam=id;if(oppLock===id)oppLock=null;if(uniSame)myPick=primary(id,lockSide)}}
-  else{if(id===myTeam)return;if(oppLock===id){if(!uniSame)freezeUni();oppPick=(oppPick+1)%TM[id].u.length;lockSide=TM[id].u[oppPick][1]==='H'?'A':'H'}
+  else{if(id===nextGame.me&&!myRand)return;if(oppLock===id){if(!uniSame)freezeUni();oppPick=(oppPick+1)%TM[id].u.length;lockSide=TM[id].u[oppPick][1]==='H'?'A':'H'}
     else{oppLock=id;oppPick=-1}}
   tmChanged()}
 function tmTapPlayer(w){if(tmWho!==w){tmWho=w;renderTeams();return}
-  if(w==='bat'){tmTapTeam(myTeam);return}
+  if(w==='bat'){if(myRand){myRand=false;myTeam=nextGame.me;myPick=nextGame.mine}   // picking his uniform means keeping him
+    tmTapTeam(myTeam);return}
   if(!oppLock)oppLock=nextGame.opp;   // picking his uniform means facing him again
   tmTapTeam(oppLock)}
-function tmSwitch(k,v){
-  if(k==='opp'){if(v==='new'&&oppLock){oppLock=null;oppPick=-1}else if(v==='same'&&!oppLock){oppLock=nextGame.opp;if(uniSame)oppPick=nextGame.ou}else return}
-  else{if(v==='new'&&uniSame){uniSame=false;oppPick=-1}else if(v==='same'&&!uniSame)freezeUni();else return}
+function tmSwitch(v){if(v==='new'&&uniSame){uniSame=false;oppPick=-1}else if(v==='same'&&!uniSame)freezeUni();else return
+  tmChanged('both')}
+// RANDOM: back to a new team every game, and every tap on it draws the next game's team again
+function tmRandom(){if(tmWho==='bat')myRand=true;else{oppLock=null;oppPick=-1}
   tmChanged()}
 document.getElementById('teamScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();
   const k=e.target.closest('.tmK'),p=e.target.closest('.tmP'),tg=e.target.closest('#tmTog span'),sw=e.target.closest('.tmSw span[data-v]');
-  if(k)tmTapTeam(k.dataset.t);else if(p)tmTapPlayer(p.dataset.w);else if(tg){tmWho=tg.dataset.w;renderTeams()}
-  else if(sw)tmSwitch(sw.parentNode.dataset.k,sw.dataset.v);
+  if(e.target.closest('#tmRnd'))tmRandom();else if(k)tmTapTeam(k.dataset.t);else if(p)tmTapPlayer(p.dataset.w);else if(tg){tmWho=tg.dataset.w;renderTeams()}
+  else if(sw)tmSwitch(sw.dataset.v);
   else if(e.target.closest('#tmDone')){hide('teamScr');show('menuScr')}});
 tap('teamBtn',()=>{tmWho='bat';hide('menuScr');renderTeams();show('teamScr')});
 // the title has one MENU button; everything else lives on the menu screen
