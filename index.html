@@ -610,7 +610,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v401';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v402';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -798,8 +798,13 @@ function leadShift(f,from,ob){if(!(f>0))return;const P=[B1,B2,B3,{x:HOME.x,y:HOM
       if(r.isPath){if(Math.hypot(r.path[0].x-P[i].x,r.path[0].y-P[i].y)<1){r.path[0]={x:nx,y:ny};
           if(r.wt){r.wt=[0];for(let j=1;j<r.path.length;j++)r.wt.push(r.wt[j-1]+Math.hypot(r.path[j].x-r.path[j-1].x,r.path[j].y-r.path[j-1].y))}break}}
       else if(Math.hypot(r.sx-P[i].x,r.sy-P[i].y)<1){r.sx=nx;r.sy=ny;break}}}
-  for(let i=0;i<3;i++)if(ob[i]&&bases[i]===ob[i]&&!runnerAnims.slice(from).some(r=>r.sk===ob[i])){basePending[i]=true;
-    runnerAnims.push({sx:P[i].x+(P[i+1].x-P[i].x)*f,sy:P[i].y+(P[i+1].y-P[i].y)*f,ex:P[i].x,ey:P[i].y,t:0,dur:10,sk:ob[i]})}}
+  // a runner the play didn't move: if that was the third out (any kind: SIMPLE's OUT, a foul…) he keeps
+  // going and the inning's over; otherwise he jogs back to his bag
+  const over=innOuts>=3;if(over&&lobNow==null)lobNow=bases.filter(Boolean).length;
+  for(let i=0;i<3;i++)if(ob[i]&&bases[i]===ob[i]&&!runnerAnims.slice(from).some(r=>r.sk===ob[i])){
+    const lx=P[i].x+(P[i+1].x-P[i].x)*f,ly=P[i].y+(P[i+1].y-P[i].y)*f;
+    if(over){bases[i]=false;const r=halfRun(P[i],P[i+1],ob[i]);r.sx=lx;r.sy=ly;runnerAnims.push(r)}
+    else{basePending[i]=true;runnerAnims.push({sx:lx,sy:ly,ex:P[i].x,ey:P[i].y,t:0,dur:10,sk:ob[i]})}}}
 // SCORED RUNNERS jog off down and to the right at 1/3 running speed instead of vanishing at the plate.
 // On a home run the runners ahead line up past the plate and wait, then everyone jogs off with the batter.
 let exits=[];
