@@ -54,6 +54,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
    flips scale along the sector's own radial axis (rotate · scaleY · unrotate). */
 /* jersey numbers: one small canvas per number, at the screen's own pixel size (see tagGet) */
 .tag{position:absolute;left:0;top:0;pointer-events:none;z-index:1;image-rendering:pixelated}
+#guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;display:none}
 #zones{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
 #zones text{font-family:'Archivo Black','Press Start 2P',sans-serif;font-weight:400;font-size:9px;fill:#fff}   /* painted wall signage: smooth, unlike the pixel scoreboard */
 #zones path{stroke:#0a0c1a;stroke-width:1}
@@ -64,6 +65,8 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .zn{transform-box:fill-box;transform-origin:center;transition:transform .15s,filter .15s,opacity .15s}
 .zn.pop{transform:rotate(var(--r)) scaleY(1.25) rotate(calc(-1*var(--r)));filter:brightness(1.7)}
 .zn.enter{animation:zIn .25s ease-out}
+/* SWING GUIDE: the zone the line points at lights up at once, and fades back over .15s as the line moves on */
+.zn.aim{filter:brightness(1.5) drop-shadow(0 0 2px rgba(255,240,160,.95));transition:none}
 @keyframes zIn{from{transform:rotate(var(--r)) scaleY(0) rotate(calc(-1*var(--r)));opacity:0}
   to{transform:rotate(var(--r)) scaleY(1) rotate(calc(-1*var(--r)));opacity:1}}
 .zHR path{fill:#e8b830}.zHR text{fill:#1a0e00}.z3B path{fill:#1a2d77}
@@ -214,6 +217,11 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 
 <div id="wrap"><div id="stage">
 <canvas id="c" width="180" height="360"></canvas>
+<svg id="guide" viewBox="0 0 180 360" preserveAspectRatio="none" aria-hidden="true">
+  <defs><filter id="gGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.3"/></filter></defs>
+  <polygon id="gWd" opacity=".26" filter="url(#gGlow)"/>
+  <line id="gGl" stroke-width="2.4" stroke-linecap="round" opacity=".6" filter="url(#gGlow)"/>
+  <line id="gLn" stroke-width=".7" stroke-linecap="round" opacity=".95"/></svg>
 <svg id="zones" viewBox="0 0 180 360" preserveAspectRatio="none">
   <defs><pattern id="zStripeBR" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#bb3333"/><rect width="2.5" height="5" fill="#4477cc"/></pattern><pattern id="zStripeDP" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#bb3333"/><rect width="2" height="4" fill="#7a1818"/></pattern><pattern id="zStripe" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#d9655b"/><rect width="2" height="4" fill="#7a1818"/></pattern><clipPath id="zclip"><rect id="zclipR" x="0" y="0" width="180" height="360"/></clipPath></defs>
   <g id="zg" clip-path="url(#zclip)"></g><g id="poles"></g></svg>
@@ -275,8 +283,15 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
     <div id="stBtn" class="tBtn">STATS</div>
+    <div id="optBtn" class="tBtn">OPTIONS</div>
     <div id="glossBtn" class="tBtn">HOW TO PLAY</div>
     <div id="menuBack" class="tBtn" style="margin-top:9cqw">BACK</div></div>
+</div>
+<div class="scr" id="optScr">
+  <div class="sS" style="color:var(--gold);margin-bottom:4cqw">OPTIONS</div>
+  <div class="tmSw" data-k="guide" style="width:80%"><span class="k">SWING GUIDE</span><span data-v="off">OFF</span><span data-v="on">ON</span></div>
+  <div class="stN" style="font-size:clamp(7px,2.2cqw,12px);max-width:80%;margin-top:2.5cqw;line-height:1.5">While the pitch comes in, a line from the plate shows where the ball would go if you swung right now.</div>
+  <div class="tBtns" style="margin-top:6cqw"><div id="optBack" class="tBtn">BACK</div></div>
 </div>
 <div class="scr" id="stScr">
   <div class="sS" style="color:var(--gold)">STATS</div>
@@ -558,7 +573,7 @@ const sfx={
   // pause / unpause: an E-C-E-C chime: soft triangle notes that ring out, with a faint octave on top for a bell edge
   pause(){[1319,1047,1319,1047].forEach((f,i)=>setTimeout(()=>{tn(f,i===3?.33:.21,'triangle',.11);tn(f*2,i===3?.23:.13,'sine',.024)},i*92))},
   unpause(){sfx.pause()},
-  inn(){tn(440,.12,'triangle',.08);setTimeout(()=>tn(660,.15,'triangle',.08),150)},
+  inn(){tn(440,.12,'triangle',.104);setTimeout(()=>tn(660,.15,'triangle',.104),150)},   // 30% up from .08
 };
 
 /* ===== pitches ===== */
@@ -595,7 +610,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v395';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v400';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -766,6 +781,19 @@ let lobNow=null;
 // halfway, then he's gone (bases cleared; LOB counted from who was on)
 function twoOutRun(old=bases,moves=[],nb=bases){const P=[B1,B2,B3,{x:HOME.x,y:HOME.y}];
   for(let i=2;i>=0;i--)if(old[i]&&!moves.some(m=>m[0]===i)){nb[i]=false;runnerAnims.push(halfRun(P[i],P[i+1],old[i]))}}
+// ...and with 2 outs they go on contact (not on the pitch): from the crack of the bat they jog toward the
+// next base, ~35% of the way by the time the ball comes down. Whatever runs the play gives them start from
+// there (leadShift); one the play doesn't move (the man on 2nd on a walk) jogs back to his bag.
+const LEAD_MAX=.35;
+function leadFrac(){return innOuts===2&&!bp&&state==='hitfly'?LEAD_MAX*Math.min(1,hitFlyT/1.15):0}
+function leadShift(f,from,ob){if(!(f>0))return;const P=[B1,B2,B3,{x:HOME.x,y:HOME.y}];
+  for(const r of runnerAnims.slice(from)){if(r.sk===batterSk)continue;
+    for(let i=0;i<3;i++){const nx=P[i].x+(P[i+1].x-P[i].x)*f,ny=P[i].y+(P[i+1].y-P[i].y)*f;
+      if(r.isPath){if(Math.hypot(r.path[0].x-P[i].x,r.path[0].y-P[i].y)<1){r.path[0]={x:nx,y:ny};
+          if(r.wt){r.wt=[0];for(let j=1;j<r.path.length;j++)r.wt.push(r.wt[j-1]+Math.hypot(r.path[j].x-r.path[j-1].x,r.path[j].y-r.path[j-1].y))}break}}
+      else if(Math.hypot(r.sx-P[i].x,r.sy-P[i].y)<1){r.sx=nx;r.sy=ny;break}}}
+  for(let i=0;i<3;i++)if(ob[i]&&bases[i]===ob[i]&&!runnerAnims.slice(from).some(r=>r.sk===ob[i])){basePending[i]=true;
+    runnerAnims.push({sx:P[i].x+(P[i+1].x-P[i].x)*f,sy:P[i].y+(P[i+1].y-P[i].y)*f,ex:P[i].x,ey:P[i].y,t:0,dur:10,sk:ob[i]})}}
 // SCORED RUNNERS jog off down and to the right at 1/3 running speed instead of vanishing at the plate.
 // On a home run the runners ahead line up past the plate and wait, then everyone jogs off with the batter.
 let exits=[];
@@ -898,7 +926,7 @@ function resolveOutPlay(type,wx,wy){
     runCall(msgs)}
   if(staged){const ba=batterRun(1,{dur:FC_RUN_FR,hold:true});runnerAnims.push(ba);basePending[0]=true;
     fcPlay={f:0,dp:!!bMove[2],ba,sc:stSc,wx,wy}}
-  // 2 outs: everyone was running on contact; show each runner heading for the
+  // 2 outs: everyone was running on contact (leadFrac); show each runner heading for the
   // next base (the inning's over, so nothing counts). A runner put out on the play has his own run.
   if(o0>=2)twoOutRun(old,moves,nb);
   // left on base for an inning-ending play: everyone who was on and wasn't put out, plus a safe batter
@@ -981,7 +1009,9 @@ let trail=[],particles=[],runnerAnims=[];
 // (the event's own timestamp; phones deliver taps lined up with the next frame), and frameMs is the
 // real time each fixed 60 Hz update stands for. The ball's position is interpolated to the exact tap time.
 let swingTimeMs=0,frameMs=0;
-let showGuide=false,innBreakT=0,basePending=[false,false,false],pendingRuns=0;
+let showGuide=false;try{showGuide=localStorage.getItem('bbGuide')==='1'}catch(e){}
+function setGuide(on){showGuide=on;try{localStorage.setItem('bbGuide',on?'1':'0')}catch(e){}}
+let innBreakT=0,basePending=[false,false,false],pendingRuns=0;
 let hitStreak=0,hrStreak=0,maxHRStreak=0,hrOK=false; // hrOK: last result was a hit or walk (Legend HR rule)
 /* players: three skin-tone groups. Each batter (and each inning's pitcher) draws a tone
    independently with the SKIN_W weights and carries it around the bases: bases[i] holds the
@@ -1648,6 +1678,34 @@ const WHIFF=FAIR+FOUL_EXTRA+4; // beyond this = total miss
 // before the foul bands tightened, so the time they gave up became a real late-whiff window.
 const PASS_T=1+44/(HOME.y-MOUND.y);
 
+// SWING GUIDE (OPTIONS): where a swing right now would send the ball. Same aim as doSwing, but worked out
+// at this very moment (between game frames too) and not rounded, so the line sweeps smoothly from one foul
+// line, across fair ground, to the other; hidden when a swing would miss.
+// A 60 Hz screen only shows the line ~13 times across a fastball's whole swing window, so it would jump
+// ~20 px along the wall each time; a faint glowing wedge over the ground it swept since the last refresh
+// (motion blur) makes it read as one continuous sweep.
+const gEl=document.getElementById('guide'),gLn=document.getElementById('gLn'),gGl=document.getElementById('gGl'),gWd=document.getElementById('gWd');
+let gOn=false,gPrev=null,gAim=null;
+function aimZone(i){const el=i==null?null:document.querySelectorAll('#zg .zn')[i]||null;   // light the wall zone the guide points at
+  if(el===gAim)return;gAim?.classList.remove('aim');el?.classList.add('aim');gAim=el}
+function updGuide(){let tx,ty,foul,zi=null;
+  if(showGuide&&state==='pitch'&&pitch&&!paused){
+    // a tap waiting for the next game step is the swing: show its moment, not now (the line would step past it)
+    const tm=swingReq?Math.min(performance.now(),swingTimeMs):performance.now();
+    const t=ballT+Math.min(1,Math.max(-1,(tm-frameMs)/TK))/pitch.fr,off=PITCH_Y+(HOME.y-PITCH_Y)*t-HOME.y,absO=Math.abs(off),adj=batRight?off:-off;
+    if(absO<=WHIFF){foul=absO>FAIR;
+      if(foul){const fp=Math.min(1,(absO-FAIR)/(WHIFF-FAIR));ty=POLE_Y+4+(HOME.y-POLE_Y-46)*fp;
+        tx=Math.max(0,Math.min(W,(adj<0?fLeft(ty):fRight(ty))+(2+fp*30)*(adj<0?-1:1)))}
+      else{const u=Math.max(2,Math.min(W-2,(adj+FAIR)/(2*FAIR)*W)),p=wallPoint(u,2);tx=p.x;ty=p.y;zi=zoneFromX(u)}}}
+  aimZone(bp?null:zi);
+  if(tx===undefined){gPrev=null;if(gOn){gOn=false;gEl.style.display='none'}return}
+  if(!gOn){gOn=true;gEl.style.display='block'}
+  const col=foul?'#ff9a3c':'#ffe14d';
+  for(const l of [gLn,gGl]){l.setAttribute('x1',HOME.x);l.setAttribute('y1',HOME.y);l.setAttribute('x2',tx.toFixed(2));l.setAttribute('y2',ty.toFixed(2));l.setAttribute('stroke',col)}
+  const mv=gPrev?Math.hypot(tx-gPrev.x,ty-gPrev.y):0;   // no move this refresh: keep the last wedge; a big jump (fair↔foul): none
+  if(gPrev&&mv>.3&&mv<60){gWd.setAttribute('points',`${HOME.x},${HOME.y} ${gPrev.x.toFixed(2)},${gPrev.y.toFixed(2)} ${tx.toFixed(2)},${ty.toFixed(2)}`);gWd.setAttribute('fill',col)}
+  else if(!gPrev||mv>=60)gWd.setAttribute('points','');
+  if(mv>.3||!gPrev)gPrev={x:tx,y:ty}}
 function doSwing(){
   if(state!=='pitch')return;sfx.swing();state='swung';
 
@@ -1959,7 +2017,7 @@ function update(){
       if(ERR_P[hitRes]&&Math.random()<ERR_P[hitRes]){errFrom=hitRes;hitRes='E';   // booted! the zone's label turns into an E as it pops
         const zn=document.querySelectorAll('.zn')[hitZI],t=zn?.querySelector('text');if(t){t.textContent='E';t.setAttribute('x',0)}zn?.querySelector('.zArr')?.remove()}
       flashZone(hitZI);hitZI=-1}
-    if(hitFlyT>=1.15)resolveHit()}
+    if(hitFlyT>=1.15){const f=leadFrac(),n=runnerAnims.length,ob=[...bases];resolveHit();leadShift(f,n,ob)}}
   if(state==='result'){resultT--;
     if(resultT<=0&&innOuts<3&&runnerAnims.length===0&&!throws.length){
       if(sameBatter){sameBatter=false;newZones();readyT=48;state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}
@@ -2003,7 +2061,9 @@ function draw(){paintPauseBtn();
   // runners on bases
   const bpos=[B1,B2,B3];
   // runners on 1st and 2nd stand a pixel off the bag toward the next base (both are to the left): leading off
-  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]);drawBaseRunner(c.x-(i<2?1:0),c.y,bases[i],i<2)}}
+  const lf=leadFrac(),nxt=[B2,B3,{x:HOME.x,y:HOME.y}];   // 2 outs: off on contact
+  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]),n=nxt[i];
+    drawBaseRunner(Math.round(c.x-(i<2?1:0)+(n.x-bpos[i].x)*lf),Math.round(c.y+(n.y-bpos[i].y)*lf),bases[i],i<2)}}
 
   // runner animations
   // he faces left from the batter's box until just before 3rd; from 3rd on he faces right (toward home)
@@ -2024,24 +2084,7 @@ function draw(){paintPauseBtn();
     drawBaseRunner(rx|0,ry|0,r.sk,lf)});
   exits.forEach(e=>drawBaseRunner(e.x|0,(e.y|0)-(e.f>0&&Math.floor(e.f/5)%2?1:0),e.sk));   // little jog bob
 
-  // guide line
-  if(state==='pitch'&&showGuide){
-    const gOff=ballWY-HOME.y,gAdj=batRight?gOff:-gOff,gAbsO=Math.abs(gOff);
-    if(gAbsO<=WHIFF){
-      const isFoul=gAbsO>FAIR;
-      let gTX,gTY;
-      if(isFoul){const fPct=Math.min(1,(gAbsO-FAIR)/(WHIFF-FAIR));
-        gTY=Math.round(POLE_Y+4+(HOME.y-POLE_Y-46)*fPct);
-        const flX=gAdj<0?fLeft(gTY):fRight(gTY);
-        const nudge=(2+fPct*30)*(gAdj<0?-1:1);
-        gTX=Math.round(Math.max(0,Math.min(W,flX+nudge)))}
-      else{const gN=(gAdj+FAIR)/(2*FAIR),gu=Math.max(2,Math.min(W-2,Math.round(gN*W)));
-        const gp=wallPoint(gu,2);gTX=Math.round(gp.x);gTY=Math.round(gp.y)}
-      cx.fillStyle=isFoul?'rgba(255,170,68,.3)':'rgba(255,255,0,.35)';
-      const clampTX=Math.max(0,Math.min(W,gTX));
-      const gdx=clampTX-HOME.x,gdy=gTY-HOME.y,gst=Math.max(Math.abs(gdx),Math.abs(gdy));
-      for(let i=0;i<=gst;i++){const gt=i/gst;
-        cx.fillRect(Math.round(HOME.x+gdx*gt),Math.round(HOME.y+gdy*gt),1,1)}}}
+  updGuide();
 
   // trail
   if(trail.length>1&&(state==='hitfly'||state==='result')){trail.forEach((p,i)=>{const a=i/trail.length;
@@ -2326,7 +2369,7 @@ function renderTeams(){
   document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=(uniSame&&!myRand?'':'NEXT GAME · ')+me.lbl[myU];
   document.getElementById('tmNmP').textContent=op.city;document.getElementById('tmUP').textContent=(uniSame&&oppLock?'':'NEXT GAME · ')+op.lbl[opU];
   drawPreview(myId,'bat',myU);drawPreview(opId,'pit',opU);
-  document.querySelectorAll('.tmSw span[data-v]').forEach(b=>b.classList.toggle('on',b.parentNode.dataset.k==='num'?(b.dataset.v==='on')===jerseyNums:(b.dataset.v==='same')===uniSame));
+  document.querySelectorAll('#teamScr .tmSw span[data-v]').forEach(b=>b.classList.toggle('on',b.parentNode.dataset.k==='num'?(b.dataset.v==='on')===jerseyNums:(b.dataset.v==='same')===uniSame));
   document.getElementById('tmHd').textContent=tmWho==='bat'?"BATTER'S TEAM":"PITCHER'S TEAM";
   document.getElementById('tmRnd').classList.toggle('sel',tmWho==='bat'?myRand:!oppLock);
 
@@ -2372,6 +2415,11 @@ tap('menuBack',()=>{hide('menuScr');show('titleScr')});
 document.getElementById('menuScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault()});
 tap('stBtn',()=>{hide('menuScr');stSimple=simpleMode;renderStats();show('stScr')});
 tap('stBack',()=>{hide('stScr');show('menuScr')});
+tap('optBtn',()=>{hide('menuScr');renderOpts();show('optScr')});
+tap('optBack',()=>{hide('optScr');show('menuScr')});
+function renderOpts(){document.querySelectorAll('#optScr .tmSw span[data-v]').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===showGuide))}
+document.getElementById('optScr').addEventListener('pointerdown',e=>{const b=e.target.closest('.tmSw span[data-v]');if(!b)return;
+  e.stopPropagation();e.preventDefault();setGuide(b.dataset.v==='on');renderOpts()});
 tap('stWipe',()=>{hide('stScr');show('stWipeScr')});
 tap('stWipeNo',()=>{hide('stWipeScr');show('stScr')});
 tap('stWipeYes',()=>{wipeStats();hide('stWipeScr');renderStats();show('stScr')});
@@ -2384,7 +2432,7 @@ document.getElementById('stScr').addEventListener('pointerdown',e=>{e.stopPropag
 function evTime(e){const now=performance.now(),t=e&&e.timeStamp;return t>0&&t<=now+1&&now-t<500?t:now}
 // a menu screen is open (team picker, stats, practice, high scores, how to play, …): taps that miss its
 // buttons — the black margins, a key press — must not start, resume or swing in the game behind it
-const MENU_SCR=['menuScr','stScr','stWipeScr','exhScr','bpScr','teamScr','hiScr','wipeScr','glossScr'];
+const MENU_SCR=['menuScr','optScr','stScr','stWipeScr','exhScr','bpScr','teamScr','hiScr','wipeScr','glossScr'];
 const menuOpen=()=>MENU_SCR.some(id=>document.getElementById(id).classList.contains('show'));
 function inp(t){if(menuOpen())return;aud();
   if(paused){paused=false;hide('pauseScr');sfx.unpause();return}
@@ -2439,7 +2487,7 @@ wrapEl.addEventListener('pointerup',e=>{const t=resumeTap;resumeTap=null;
 wrapEl.addEventListener('pointercancel',()=>{resumeTap=null});
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(!e.repeat)inp(evTime(e))}
-  if(e.code==='KeyG'){showGuide=!showGuide}});
+  if(e.code==='KeyG'){setGuide(!showGuide)}});
 
 /* ===== title music: "Take Me Out to the Ball Game" chorus (1908, public domain) =====
    NES-style chiptune: 2 pulse + triangle + noise. From the project's ballgame-chiptune.js.
