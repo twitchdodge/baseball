@@ -595,7 +595,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v394';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v395';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1361,8 +1361,8 @@ function drawPitcher(fr){
   SC.save();if(pitchLefty){SC.translate(2*px+1,0);SC.scale(-1,1)}             // lefty: mirror about the mound centre
   SC.fillStyle=un;SC.fillRect(px-3,py+1,7,5);SC.fillStyle=uD;SC.fillRect(px-3,py+1,7,1);
   if(!jerseyNums){SC.fillStyle=u.let;SC.fillRect(px-1,py+2,1,2);SC.fillRect(px+1,py+2,1,2)}   // numbers off: the chest lettering
-  SC.fillStyle=u.pants;SC.fillRect(px-2,py+6,3,4);SC.fillRect(px+1,py+6,3,4);
-  SC.fillStyle='#333';SC.fillRect(px-2,py+9,3,2);SC.fillRect(px+1,py+9,3,2);
+  SC.fillStyle=u.pants;SC.fillRect(px-2,py+6,5,4);                           // legs: 5 wide, centred under the 7-wide torso
+  SC.fillStyle='#333';SC.fillRect(px-2,py+9,5,2);
   SC.fillStyle=sk;
   if(fr===0){SC.fillRect(px-4,py+2,2,2);SC.fillRect(px+4,py+2,2,2);
     SC.fillStyle=GLOVE;SC.fillRect(px+4,py+1,3,3)}
@@ -1370,7 +1370,7 @@ function drawPitcher(fr){
     SC.fillStyle=GLOVE;SC.fillRect(px+4,py+1,3,3)}
   else{SC.fillRect(px-6,py+5,2,2);SC.fillRect(px+4,py+3,2,2);               // release: hand beside the hip, belt height
     SC.fillStyle=GLOVE;SC.fillRect(px+4,py+2,3,3)}
-  SC.fillStyle=sk;SC.fillRect(px-2,py-4,5,4);                               // face
+  SC.fillStyle=sk;SC.fillRect(px-2,py-4,5,4);SC.fillRect(px-1,py,3,1);        // face, and a 3 px neck down to the collar
   SC.fillStyle=u.cap;SC.fillRect(px-2,py-5,5,3);                               // cap, same width as the face
   // ball in hand during windup
   if(fr===1){SC.fillStyle=pitch?pitch.color:'#fff';SC.fillRect(px-6,py-5,3,3)}
