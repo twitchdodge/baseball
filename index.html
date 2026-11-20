@@ -131,8 +131,8 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 #tmCvB{width:25.3cqw;height:27cqw}#tmCvP{width:27.4cqw;height:27.4cqw;margin-bottom:.42cqw}   /* pitcher 25% bigger, feet level with the batter's */
 .tmP b{color:#fff;font-weight:normal;font-size:clamp(7px,2.23cqw,12px)}
 /* the UNIFORMS switch, NEW | SAME */
-.tmSw{display:flex;width:calc(100% - 5.6cqw);margin-top:1.4cqw;align-items:stretch}
-.tmSw span{flex:1;text-align:center;font-size:clamp(7px,2.23cqw,12px);padding:1.9cqw 0 1.6cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
+.tmSw{display:flex;width:calc(100% - 5.6cqw);margin-top:1cqw;align-items:stretch}
+.tmSw span{flex:1;text-align:center;font-size:clamp(7px,2.23cqw,12px);padding:1.5cqw 0 1.2cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
 .tmSw span+span{margin-left:-1px}
 .tmSw span.k{flex:1.25;border-color:transparent;color:#aab;text-align:left;cursor:default;padding-left:.6cqw}
 .tmSw span.on{background:var(--gold);color:#0a0c1a;border-color:var(--gold)}
@@ -142,8 +142,8 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .tmK{height:6.9cqw;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,2.8cqw,15px);letter-spacing:.3cqw;color:#fff;cursor:pointer;
   text-shadow:1px 1px 0 rgba(0,0,0,.45)}
 .tmK.sel{outline:2px solid var(--gold);outline-offset:1px}.tmK.nx{outline:2px dashed var(--gold);outline-offset:1px}
-#tmHd{width:calc(100% - 5.6cqw);margin-top:2.2cqw;padding-top:2cqw;border-top:1px solid #2a2f48;text-align:center;font-size:clamp(8px,2.8cqw,15px);color:var(--gold)}
-#tmRnd{width:calc(100% - 5.6cqw);margin-top:1.4cqw;box-sizing:border-box;border:1px solid #667;background:repeating-linear-gradient(135deg,#2a2f48 0 4cqw,#353b5a 4cqw 8cqw)}
+#tmHd{width:calc(100% - 5.6cqw);margin-top:1.4cqw;padding-top:1.2cqw;border-top:1px solid #2a2f48;text-align:center;font-size:clamp(8px,2.8cqw,15px);color:var(--gold)}
+#tmRnd{width:calc(100% - 5.6cqw);margin-top:1cqw;box-sizing:border-box;border:1px solid #667;background:repeating-linear-gradient(135deg,#2a2f48 0 4cqw,#353b5a 4cqw 8cqw)}
 #tmDone{margin-top:auto;margin-bottom:13cqw;min-width:30%;text-align:center}
 @keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
 #innLbl{top:44%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
@@ -270,7 +270,7 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
 <div class="scr" id="menuScr">
   <div class="sS" style="color:var(--gold);margin-bottom:4cqw">MENU</div>
   <div class="tBtns">
-    <div id="teamBtn" class="tBtn">CHOOSE TEAMS</div>
+    <div id="teamBtn" class="tBtn">TEAM &amp; UNIFORM</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
@@ -305,11 +305,12 @@ svg.trph{height:.875em;width:auto;margin-left:.3em;vertical-align:.125em;   /* P
   <div class="tBtns"><div id="bpCopy" class="tBtn">COPY RESULTS</div><div id="bpAgain" class="tBtn">AGAIN</div><div id="bpMenu" class="tBtn">MAIN MENU</div></div>
 </div>
 <div class="scr" id="teamScr">
-  <div class="tt">CHOOSE TEAMS</div>
+  <div class="tt">TEAM &amp; UNIFORM</div>
   <div id="tmTog"><span data-w="bat" class="on">BATTER</span><span data-w="pit">PITCHER</span></div>
   <div id="tmPv"><div class="tmP on" data-w="bat"><div class="bx"><canvas id="tmCvB" width="120" height="128"></canvas></div><b id="tmNmB"></b><span id="tmUB"></span></div>
     <div class="tmP" data-w="pit"><div class="bx"><canvas id="tmCvP" width="104" height="104"></canvas></div><b id="tmNmP"></b><span id="tmUP"></span></div></div>
   <div class="tmSw" data-k="uni"><span class="k">UNIFORMS</span><span data-v="new">NEW</span><span data-v="same">SAME</span></div>
+  <div class="tmSw" data-k="num"><span class="k">NUMBERS</span><span data-v="on">ON</span><span data-v="off">OFF</span></div>
   <div id="tmHd"></div>
   <div id="tmRnd" class="tmK">RANDOM</div>
   <div id="tmGrid"></div>
@@ -594,7 +595,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v388';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v394';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -761,6 +762,10 @@ const halfRun=(a,b,sk)=>({sx:a.x,sy:a.y,ex:(a.x+b.x)/2,ey:(a.y+b.y)/2,t:0,dur:12
 function batterHalf(extra){const a=batterRun(1,extra),q=a.path;q[2]={x:(q[1].x+B1.x)/2,y:(q[1].y+B1.y)/2};
   a.wt=[0];for(let i=1;i<q.length;i++)a.wt.push(a.wt[i-1]+Math.hypot(q[i].x-q[i-1].x,q[i].y-q[i-1].y));a.dur=13;return a}
 let lobNow=null;
+// with 2 outs, the third out: every runner not already part of the play heads for the next base,
+// halfway, then he's gone (bases cleared; LOB counted from who was on)
+function twoOutRun(old=bases,moves=[],nb=bases){const P=[B1,B2,B3,{x:HOME.x,y:HOME.y}];
+  for(let i=2;i>=0;i--)if(old[i]&&!moves.some(m=>m[0]===i)){nb[i]=false;runnerAnims.push(halfRun(P[i],P[i+1],old[i]))}}
 // SCORED RUNNERS jog off down and to the right at 1/3 running speed instead of vanishing at the plate.
 // On a home run the runners ahead line up past the plate and wait, then everyone jogs off with the batter.
 let exits=[];
@@ -826,14 +831,11 @@ function resolveOutPlay(type,wx,wy){
         T=T.map(x=>[sc(x)?x[0]+(d-toOut)*x[0]/sw:oh(x)?x[0]+toOut*x[0]/ow:x[0]*urge(o0),x[1],x[2]])}}
     let r=Math.random()*T.reduce((a,o)=>a+o[0],0);
     for(const o of T){if((r-=o[0])<0){res=o[1];moves=o[2];break}}}
-  if(type==='GB'||type==='FB')tallyPA(res==='SF'?'SFX':'ABX');
   // 2 outs, grounder: the third out is either the batter at 1st or (with a runner on 1st) the force
-  // at 2nd, 50/50. Forced runners are shown running either way (see below).
+  // at 2nd, 50/50. Every runner is running anyway (see the 2-out block below).
   else if(type==='GB'){
-    if(bases[0]&&Math.random()<.5){res='FC';moves=[[0,2,1],['B',1,0]]}
-    if(bases[0]&&bases[1])moves.unshift([1,3,0]);
-    if(bases[0]&&bases[1]&&bases[2])moves.unshift([2,4,0]);
-    if(bases[0]&&res!=='FC')moves.unshift([0,2,0])}
+    if(bases[0]&&Math.random()<.5){res='FC';moves=[[0,2,1],['B',1,0]]}}
+  if(type==='GB'||type==='FB')tallyPA(res==='SF'?'SFX':'ABX');   // after the if/else above, never between its parts
   // last inning, short of the target: a fly ball only sends the runner from 3rd if he's the target run, and
   // a runner tags from 2nd only if he'd be it (nobody risks the out otherwise)
   if(type==='FB'&&o0<2&&!simpleMode&&cautious()){
@@ -896,10 +898,9 @@ function resolveOutPlay(type,wx,wy){
     runCall(msgs)}
   if(staged){const ba=batterRun(1,{dur:FC_RUN_FR,hold:true});runnerAnims.push(ba);basePending[0]=true;
     fcPlay={f:0,dp:!!bMove[2],ba,sc:stSc,wx,wy}}
-  // fly ball with 2 outs: everyone was running on contact; show each runner heading for the next
-  // base (the inning's over, so nothing counts)
-  if(type==='FB'&&o0>=2){const P=[B1,B2,B3,{x:HOME.x,y:HOME.y}];
-    for(let i=2;i>=0;i--)if(old[i]){nb[i]=false;runnerAnims.push(halfRun(P[i],P[i+1],old[i]))}}
+  // 2 outs: everyone was running on contact; show each runner heading for the
+  // next base (the inning's over, so nothing counts). A runner put out on the play has his own run.
+  if(o0>=2)twoOutRun(old,moves,nb);
   // left on base for an inning-ending play: everyone who was on and wasn't put out, plus a safe batter
   if(ends)lobNow=old.filter((r,i)=>r&&!moves.some(m=>m[0]===i&&m[2])).length+(moves.some(m=>m[0]==='B'&&!m[2])?1:0);
   bases=nb;innOuts=Math.min(3,o0+outs);hitStreak=0;endStreak();
@@ -1064,6 +1065,8 @@ let myTeam=null,myRand=true,oppLock=null,uniSame=false,lockSide='H',myPick=0,opp
 try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;myRand=!!t.rand;oppLock=TM[t.opp]?t.opp:null;
   uniSame=!!t.uniSame&&t.myU>=0&&t.myU<TM[t.my].u.length;if(uniSame){lockSide=t.side==='A'?'A':'H';myPick=t.myU;oppPick=oppLock&&t.oppU>=0?t.oppU:-1}}}catch(e){}
 if(!myTeam)myTeam=TEAMS[Math.floor(Math.random()*TEAMS.length)].id;   // first visit: a team of your own, change it any time
+// jersey numbers on/off (TEAM & UNIFORM screen); off = the plain jerseys, the pitcher's two chest bars
+let jerseyNums=true;try{jerseyNums=localStorage.getItem('bbNums')!=='0'}catch(e){}
 function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTeam,rand:myRand,opp:oppLock,uniSame,side:lockSide,myU:myPick,oppU:oppPick}))}catch(e){}}
 const primary=(id,side)=>TM[id].u.findIndex(x=>x[0]===side);
 // same-uniforms opponent: his pick if he's the fixed opponent, otherwise his primary for the side (or the next one that doesn't clash)
@@ -1357,6 +1360,7 @@ function drawPitcher(fr){
   const px=MOUND.x,py=MOUND.y-10,sk=pitcherSk,u=PIT_U,un=u.jer,uD=u.yoke; // feet (py+9..py+10) land on the rubber
   SC.save();if(pitchLefty){SC.translate(2*px+1,0);SC.scale(-1,1)}             // lefty: mirror about the mound centre
   SC.fillStyle=un;SC.fillRect(px-3,py+1,7,5);SC.fillStyle=uD;SC.fillRect(px-3,py+1,7,1);
+  if(!jerseyNums){SC.fillStyle=u.let;SC.fillRect(px-1,py+2,1,2);SC.fillRect(px+1,py+2,1,2)}   // numbers off: the chest lettering
   SC.fillStyle=u.pants;SC.fillRect(px-2,py+6,3,4);SC.fillRect(px+1,py+6,3,4);
   SC.fillStyle='#333';SC.fillRect(px-2,py+9,3,2);SC.fillRect(px+1,py+9,3,2);
   SC.fillStyle=sk;
@@ -1389,7 +1393,7 @@ function tagGet(){let t=tagPool[tagN++];
   if(!t.on){t.on=true;t.el.style.display=''}return t}
 // jersey number n, (x,y) = top centre in field coords; a digit is 3×5 blocks of half a field pixel, each block
 // rounded to whole screen pixels so they all match
-function jerseyNum(n,x,y,col){const d=String(n),cols=d.length*4-1;
+function jerseyNum(n,x,y,col){if(!jerseyNums)return;const d=String(n),cols=d.length*4-1;
   if(SC!==cx){const m=SC.getTransform(),c=Math.max(1,Math.round(m.a/2)),w=cols*c;   // team-picker preview
     SC.save();SC.setTransform(1,0,0,1,0,0);drawDigits(SC,n,Math.round(m.a*x+m.e-w/2),Math.round(m.d*y+m.f),c,col);SC.restore();return}
   const t=tagGet(),c=Math.max(1,Math.round(tagS/2)),w=cols*c,h=5*c,key=d+col+c+'/'+tagDPR;
@@ -1467,14 +1471,16 @@ function drawOnDeck(){   // the kneeling next batter (both circles are drawn wit
 }
 // (x,y) is where his feet are: standing on a bag they're on its middle, running they're on the path
 // left=true: runner facing left (on 1st, on 2nd, on the way to 3rd), ear flap shows on our right
+// runner: 6 px wide (between the pitcher's 7 and a narrower look), head and helmet centred over the body,
+// ear flap on the side away from where he's running; his number centred on the jersey
 function drawBaseRunner(x,y,sk,left){y-=3;const u=BAT_U;
-  SC.fillStyle=u.jer;SC.fillRect(x-2,y-5,5,5);
-  SC.fillStyle=u.yoke;SC.fillRect(x-2,y-5,5,1);
-  SC.fillStyle=u.pantsS;SC.fillRect(x-2,y,5,4);
-  SC.fillStyle='#333';SC.fillRect(x-2,y+3,5,2);
-  SC.fillStyle=sk||SKIN[0][0];SC.fillRect(left?x-2:x-1,y-9,4,4);
-  SC.fillStyle=u.cap;SC.fillRect(x-2,y-10,5,3);SC.fillRect(left?x+2:x-2,y-7,1,1);   // batting helmet + ear flap
-  if(sk&&sk.num)jerseyNum(sk.num,x+.5,y-3.5,u.let);
+  SC.fillStyle=u.jer;SC.fillRect(x-2,y-5,6,5);
+  SC.fillStyle=u.yoke;SC.fillRect(x-2,y-5,6,1);
+  SC.fillStyle=u.pantsS;SC.fillRect(x-2,y,6,4);
+  SC.fillStyle='#333';SC.fillRect(x-2,y+3,6,2);
+  SC.fillStyle=sk||SKIN[0][0];SC.fillRect(x-1,y-9,4,4);
+  SC.fillStyle=u.cap;SC.fillRect(x-2,y-10,6,3);SC.fillRect(left?x+3:x-2,y-7,1,1);   // batting helmet + ear flap
+  if(sk&&sk.num)jerseyNum(sk.num,x+1,y-3.5,u.let);
 }
 
 /* ===== scoreboard (drawn on canvas) ===== */
@@ -1658,6 +1664,7 @@ function doSwing(){
 
   if(absO>WHIFF){tallyPA('K');
     setTimeout(()=>{batFr=0},300);
+    if(innOuts===2){lobNow=bases.filter(Boolean).length;twoOutRun()}   // strike three with 2 outs: they were running
     innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
     state='result';checkInning();return}
 
@@ -1690,6 +1697,7 @@ function doSwing(){
 
 function ballPassed(){if(bp){bpTake();return}
   tallyPA('K');
+  if(innOuts===2){lobNow=bases.filter(Boolean).length;twoOutRun()}   // strike three with 2 outs: they were running
   innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
   state='result';checkInning()}
 
@@ -1994,7 +2002,8 @@ function draw(){paintPauseBtn();
 
   // runners on bases
   const bpos=[B1,B2,B3];
-  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]);drawBaseRunner(c.x,c.y,bases[i],i<2)}}
+  // runners on 1st and 2nd stand a pixel off the bag toward the next base (both are to the left): leading off
+  for(let i=0;i<3;i++){if(bases[i]&&!basePending[i]){const c=bagAt(bpos[i]);drawBaseRunner(c.x-(i<2?1:0),c.y,bases[i],i<2)}}
 
   // runner animations
   // he faces left from the batter's box until just before 3rd; from 3rd on he faces right (toward home)
@@ -2317,7 +2326,7 @@ function renderTeams(){
   document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=(uniSame&&!myRand?'':'NEXT GAME · ')+me.lbl[myU];
   document.getElementById('tmNmP').textContent=op.city;document.getElementById('tmUP').textContent=(uniSame&&oppLock?'':'NEXT GAME · ')+op.lbl[opU];
   drawPreview(myId,'bat',myU);drawPreview(opId,'pit',opU);
-  document.querySelectorAll('.tmSw span[data-v]').forEach(b=>b.classList.toggle('on',(b.dataset.v==='same')===uniSame));
+  document.querySelectorAll('.tmSw span[data-v]').forEach(b=>b.classList.toggle('on',b.parentNode.dataset.k==='num'?(b.dataset.v==='on')===jerseyNums:(b.dataset.v==='same')===uniSame));
   document.getElementById('tmHd').textContent=tmWho==='bat'?"BATTER'S TEAM":"PITCHER'S TEAM";
   document.getElementById('tmRnd').classList.toggle('sel',tmWho==='bat'?myRand:!oppLock);
 
@@ -2354,7 +2363,7 @@ function tmRandom(){if(tmWho==='bat')myRand=true;else{oppLock=null;oppPick=-1}
 document.getElementById('teamScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();
   const k=e.target.closest('.tmK'),p=e.target.closest('.tmP'),tg=e.target.closest('#tmTog span'),sw=e.target.closest('.tmSw span[data-v]');
   if(e.target.closest('#tmRnd'))tmRandom();else if(k)tmTapTeam(k.dataset.t);else if(p)tmTapPlayer(p.dataset.w);else if(tg){tmWho=tg.dataset.w;renderTeams()}
-  else if(sw)tmSwitch(sw.dataset.v);
+  else if(sw){if(sw.parentNode.dataset.k==='num'){jerseyNums=sw.dataset.v==='on';try{localStorage.setItem('bbNums',jerseyNums?'1':'0')}catch(err){}renderTeams()}else tmSwitch(sw.dataset.v)}
   else if(e.target.closest('#tmDone')){hide('teamScr');show('menuScr')}});
 tap('teamBtn',()=>{tmWho='bat';hide('menuScr');renderTeams();show('teamScr')});
 // the title has one MENU button; everything else lives on the menu screen
@@ -2373,10 +2382,14 @@ document.getElementById('stScr').addEventListener('pointerdown',e=>{e.stopPropag
 /* ===== input ===== */
 // the time of a tap/key press: its event timestamp when that's sane, otherwise now
 function evTime(e){const now=performance.now(),t=e&&e.timeStamp;return t>0&&t<=now+1&&now-t<500?t:now}
-function inp(t){aud();
+// a menu screen is open (team picker, stats, practice, high scores, how to play, …): taps that miss its
+// buttons — the black margins, a key press — must not start, resume or swing in the game behind it
+const MENU_SCR=['menuScr','stScr','stWipeScr','exhScr','bpScr','teamScr','hiScr','wipeScr','glossScr'];
+const menuOpen=()=>MENU_SCR.some(id=>document.getElementById(id).classList.contains('show'));
+function inp(t){if(menuOpen())return;aud();
   if(paused){paused=false;hide('pauseScr');sfx.unpause();return}
-  if(state==='title'){hide('titleScr');exhibitionMode=false;startGame()}
-  else if(state==='gameover'){hide('goScr');
+  if(state==='title'){if(!document.getElementById('titleScr').classList.contains('show'))return;hide('titleScr');exhibitionMode=false;startGame()}
+  else if(state==='gameover'){if(!document.getElementById('goScr').classList.contains('show'))return;hide('goScr');
     if(chalJustUnlocked){chalJustUnlocked=false;exhibitionMode=false;setChallenge(true);nextRound=0}   // straight into ROOKIEᶜ
     else if(exhibitionMode){nextRound=round}
     startGame()}
@@ -2392,7 +2405,7 @@ document.getElementById('pauseBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();
   if(state==='title'||state==='gameover')return;
   paused=!paused;if(paused){show('pauseScr');sfx.pause()}else{hide('pauseScr');sfx.unpause()}});
-function toMenu(){bp=null;hide('bpScr');hide('menuScr');hide('stScr');hide('stWipeScr');aud();musicStop();cancelPlay();hide('goScr');hide('exhScr');
+function toMenu(){bp=null;MENU_SCR.forEach(hide);hide('bpScr');hide('menuScr');hide('stScr');hide('stWipeScr');aud();musicStop();cancelPlay();hide('goScr');hide('exhScr');
   document.getElementById('skipBtn').style.display='none';round=0;nextRound=0;exhibitionMode=false;chalJustUnlocked=false;paused=false;hide('pauseScr');state='title';paintChal();show('titleScr')}
 tap('resetBtn',toMenu);
 tap('goMenu',toMenu);   // game over: back to the title menu instead of straight into the next game
