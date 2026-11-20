@@ -610,7 +610,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v405';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v408';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1362,8 +1362,8 @@ function drawFieldStatic(){
 }
 function pxL(c,x1,y1,x2,y2,w){const dx=x2-x1,dy=y2-y1,st=Math.max(Math.abs(dx),Math.abs(dy)),hw=w>>1;
   for(let i=0;i<=st;i++){const t=i/st;c.fillRect(Math.round(x1+dx*t)-hw,Math.round(y1+dy*t)-hw,w,w)}}
-const BAG_R=4,BAG_IN=1,BAG_DRAW=1.5;   // bag half-diagonal; how far 1B/3B sit toward fair ground (runners stand by BAG_IN; the
-                                       // 2× field draws the bag BAG_DRAW in: half a pixel more, clear of the 2 px foul lines)
+const BAG_R=4,BAG_IN=1,BAG_DRAW=.5;   // bag half-diagonal; how far 1B/3B sit toward fair ground (runners stand by BAG_IN; the
+                                      // 2× field draws the bag BAG_DRAW in, out against the 2 px foul line, its foul-side corner pixel trimmed)
 function bagAt(b,inset=BAG_IN){return{x:b.x+(b===B1?-inset:b===B3?inset:0),y:b.y}}
 function pxDiamond(c,x,y,r){for(let d=-r;d<=r;d++){const w=r-Math.abs(d);c.fillRect(x-w,y+d,w*2+1,1)}}
 function poly(c,pts){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fill()}
@@ -1449,7 +1449,10 @@ function drawFieldFine(){const s=1/RS,q=v=>Math.round(v*RS)/RS,HX=HOME.x;
    rowFill(yS,HOME.y+1,(y,yc)=>{const R=lineR(yc);fc.fillRect(R-4,y,6,s);fc.fillRect(2*HX-R-2,y,6,s)})}
   // foul lines, 2 wide (the 1x field's were 3), stepping every half pixel
   fc.fillStyle='rgba(255,255,255,.75)';
-  rowFill(POLE_Y,HOME.y+1,(y,yc)=>{const R=lineR(yc);fc.fillRect(R-2.5,y,2,s);fc.fillRect(2*HX-R+.5,y,2,s)});   // 2 px wide, centred where the 3 px line was
+  // 2 px wide, a straight stripe from the centre of the pole's base (where the pole stands) down to
+  // where the old 3 px line met the plate
+  {const cTop=W-POLE_X,cBot=lineR(HOME.y+s/2)-1.5;
+   rowFill(POLE_Y,HOME.y+1,(y,yc)=>{const c=cTop+(cBot-cTop)*(yc-POLE_Y)/(HOME.y-POLE_Y),x0=q(c-1);fc.fillRect(x0,y,2,s);fc.fillRect(2*HX-x0-2,y,2,s)})}
   // mound
   {const ccx=MOUND.x+.5,ccy=MOUND.y+.5;
    for(let r=10;r>=0;r--){fc.fillStyle=r>7?DIRT_DK:r>3?DIRT:DIRT_LT;
@@ -1457,7 +1460,11 @@ function drawFieldFine(){const s=1/RS,q=v=>Math.round(v*RS)/RS,HX=HOME.x;
   fc.fillStyle='#fff';fc.fillRect(MOUND.x-4,MOUND.y+1,9,2);
   // batting circle
   fc.fillStyle=DIRT;rowFill(HOME.y-22,HOME.y+23,(y,yc)=>{const dd=yc-(HOME.y+.5),e=484-dd*dd;if(e<0)return;const ext=q(Math.sqrt(e));fc.fillRect(HX-ext,y,2*ext,s)});
-  fc.fillStyle='#fff';[B1,B2,B3].forEach(b=>{const c=bagAt(b,BAG_DRAW);pxDiamond(fc,c.x,c.y,BAG_R)});
+  // 1B/3B are drawn without the outer half of the corner pixel pointing into foul ground, so the bag stops at the line
+  fc.fillStyle='#fff';[B1,B2,B3].forEach(b=>{const c=bagAt(b,BAG_DRAW),r=BAG_R;
+    for(let d=-r;d<=r;d++){const w=r-Math.abs(d);let x0=c.x-w,n=2*w+1;
+      if(d===0&&b===B1)n-=.5;else if(d===0&&b===B3){x0+=.5;n-=.5}   // the outer half of the corner pixel
+      fc.fillRect(x0,c.y+d,n,1)}});
   fc.fillRect(HOME.x-3,HOME.y-2,7,4);fc.fillRect(HOME.x-2,HOME.y+2,5,1);fc.fillRect(HOME.x-1,HOME.y+3,3,1);fc.fillRect(HOME.x,HOME.y+4,1,1);
   fc.fillStyle='rgba(255,255,255,.28)';
   fc.fillRect(HOME.x-14,HOME.y-7,1,14);fc.fillRect(HOME.x-14,HOME.y-7,8,1);fc.fillRect(HOME.x-14,HOME.y+6,8,1);fc.fillRect(HOME.x-7,HOME.y-7,1,14);
