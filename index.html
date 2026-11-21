@@ -306,6 +306,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
 </div>
 <div class="scr" id="exhScr">
   <div class="sS" style="color:var(--gold);margin-bottom:12px">PRACTICE</div>
+  <div id="exhChal" class="tBtn chal" style="display:none;margin-bottom:3cqw">CHALLENGE MODE</div>
   <div class="exhH">EXHIBITION</div>
   <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
   <div class="exhH" style="margin-top:5cqw">BATTING PRACTICE</div>
@@ -610,7 +611,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v408';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v411';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1539,8 +1540,8 @@ function drawBatter(fr){
   SC.save();SC.translate(bx,by);if(!batRight)SC.scale(-1,1);
   const u=BAT_U;SC.fillStyle=u.jer;SC.fillRect(-3,-7,8,7);
   SC.fillStyle=u.yoke;SC.fillRect(-3,-7,8,2);
-  SC.fillStyle=u.pants;SC.fillRect(-2,0,3,6);SC.fillRect(2,0,3,6);
-  SC.fillStyle='#333';SC.fillRect(-2,5,3,2);SC.fillRect(2,5,3,2);
+  SC.fillStyle=u.pants;SC.fillRect(-2.5,0,3,6);SC.fillRect(1.5,0,3,6);       // old stance, nudged ½ px left: centred under the torso
+  SC.fillStyle='#333';SC.fillRect(-2.5,5,3,2);SC.fillRect(1.5,5,3,2);
   SC.fillStyle=sk;
   if(walkT>0){SC.fillRect(4,-4,3,3);                              // walking up: hand at the hip,
     SC.fillStyle=bt;for(let i=0;i<9;i++)SC.fillRect(6+Math.floor(i*.5),-1+i,2,1)}   // bat hanging barrel-down
@@ -2335,7 +2336,8 @@ function bpEnd(){const st=bpStats(bp.rec),code=bpCode();state='gameover';batterU
   document.getElementById('bpCode').textContent=code;bp.done=true;show('bpScr')}
 
 /* ===== exhibition ===== */
-function showExh(){showBPSet();
+function showExh(){showBPSet();   // CHALLENGE MODE (once unlocked) switches the levels and the BP pitch set
+  const cb=document.getElementById('exhChal');cb.style.display=chalUnlocked?'':'none';cb.classList.toggle('on',challenge);
   const list=document.getElementById('exhList');list.innerHTML='';
   ROUNDS.forEach((_,i)=>{const d=document.createElement('div'),r=RD(i);
     const ok=i<=maxUnlocked;
@@ -2345,6 +2347,7 @@ function showExh(){showBPSet();
     if(ok)d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();aud();
       hide('exhScr');exhibitionMode=true;round=i;nextRound=i;startGame()});
     list.appendChild(d)})}
+onTap('exhChal',()=>{setChallenge(!challenge);showExh()});
 document.getElementById('exhBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();hide('menuScr');showExh();show('exhScr')});
 function onTap(id,fn){document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn()})}
