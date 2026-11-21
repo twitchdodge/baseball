@@ -124,16 +124,14 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 #teamScr{justify-content:flex-start;padding-top:2.2cqw;gap:0;background:#0a0c1a}
 #tmGrid{width:100%;display:flex;flex-direction:column;align-items:center}
 #teamScr .tt{font-size:clamp(9px,3.07cqw,17px);color:var(--gold)}
-#tmTog{display:flex;margin-top:1.7cqw}#tmTog span{font-size:clamp(8px,2.5cqw,14px);padding:1.9cqw 3.4cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
-#tmTog span.on{background:var(--gold);color:#0a0c1a;border-color:var(--gold)}
 #tmPv{display:flex;gap:5cqw;margin-top:1.7cqw}
 .tmP{display:flex;flex-direction:column;align-items:center;gap:1.4cqw;font-size:clamp(6px,1.95cqw,11px);color:#aab;cursor:pointer}
 .tmP .bx{width:36.9cqw;height:30cqw;border:1px solid #2a2f48;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
 .tmP.on .bx{border:2px solid var(--gold)}
 .tmP canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
-#tmCvB{width:25.3cqw;height:27cqw}#tmCvP{width:27.4cqw;height:27.4cqw;margin-bottom:.42cqw}   /* pitcher 25% bigger, feet level with the batter's */
+#tmCvB{width:25.3cqw;height:27cqw}
 .tmP b{color:#fff;font-weight:normal;font-size:clamp(7px,2.23cqw,12px)}
-/* the UNIFORMS switch, NEW | SAME */
+/* the NUMBERS switch, ON | OFF */
 .tmSw{display:flex;width:calc(100% - 5.6cqw);margin-top:1cqw;align-items:stretch}
 .tmSw span{flex:1;text-align:center;font-size:clamp(7px,2.23cqw,12px);padding:1.5cqw 0 1.2cqw;border:1px solid #667;color:#c6c9d6;cursor:pointer}
 .tmSw span+span{margin-left:-1px}
@@ -144,9 +142,9 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .tmD{font-size:clamp(6px,2.23cqw,12px);color:#0a0c1a;background:#c9cfe0;text-align:center;padding:1.1cqw 0 .8cqw;margin-bottom:.6cqw}
 .tmK{height:6.9cqw;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,2.8cqw,15px);letter-spacing:.3cqw;color:#fff;cursor:pointer;
   text-shadow:1px 1px 0 rgba(0,0,0,.45)}
-.tmK.sel{outline:2px solid var(--gold);outline-offset:1px}.tmK.nx{outline:2px dashed var(--gold);outline-offset:1px}
+.tmK.sel{outline:2px solid var(--gold);outline-offset:1px}
 #tmHd{width:calc(100% - 5.6cqw);margin-top:1.4cqw;padding-top:1.2cqw;border-top:1px solid #2a2f48;text-align:center;font-size:clamp(8px,2.8cqw,15px);color:var(--gold)}
-#tmRnd{width:calc(100% - 5.6cqw);margin-top:1cqw;box-sizing:border-box;border:1px solid #667;background:repeating-linear-gradient(135deg,#2a2f48 0 4cqw,#353b5a 4cqw 8cqw)}
+#tmHint{margin-top:.9cqw;font-size:clamp(6px,1.95cqw,11px);color:#aab}
 #tmDone{margin-top:auto;margin-bottom:13cqw;min-width:30%;text-align:center}
 @keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
 #innLbl{top:44%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
@@ -278,7 +276,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
 <div class="scr" id="menuScr">
   <div class="sS" style="color:var(--gold);margin-bottom:4cqw">MENU</div>
   <div class="tBtns">
-    <div id="teamBtn" class="tBtn">TEAM &amp; UNIFORM</div>
+    <div id="teamBtn" class="tBtn">CHOOSE TEAM</div>
     <div id="modeRow" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div>
     <div id="exhBtn" class="tBtn">PRACTICE MODE</div>
     <div id="hiBtn" class="tBtn">HIGH SCORES</div>
@@ -321,14 +319,11 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
   <div class="tBtns"><div id="bpCopy" class="tBtn">COPY RESULTS</div><div id="bpAgain" class="tBtn">AGAIN</div><div id="bpMenu" class="tBtn">MAIN MENU</div></div>
 </div>
 <div class="scr" id="teamScr">
-  <div class="tt">TEAM &amp; UNIFORM</div>
-  <div id="tmTog"><span data-w="bat" class="on">BATTER</span><span data-w="pit">PITCHER</span></div>
-  <div id="tmPv"><div class="tmP on" data-w="bat"><div class="bx"><canvas id="tmCvB" width="120" height="128"></canvas></div><b id="tmNmB"></b><span id="tmUB"></span></div>
-    <div class="tmP" data-w="pit"><div class="bx"><canvas id="tmCvP" width="104" height="104"></canvas></div><b id="tmNmP"></b><span id="tmUP"></span></div></div>
-  <div class="tmSw" data-k="uni"><span class="k">UNIFORMS</span><span data-v="new">NEW</span><span data-v="same">SAME</span></div>
+  <div class="tt">CHOOSE TEAM</div>
+  <div id="tmPv"><div class="tmP on"><div class="bx"><canvas id="tmCvB" width="120" height="128"></canvas></div><b id="tmNmB"></b><span id="tmUB"></span></div></div>
   <div class="tmSw" data-k="num"><span class="k">NUMBERS</span><span data-v="on">ON</span><span data-v="off">OFF</span></div>
-  <div id="tmHd"></div>
-  <div id="tmRnd" class="tmK">RANDOM</div>
+  <div id="tmHd">YOUR TEAM</div>
+  <div id="tmHint">TAP IT AGAIN TO CHANGE UNIFORMS</div>
   <div id="tmGrid"></div>
   <div id="tmDone" class="tBtn">DONE</div>
 </div>
@@ -611,7 +606,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v411';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v413';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1099,33 +1094,21 @@ function schedOpp(my){const me=TM[my],w=[];
   for(const t of TEAMS){if(t.id===my)continue;
     w.push([t.id,t.lg===me.lg?(t.dv===me.dv?52/4:64/10):(RIVAL[my]===t.id?4:42/14)])}
   let r=Math.random()*w.reduce((a,x)=>a+x[1],0);for(const x of w){if((r-=x[1])<=0)return x[0]}return w[0][0]}
-// RANDOM on either side: a new team every game (yours: any of the 30; the opponent: by the schedule's
-// odds for whoever you are that day) · a team picked: that team every game. One switch on the picker:
-//   UNIFORMS  NEW: home/away changes game to game and each team dresses for the day (mostly its primary,
-//                  an alternate now and then) · SAME: one side and the same uniforms every game
-let myTeam=null,myRand=true,oppLock=null,uniSame=false,lockSide='H',myPick=0,oppPick=-1,nextGame=null,game=null;
-try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;myRand=!!t.rand;oppLock=TM[t.opp]?t.opp:null;
-  uniSame=!!t.uniSame&&t.myU>=0&&t.myU<TM[t.my].u.length;if(uniSame){lockSide=t.side==='A'?'A':'H';myPick=t.myU;oppPick=oppLock&&t.oppU>=0?t.oppU:-1}}}catch(e){}
-if(!myTeam)myTeam=TEAMS[Math.floor(Math.random()*TEAMS.length)].id;   // first visit: a team of your own, change it any time
-// jersey numbers on/off (TEAM & UNIFORM screen); off = the plain jerseys, the pitcher's two chest bars
-let jerseyNums=true;try{jerseyNums=localStorage.getItem('bbNums')!=='0'}catch(e){}
-function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTeam,rand:myRand,opp:oppLock,uniSame,side:lockSide,myU:myPick,oppU:oppPick}))}catch(e){}}
+// CHOOSE TEAM: you pick your team and one of its uniforms, and that is what you wear every game.
+// The other team is drawn fresh each game by the schedule's odds (never the same club twice running),
+// dressed for the other side of the day: road greys against your home whites, and so on.
 const primary=(id,side)=>TM[id].u.findIndex(x=>x[0]===side);
-// same-uniforms opponent: his pick if he's the fixed opponent, otherwise his primary for the side (or the next one that doesn't clash)
-function fixedOpp(id,side,vs){if(oppLock===id&&oppPick>=0)return oppPick;const t=TM[id],clash=x=>Math.abs(lum(x[3])-lum(vs[3]))<.12;
-  const p0=primary(id,side);if(!clash(t.u[p0]))return p0;const i=t.u.findIndex(x=>x[1]===side&&!clash(x));return i>=0?i:t.u.findIndex(x=>!clash(x))}
-// keep: the side of the picker that didn't change ('bat' or 'pit'): that team, and its uniform when it
-// still works, stay as they were instead of being drawn again
-function rollNext(keepSide,keep){const k=keep&&nextGame;
-  const side=uniSame?lockSide:keepSide||(Math.random()<.5?'H':'A');   // side = yours
-  let me=myTeam;if(myRand){me=null;if(k&&(keep==='bat'||keep==='both')&&nextGame.me!==oppLock)me=nextGame.me;
-    if(!me){const c=TEAMS.filter(t=>t.id!==oppLock&&(!k||keep!=='pit'||t.id!==nextGame.opp));me=c[Math.floor(Math.random()*c.length)].id}}
-  let opp=oppLock;if(!opp){if(k&&(keep==='pit'||keep==='both')&&nextGame.opp!==me)opp=nextGame.opp;if(!opp)opp=schedOpp(me)}
-  const oSide=side==='H'?'A':'H',same=(a,f)=>k&&a===nextGame[f]&&nextGame.side===side,clash=(x,y)=>Math.abs(lum(x[3])-lum(y[3]))<.12;let mine,ou;
-  if(uniSame){mine=myRand?primary(me,side):myPick;ou=fixedOpp(opp,oSide,TM[me].u[mine])}
-  else{mine=same(me,'me')&&keep!=='pit'?nextGame.mine:autoUni(me,side,null);
-    ou=same(opp,'opp')&&keep!=='bat'&&!clash(TM[opp].u[nextGame.ou],TM[me].u[mine])?nextGame.ou:autoUni(opp,oSide,TM[me].u[mine])}
-  nextGame={me,side,opp,mine,ou}}
+let myTeam=null,myPick=0,nextGame=null,game=null;
+function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTeam,myU:myPick}))}catch(e){}}
+try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;
+  // a save from before v412 kept a uniform only when UNIFORMS was on SAME; otherwise start in the home whites
+  myPick=Number.isInteger(t.myU)&&t.myU>=0&&t.myU<TM[t.my].u.length&&t.uniSame!==false?t.myU:primary(t.my,'H')}}catch(e){}
+if(!myTeam){myTeam=TEAMS[Math.floor(Math.random()*TEAMS.length)].id;myPick=primary(myTeam,'H');saveTeams()}   // first visit: a team of your own, yours until you change it
+// jersey numbers on/off (CHOOSE TEAM screen); off = the plain jerseys, the pitcher's two chest bars
+let jerseyNums=true;try{jerseyNums=localStorage.getItem('bbNums')!=='0'}catch(e){}
+function rollNext(){const me=myTeam,mine=myPick,side=TM[me].u[mine][1],oSide=side==='H'?'A':'H';
+  let opp,n=0;do opp=schedOpp(me);while(game&&opp===game.opp&&++n<30);
+  nextGame={me,side,opp,mine,ou:autoUni(opp,oSide,TM[me].u[mine])}}
 let BAT_U=uniOf(myTeam,0),PIT_U=uniOf('BOS',0);
 function useGame(g){BAT_U=uniOf(g.me,g.mine);PIT_U=uniOf(g.opp,g.ou)}
 rollNext();useGame(nextGame);
@@ -2443,65 +2426,37 @@ document.getElementById('exhBack').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();hide('exhScr');show('menuScr')});
 
 /* ===== team picker ===== */
-let tmWho='bat';const prevNum={};   // one number per team for the previews, kept while you browse
-function drawPreview(id,who,ui){const cv=document.getElementById(who==='bat'?'tmCvB':'tmCvP'),g=cv.getContext('2d');
+const prevNum={};   // one number per team for the preview, kept while you browse
+function drawPreview(id,ui){const cv=document.getElementById('tmCvB'),g=cv.getContext('2d');
   // the canvas at its real screen size, each sprite pixel a whole number of screen pixels, feet on the bottom edge
-  const bw=who==='bat'?30:26,bh=who==='bat'?32:26,r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  const bw=30,bh=32,r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
   if(r.width>0){cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr)}
   const sc=Math.max(1,Math.floor(Math.min(cv.width/bw,cv.height/bh)));
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.setTransform(sc,0,0,sc,Math.floor((cv.width-bw*sc)/2),cv.height-bh*sc);
- 
-  const keep=[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty,batterNum,pitcherNum];SC=g;g.save();
-  if(who==='bat'){BAT_U=uniOf(id,ui);batRight=true;walkT=0;batterNum=prevNum['b'+id]||(prevNum['b'+id]=pickNum(id));g.translate(13-(HOME.x-11),29-(HOME.y+12));drawBatter(0)}
-  else{PIT_U=uniOf(id,ui);pitchLefty=false;pitcherNum=prevNum['p'+id]||(prevNum['p'+id]=pickNum(id));g.translate(13-(MOUND.x+1),24-(MOUND.y+1));drawPitcher(0)}
-  g.restore();[SC,BAT_U,PIT_U,batRight,walkT,pitchLefty,batterNum,pitcherNum]=keep}
-function renderTeams(){
-  document.querySelectorAll('#tmTog span').forEach(b=>b.classList.toggle('on',b.dataset.w===tmWho));
-  document.querySelectorAll('.tmP').forEach(b=>b.classList.toggle('on',b.dataset.w===tmWho));
-  const myId=nextGame.me,me=TM[myId],opId=nextGame.opp,op=TM[opId],myU=nextGame.mine,opU=nextGame.ou;
-  document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=(uniSame&&!myRand?'':'NEXT GAME · ')+me.lbl[myU];
-  document.getElementById('tmNmP').textContent=op.city;document.getElementById('tmUP').textContent=(uniSame&&oppLock?'':'NEXT GAME · ')+op.lbl[opU];
-  drawPreview(myId,'bat',myU);drawPreview(opId,'pit',opU);
-  document.querySelectorAll('#teamScr .tmSw span[data-v]').forEach(b=>b.classList.toggle('on',b.parentNode.dataset.k==='num'?(b.dataset.v==='on')===jerseyNums:(b.dataset.v==='same')===uniSame));
-  document.getElementById('tmHd').textContent=tmWho==='bat'?"BATTER'S TEAM":"PITCHER'S TEAM";
-  document.getElementById('tmRnd').classList.toggle('sel',tmWho==='bat'?myRand:!oppLock);
-
+  const keep=[SC,BAT_U,batRight,walkT,batterNum];SC=g;g.save();
+  BAT_U=uniOf(id,ui);batRight=true;walkT=0;batterNum=prevNum['b'+id]||(prevNum['b'+id]=pickNum(id));g.translate(13-(HOME.x-11),29-(HOME.y+12));drawBatter(0);
+  g.restore();[SC,BAT_U,batRight,walkT,batterNum]=keep}
+function renderTeams(){const me=TM[myTeam];
+  document.getElementById('tmNmB').textContent=me.city;document.getElementById('tmUB').textContent=me.lbl[myPick];
+  drawPreview(myTeam,myPick);
+  document.querySelectorAll('#teamScr .tmSw span[data-v]').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===jerseyNums));
   // West · Central · East, AL on top
   let h='';for(const lg of ['AL','NL']){h+=`<div class="tmL">${lg}</div><div class="tmR">`;
     for(const [dv,nm] of [['W','WEST'],['C','CENTRAL'],['E','EAST']]){h+=`<div class="tmC"><div class="tmD">${nm}</div>`;
-      for(const t of TEAMS.filter(t=>t.lg===lg&&t.dv===dv)){
-        const cls=tmWho==='bat'?(myRand?(t.id===myId?' nx':''):(t.id===myTeam?' sel':'')):(oppLock?(t.id===oppLock?' sel':''):(t.id===opId?' nx':''));
-        h+=`<div class="tmK${cls}" data-t="${t.id}" style="background:${chipBg(t)}">${t.ab}</div>`}
+      for(const t of TEAMS.filter(t=>t.lg===lg&&t.dv===dv))h+=`<div class="tmK${t.id===myTeam?' sel':''}" data-t="${t.id}" style="background:${chipBg(t)}">${t.ab}</div>`;
       h+='</div>'}
     h+='</div>'}
   document.getElementById('tmGrid').innerHTML=h}
-// a change on one tab leaves the other tab's team (and uniform) alone
-function tmChanged(keep){rollNext(nextGame&&nextGame.side,keep||(tmWho==='bat'?'pit':'bat'));saveTeams();renderTeams()}
-// freeze whatever is showing: its side and both uniforms
-function freezeUni(){uniSame=true;lockSide=nextGame.side;myPick=nextGame.mine;oppPick=oppLock?nextGame.ou:-1}
-function tmTapTeam(id){
-  if(tmWho==='bat'){if(myRand){myRand=false;myTeam=id;if(oppLock===id)oppLock=null;myPick=id===nextGame.me?nextGame.mine:primary(id,lockSide);tmChanged();return}   // off RANDOM: just pick him
-    if(id===myTeam){if(!uniSame)freezeUni();myPick=(myPick+1)%TM[id].u.length;lockSide=TM[id].u[myPick][1]}
-    else{myTeam=id;if(oppLock===id)oppLock=null;if(uniSame)myPick=primary(id,lockSide)}}
-  else{if(id===nextGame.me&&!myRand)return;if(oppLock===id){if(!uniSame)freezeUni();oppPick=(oppPick+1)%TM[id].u.length;lockSide=TM[id].u[oppPick][1]==='H'?'A':'H'}
-    else{oppLock=id;oppPick=-1}}
-  tmChanged()}
-function tmTapPlayer(w){if(tmWho!==w){tmWho=w;renderTeams();return}
-  if(w==='bat'){if(myRand){myRand=false;myTeam=nextGame.me;myPick=nextGame.mine}   // picking his uniform means keeping him
-    tmTapTeam(myTeam);return}
-  if(!oppLock)oppLock=nextGame.opp;   // picking his uniform means facing him again
-  tmTapTeam(oppLock)}
-function tmSwitch(v){if(v==='new'&&uniSame){uniSame=false;oppPick=-1}else if(v==='same'&&!uniSame)freezeUni();else return
-  tmChanged('both')}
-// RANDOM: back to a new team every game, and every tap on it draws the next game's team again
-function tmRandom(){if(tmWho==='bat')myRand=true;else{oppLock=null;oppPick=-1}
-  tmChanged()}
+// a tap on another team makes it yours, in its home uniform; a tap on your own team (or on the batter) tries on its next uniform
+function tmTapTeam(id){if(id===myTeam)myPick=(myPick+1)%TM[id].u.length;else{myTeam=id;myPick=primary(id,'H')}
+  rollNext();saveTeams();renderTeams()}
 document.getElementById('teamScr').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();
-  const k=e.target.closest('.tmK'),p=e.target.closest('.tmP'),tg=e.target.closest('#tmTog span'),sw=e.target.closest('.tmSw span[data-v]');
-  if(e.target.closest('#tmRnd'))tmRandom();else if(k)tmTapTeam(k.dataset.t);else if(p)tmTapPlayer(p.dataset.w);else if(tg){tmWho=tg.dataset.w;renderTeams()}
-  else if(sw){if(sw.parentNode.dataset.k==='num'){jerseyNums=sw.dataset.v==='on';try{localStorage.setItem('bbNums',jerseyNums?'1':'0')}catch(err){}renderTeams()}else tmSwitch(sw.dataset.v)}
-  else if(e.target.closest('#tmDone')){hide('teamScr');show('menuScr')}});
-tap('teamBtn',()=>{tmWho='bat';hide('menuScr');renderTeams();show('teamScr')});
+  const k=e.target.closest('.tmK'),sw=e.target.closest('.tmSw span[data-v]');
+  if(k)tmTapTeam(k.dataset.t);else if(e.target.closest('.tmP'))tmTapTeam(myTeam);
+  else if(sw){jerseyNums=sw.dataset.v==='on';try{localStorage.setItem('bbNums',jerseyNums?'1':'0')}catch(err){}renderTeams()}
+  else if(e.target.closest('#tmDone')){if(state==='title'){useGame(nextGame);batterNum=pickNum(nextGame.me);pitcherNum=pickNum(nextGame.opp)}   // the title screen's players change with you
+    hide('teamScr');show('menuScr')}});
+tap('teamBtn',()=>{hide('menuScr');renderTeams();show('teamScr')});
 // the title has one MENU button; everything else lives on the menu screen
 tap('menuBtn',()=>{hide('titleScr');paintChal();show('menuScr')});
 tap('menuBack',()=>{hide('menuScr');show('titleScr')});
