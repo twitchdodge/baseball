@@ -682,7 +682,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v438';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v439';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1179,7 +1179,7 @@ function saveTeams(){try{localStorage.setItem('bbTeams',JSON.stringify({my:myTea
 try{const t=JSON.parse(localStorage.getItem('bbTeams')||'null');if(t&&TM[t.my]){myTeam=t.my;
   // a save from before v412 kept a uniform only when UNIFORMS was on SAME; otherwise start in the home whites
   myPick=Number.isInteger(t.myU)&&t.myU>=0&&t.myU<TM[t.my].u.length&&t.uniSame!==false?t.myU:primary(t.my,'H')}}catch(e){}
-if(!myTeam){myTeam=TEAMS[Math.floor(Math.random()*TEAMS.length)].id;myPick=primary(myTeam,'H');saveTeams()}   // first visit: a team of your own, yours until you change it
+if(!myTeam){myTeam='NYY';myPick=primary(myTeam,'H');saveTeams()}   // first visit: the Yankees in their home whites (v439, David's pick; a random team until then), yours until you change it
 // jersey numbers on/off (CHOOSE TEAM screen); off = the plain jerseys, the pitcher's two chest bars
 let jerseyNums=true;try{jerseyNums=localStorage.getItem('bbNums')!=='0'}catch(e){}
 function rollNext(){const me=myTeam,mine=myPick,side=TM[me].u[mine][1],oSide=side==='H'?'A':'H';
