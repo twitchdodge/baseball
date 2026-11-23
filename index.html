@@ -608,6 +608,28 @@ const ROAR_UP={r1:'r2',r2:'r3',r3:'h3',pr:'r3',h1:'h2',h2:'h3',h3:'h4',h4:'h4'};
 function homeArrivalMs(){let m=Infinity;for(const a of runnerAnims){if(a.hold||a.noRun||a.hrBat)continue;
   const e=a.path?a.path[a.path.length-1]:{x:a.ex,y:a.ey};if(Math.abs(e.x-HOME.x)>3||Math.abs(e.y-HOME.y)>3)continue;
   m=Math.min(m,((a.delay||0)+(1-a.t)*a.dur)*1000/60)}return m}
+// THE BIGGEST ROAR (v452). David: "any time the winning run scores with 2 outs in the third, it should be a big roar, bigger than any other";
+// also the parade (with "maybe we can try some bigger crowd cheers also?"). Three layers of crowd over one noise: the body (a band round
+// 480 Hz) that surges twice, the shouting above it (1.25 kHz), a little air (3.2 kHz), and a scatter of whistles; 4.2 s long, louder and
+// longer than the grand slam's (ROARS.h4: one band, 2.45 s).
+const BIG={v:.355,L:4.2};   // about 4 dB above the grand slam's roar over its first second and a half, and 1.7 s longer (v453: v .34 → .355 makes up the 0.4 dB the whistles gave)
+function crowdBig(p=BIG){try{aud();const t=ac.currentTime+.01,L=p.L,v=p.v,sr=ac.sampleRate,len=Math.ceil(sr*(L+.15)),buf=ac.createBuffer(1,len,sr),x=buf.getChannelData(0);
+  for(let i=0;i<len;i++)x[i]=Math.random()*2-1;
+  const layer=(hz,q,pts,k)=>{const sc=ac.createBufferSource();sc.buffer=buf;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=hz;bp.Q.value=q;const g=ac.createGain();
+    g.gain.setValueAtTime(.0001,t);for(const [s2,a] of pts)g.gain.linearRampToValueAtTime(Math.max(.0001,a*v*k),t+s2);sc.connect(bp).connect(g).connect(out);sc.start(t,Math.random()*.1);sc.stop(t+L+.05)};
+  layer(480,.55,[[.22,1],[.6,.8],[1.05,1.05],[1.6,.85],[2.3,.9],[L*.8,.45],[L,0]],1);      // the body: up fast, a second surge
+  layer(1250,.9,[[.3,1],[.7,.7],[1.15,.95],[1.7,.6],[L*.7,.3],[L,0]],.5);                   // shouting
+  layer(3200,1.2,[[.25,1],[1.2,.6],[L*.6,.2],[L,0]],.12);                                   // air (v453: no whistles, "don't need the seagull type noises")
+  }catch(e){}}
+// a crowd that builds: one band of crowd swelling from nothing over `L` seconds (the parade's street, as the bus comes into town; the parade asks for it to peak as the roof comes off, ROAD.PT1+.2 s: v455 lengthened the way in)
+function crowdSwell(L=4.6,v=.16){try{aud();const t=ac.currentTime+.01,sr=ac.sampleRate,len=Math.ceil(sr*(L+.6)),buf=ac.createBuffer(1,len,sr),x=buf.getChannelData(0);
+  for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const sc=ac.createBufferSource();sc.buffer=buf;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=560;bp.Q.value=.6;
+  const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v*.15,t+L*.4);g.gain.linearRampToValueAtTime(v,t+L);g.gain.linearRampToValueAtTime(.0001,t+L+.5);
+  sc.connect(bp).connect(g).connect(out);sc.start(t);sc.stop(t+L+.55)}catch(e){}}
+// the winning run scoring with two outs in the last inning (it only counts as that when this play is the one that reaches the target)
+let playOuts=0;   // outs when this pitch was thrown: a sacrifice fly with one out isn't a two-out hit
+const walkOff=hit=>hit&&inning===MAX_INN&&playOuts===2;   // v452: the run that reaches the target with two outs in the last inning gets the biggest roar
+function roarBig(at=0){const t=performance.now()+at;roarEnd=t+BIG.L*1000;setTimeout(()=>crowdBig(),at)}
 let quietPlay=false;   // set by resolveOutPlay for an out that doesn't help the winning run; cleared each pitch
 function roar(at=0,p=ROARS.pp,force){if(quietPlay)return;const t=performance.now()+at;if(t<roarEnd&&!force)return;roarEnd=t+p.L*1000;setTimeout(()=>sfx.ooh(p),at)}
 let OOH_SF=0,OOH_SEND=200;   // crowd ooh: on a sac fly it starts as the ball hits the wall; on a runner sent home, 200 ms in
@@ -634,6 +656,7 @@ const sfx={
   over(){tnRun([392,349,330,262],.13,.25,'square',.08)},
   win(){tnRun([523,659,784,1047,1319],.09,.18,'square',.11)},
   coin(){tn(988,.07,'square',.13);setTimeout(()=>tn(1319,.18,'square',.13),70)},
+  thud(){noiseHit(0,.06,.4,'lowpass',700);vc(70,0,.08,'triangle',.2)},   // the bus's own roof back on (v454): bling's thud alone
   bling(){noiseHit(0,.06,.4,'lowpass',700);vc(70,0,.08,'triangle',.2);vc(988,90,.07,'square',.12);vc(1319,160,.07,'square',.12);vc(1568,230,.24,'square',.12)},   // the gold roof lands on the bus (v442): a thud, then three rising notes, all on the sound clock
   target(){tn(784,.08,'square',.12);setTimeout(()=>tn(784,.08,'square',.12),100);setTimeout(()=>tn(1047,.34,'square',.13),200)},
   // error: a slide-whistle 'whoops' (dip then swoop up) followed by a ta-da
@@ -668,7 +691,8 @@ const PITCHES=[
 const MPH={'SUPER FAST':[104,107],HEATER:[98,103],FASTBALL:[92,96],CURVEBALL:[82,87],KNUCKLEBALL:[76,79],CHANGEUP:[70,74]};
 // CHALLENGE: every pitch is bumped one notch faster; the heater becomes SUPER FAST, which only exists here.
 // SF_PLUS = how many frames quicker than the heater it reaches the plate.
-const SF_COLOR='#3d8bff';let SF_PLUS=3,devAllSF=false;   // +3 locked in (16 frames vs the heater's 19)
+const SF_COLOR='#3d8bff';let SF_PLUS=3,devAllSF=false,devOldParade=false;   // devOldParade (DEV): set by OLD PARADE for that one parade, which then has v451's crowd (the grand slam's roar, no build-up); a real game clears it
+   // +3 locked in (16 frames vs the heater's 19)
 const LEVEL_UP={CHANGEUP:'KNUCKLEBALL',KNUCKLEBALL:'CURVEBALL',CURVEBALL:'FASTBALL',FASTBALL:'HEATER'};
 function superFast(){return{n:'SUPER FAST',fr:PITCHES[3].fr-SF_PLUS,oX:t=>0,color:SF_COLOR}}
 function levelUp(p){if(p.n==='HEATER')return superFast();return{...PITCHES.find(q=>q.n===LEVEL_UP[p.n])}}
@@ -688,7 +712,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v451';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v457';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -1545,7 +1569,7 @@ function basePitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 // drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
 function cancelPlay(){bpClearLbl();steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
-function startGame(){bp=null;paused=false;hide('pauseScr');gs=newGS();musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+function startGame(){bp=null;paused=false;devOldParade=false;hide('pauseScr');gs=newGS();musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;setVenue(round);sbF.cur=0;marqReset();TUNE.play('field');   // the park for this level, and two organ chords (ta-da) play us onto the field
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1605,7 +1629,7 @@ function nextPitch(){
   readyT=Math.round(delayMs/16.67);
   state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}
 function beginWindup(){state='windup';windupT=14;pFr=1;sfx.pitch();radar=0}
-function launchBall(){state='pitch';quietPlay=false;awwSnap={r:runs+pendingRuns,on:bases.filter(Boolean).length};pFr=2;ballT=0;pitchCt++;setTimeout(()=>pFr=0,180);
+function launchBall(){state='pitch';quietPlay=false;playOuts=innOuts;awwSnap={r:runs+pendingRuns,on:bases.filter(Boolean).length};pFr=2;ballT=0;pitchCt++;setTimeout(()=>pFr=0,180);
   {const m=MPH[pitch.n]||[90,94];radar=m[0]+Math.floor(Math.random()*(m[1]-m[0]+1))}
   if(pitch.n!=='FASTBALL')showLbl('resLbl',pitch.n,pitch.color,450)}
 
@@ -1834,7 +1858,7 @@ function resolveHit(){if(bp){bpLand();return}
         onSafe:()=>{basePending[2]=false;showLbl('innLbl','1ST TO 3RD!','#e8f6ff',900)},
         onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
-      if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}{const k='h'+Math.min(4,Math.max(hrRuns,hrStreak));roar(0,ROARS[hrTgt?ROAR_UP[k]:k])}   // back-to-back homers: 2nd = 2-run roar, 3rd = 3-run, 4th+ = grand slam
+      if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}{const k='h'+Math.min(4,Math.max(hrRuns,hrStreak));if(walkOff(hrTgt))roarBig(0);else roar(0,ROARS[hrTgt?ROAR_UP[k]:k])}   // back-to-back homers: 2nd = 2-run roar, 3rd = 3-run, 4th+ = grand slam
       showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);
       if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
@@ -1932,7 +1956,8 @@ function runLbl(scored,txt,force){const before=runs+pendingRuns-scored,hit=befor
   // the cheer peaks as the first runner touches home (it starts while he's coming in); skipped while a homer's roar is going.
   // force: a run revealed on a play at the plate gets its own, bigger cheer, right at the call
   if(scored>0){const k=force?'pr':'r'+Math.min(3,scored),p=ROARS[hit?ROAR_UP[k]:k];
-    if(force)roar(0,p,true);else{const t=homeArrivalMs();roar(t<Infinity?Math.max(0,t-p.a):350,p)}}
+    if(walkOff(hit)){const t=force?0:homeArrivalMs();roarBig(t<Infinity?Math.max(0,t-220):350)}   // v452: the winning run with two outs in the last inning: the biggest roar of all
+    else if(force)roar(0,p,true);else{const t=homeArrivalMs();roar(t<Infinity?Math.max(0,t-p.a):350,p)}}
   setTimeout(()=>hit?showLbl('scorLbl','TARGET!!',TGT_GRN,1100,'0 0 12px rgba(94,224,94,.5)'):showLbl('scorLbl',txt,'#ffd642',1100),350)}
 
 /* ===== update ===== */
@@ -2239,10 +2264,10 @@ function setChallenge(on){challenge=on&&chalUnlocked;try{localStorage.setItem('b
 document.getElementById('chalBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setChallenge(!challenge)});
 paintChal();
 // developer toggles (test builds only): every challenge pitch SUPER FAST, and how much faster than a heater
-if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span>';   // (v446: hear the win tune of each drive)
+if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="oldp">OLD PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span><b>CROWD</b><span data-c="slam">SLAM</span><span data-c="big">BIG</span>';   // (v446: hear the win tune of each drive)
   for(const id of ['titleScr','pauseScr']){const d=document.createElement('div');d.className='devP';d.innerHTML=html;document.getElementById(id).appendChild(d);
-    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const tn0=e.target.dataset.t;if(tn0){musicStop();TUNE.play(tn0);return}const k=e.target.dataset.d;if(!k)return;
-      if(k==='all')devAllSF=!devAllSF;else if(k==='odds'){newOdds=!newOdds;paintChal()}else if(k==='unl'){devUnlockDemo();return}else SF_PLUS=+k;
+    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const tn0=e.target.dataset.t;if(tn0){musicStop();TUNE.play(tn0);return}const cr=e.target.dataset.c;if(cr){if(cr==='big')crowdBig();else sfx.ooh(ROARS.h4);return}const k=e.target.dataset.d;if(!k)return;
+      if(k==='all')devAllSF=!devAllSF;else if(k==='odds'){newOdds=!newOdds;paintChal()}else if(k==='unl'||k==='oldp'){devOldParade=k==='oldp';devUnlockDemo();return}else SF_PLUS=+k;   /* v453: OLD PARADE plays the parade itself, with v451's crowd */
       try{localStorage.setItem('bbDevOdds',newOdds?'1':'0');localStorage.setItem('bbDevAllSF',devAllSF?'1':'0');localStorage.setItem('bbDevSF',''+SF_PLUS)}catch(err){}paintDev()})}
   paintDev()}
 function paintDev(){document.querySelectorAll('.devP span').forEach(el=>{const k=el.dataset.d;
@@ -2779,7 +2804,7 @@ function waterTower(g,x,by,label){const L='#7d8794';lin(g,L,x-14,by,x-9,by-46,2)
 function billboard(g,x,by,l1,l2,bg='#f6f1e4',ink='#1c2a5a'){fr(g,'#5a4636',x-22,by-30,3,30);fr(g,'#5a4636',x+20,by-30,3,30);
   fr(g,'#3c404b',x-34,by-64,69,36);fr(g,bg,x-32,by-62,65,32);
   txt3(g,ink,l1,x-(txt3w(l1,2)>>1),by-58,2);txt3(g,'#c8322a',l2,x-(txt3w(l2,2)>>1),by-44,2)}
-function shops(g,x,by){const P=[['#b5573a','DINER','#c8322a'],['#d7c9a6','BATS','#23408a'],['#7f9a8a','DELI','#2c6b4f']];
+function shops(g,x,by,P=[['#b5573a','DINER','#c8322a'],['#d7c9a6','BATS','#23408a'],['#7f9a8a','DELI','#2c6b4f']]){   // (P: other shops, v457)
   P.forEach(([c,name,aw],i)=>{const xx=x+i*38,h=50+(i===1?8:0);fr(g,c,xx,by-h,36,h);fr(g,dk(c,.2),xx+30,by-h,6,h);fr(g,lt(c,.35),xx,by-h,36,2);fr(g,dk(c,.3),xx-1,by-h-2,38,2);
     win(g,xx+5,by-h+8,9,10);win(g,xx+21,by-h+8,9,10);
     fr(g,'#1c2440',xx+3,by-22,30,22);fr(g,'#9fc6dc',xx+5,by-19,14,13);fr(g,'#6b4526',xx+22,by-19,9,19);
@@ -3404,7 +3429,7 @@ const LOT=-.6,LOTSPR=wide(vLot);                        // the bus garage the tr
 const FILL=[];
 function add(x,w,h,fn){const it={x,w,h,wins:null};it.c=mk(w,h,g=>{const r=fn(g,w>>1,h);if(r)it.wins=r});FILL.push(it)}
 const T=(s,v)=>(g,c,b)=>tree(g,c,b,s,v);
-add(-760,72,70,(g,c,b)=>billboard(g,c,b,'CHAMPS','THIS WAY'));   // out past the lot, where the first world's camera never goes: only a bus coming on from the parade passes it (v442)
+add(-760,72,70,(g,c,b)=>billboard(g,c,b,'CHAMPS','THIS WAY'));FILL[FILL.length-1].ch=1;   // out past the lot, where the first world's camera never goes: only a bus coming on from the parade passes it (v442)
 add(-211,46,74,T(19,1));
 add(238,60,90,T(22,1));add(302,90,80,(g,c,b)=>house(g,c-32,b,64,40,'#f0d9a0','#7a4a3a'));add(368,72,106,T(28,0));
 add(434,90,78,(g,c,b)=>house(g,c-30,b,60,38,'#b8cad8','#4a4f5c',{side:1,chimney:1}));add(488,50,74,T(17,2));
@@ -3414,21 +3439,53 @@ add(VS+230,56,80,T(20,0));add(VS+318,120,66,(g,c,b)=>shops(g,c-57,b));add(VS+410
  B.forEach(([x,w,h],i)=>add(VS*2+x,w+4,h+26,(g,c,b)=>bldg(g,c-(w>>1),b,w,h,P[i%4],{tank:i%3===1,spire:i===3,awn:['#c84a3a','#23408a','#2c6b4f'][i%3]})))}
 add(VS*3+212,48,90,(g,c,b)=>bldg(g,c-20,b,40,60,['#b0886a','#8f6a50','#33406a'],{}));add(VS*3+262,60,90,T(22,2));
 add(VS*3+336,100,70,(g,c,b)=>barn(g,c-44,b));add(VS*3+398,24,14,(g,c,b)=>hay(g,c,b));add(VS*3+452,124,44,(g,c,b)=>corn(g,0,b,124,40,21));
-for(let k=0;k<3;k++)add(VS*4+250+k*128,128,46,(g,c,b)=>corn(g,0,b,128,42,30+k));
+for(let k=0;k<2;k++)add(VS*4+250+k*128,128,46,(g,c,b)=>corn(g,0,b,128,42,30+k));   // (three until v457: the third made way for the edge of town)
 add(VS*4+384,72,70,(g,c,b)=>billboard(g,c,b,'PARADE','TODAY'));   // in the corn on the way out of the last park: only a bus that drives on past it sees it
+/* THE EDGE OF TOWN (v455–v457). David: "the scene in between legend and the parade is a bit odd, it's just some grass but it's further back
+   than the other scenes. maybe we could have a couple houses at least or a medium building, to slightly transition to the city. it can be
+   twice as wide as it is now. same thing between the city and the parking lot when you go to rookie" (v455: the city begins PGAP px further
+   on and two houses and a brick building stood out on the plain); "I don't like how all the stuff is so far back between legend and parade"
+   (v456 stood them at the street wall's depth, along the road); "No the grass is still so far back, it looks weird. And maybe the houses are
+   too close by comparison now. Can you just have a look at those transitions in and out of the parade and make them more natural please".
+   v457: the way into town steps forward a row at a time, as a real road into a city does: a house among trees on the parks' ground line
+   where the corn ends (as every other house in the game stands); then a middle row, nearer the road (APP, at depth APP_PP on its own ground
+   line APP_Y, between the parks' and the street wall's): a tree and a house with its lawn, a row of shops and two blocks of flats, the shops
+   and blocks on a forecourt that runs on into the city's own pavement; then the street wall itself. The roadside has a pavement and street
+   lamps instead of poles from a little before the shops (TAPP). Going out of town to the right (onward, home) the same, the other way
+   round. */
+const SHOPS2=[['#8a5a7a','PIZZA','#c8322a'],['#c9b79a','BARBER','#23408a'],['#6f8f9f','MARKET','#2c6b4f']];
+add(VS*4+452,56,84,T(21,1));add(VS*4+500,90,80,(g,c,b)=>house(g,c-32,b,64,40,'#b8cad8','#4a4f5c'));add(VS*4+548,50,74,T(17,2));   // a house among trees where the corn ends
+add(-1050,50,74,T(17,0));add(-1002,90,80,(g,c,b)=>house(g,c-32,b,64,40,'#c9d6c0','#4a5a4c'));add(-954,56,84,T(21,1));               // (and out past the lot, the same)
 const SKYL=[];{const rnd=rng(9);for(let x=926;x<1100;){const w=12+Math.floor(rnd()*16),b=(x+w/2-180)/(D*PF),bell=Math.max(.55,1-((b-3.03)/.75)**2),h=Math.round((130+rnd()*120)*bell),lit=[];
   for(let yy=6;yy<h-6;yy+=7)for(let xx=3;xx<w-4;xx+=5)if(rnd()<.42)lit.push([xx,yy]);SKYL.push({x,w,h,c:rnd()<.5?0:1,sp:rnd()<.22,lit});x+=w+Math.floor(rnd()*3)}}
 
 /* the parade (after the last park is beaten): the road runs on into a city that has turned out for the champions. The bus drives in
    as on any win, slows to a crawl, the roof comes off and the team stands up; then it rolls on for as long as anyone cares to watch.
    PW0: where the city begins (the camera position that puts its edge mid-screen) · PW1: where the bus reaches walking pace, PT1 seconds in */
-const PW0=4.73*D,PW1=5*D,PT1=4.4,PVP=30,PWALL=.8,PCROWD=.92,PFRONT=1.6,PFAR=.3,PFX=2046,PGY=546;
+const TAPP=700,PGAP=700,PW0=4.73*D+PGAP,PW1=5*D+PGAP,PT1=5,PVP=30,PWALL=.8,PCROWD=.92,PFRONT=1.6,PFAR=.3,PFX=2046,PGY=546;
 // ticker tape and confetti: a field of paper that fills the city's air at every depth between the buildings and the near kerb. It is
 // worked out from the clock, wrapping round the screen, so there is nothing to keep track of. One piece in seven is a long streamer.
 const PCN=340,PCF=Array.from({length:PCN},(_,i)=>{const z=h2(i,1,21),pp=.84+z*.7,st=i%6===0,c=st?(i%12?'#ffffff':'#f6f1e4'):PCONF[Math.floor(h2(i,7,21)*PCONF.length)];
   return{pp,st,c,c2:lt(c,.45),u:h2(i,3,21)*420,y0:h2(i,4,21)*780,vy:(st?34:52)+h2(i,5,21)*44+z*30,ph:h2(i,6,21)*6.28,sf:1.2+h2(i,8,21)*1.6,sw:4+z*8,ff:5+h2(i,9,21)*5,
     s:pp<.98?1:pp<1.26?2:3,len:7+Math.floor(z*9),fl:(pp<1?lerp(PGY+8,RY+26,(pp-.84)/.16):lerp(RY+40,SH+30,(pp-1)/.54))+h2(i,10,21)*14}});
-let PAR=null,par=null;   // PAR: the street's sprites, painted in the team's colours when a parade begins · par: the parade under way {t, pop, c0}
+let PAR=null,par=null;
+// the middle row at the edge of town (v457): d, its left edge in camera px from where the city begins (on the way out, the same mirrored
+// after it ends); each sprite stands on APP_Y two px above its bottom. In front of the shops and flats, from APPF to 8 px into the city's
+// pavement, a car park: asphalt with white bays and a few cars (CARS: d of the car's middle, colour, facing), a strip of pavement along the
+// shop fronts, and the roadside pavement in front of it.
+const APP_PP=.65,APP_Y=512,APPF=-410,CARS=[[-338,'#c8322a',1],[-262,'#e8e2d0',-1],[-178,'#2f7a8a',1],[-66,'#e8a030',-1]];
+const CARSPR={};const carSpr=(c,L)=>CARSPR[c+L]||(CARSPR[c+L]=mk(28,16,g=>{const x=1,y=15;   // the lot's own parked car (art_venues, vLot)
+  fr(g,dk(c,.35),x,y-4,26,2);fr(g,c,x,y-9,26,5);fr(g,lt(c,.25),x,y-9,26,1);fr(g,c,x+6,y-14,14,5);fr(g,lt(c,.25),x+6,y-14,14,1);
+  fr(g,'#a9d6f0',x+8,y-13,4,4);fr(g,'#a9d6f0',x+14,y-13,4,4);fr(g,'#f6e9a8',L>0?x+25:x,y-8,1,2);fr(g,'#c8322a',L>0?x:x+25,y-8,1,2);
+  for(const wx of [6,20]){dsc(g,'#15171f',x+wx,y-2,3);dsc(g,'#9aa0aa',x+wx,y-2,1)}}));
+const APP=(()=>{const L=[],put=(d,c)=>L.push({d,c});
+  put(-640,mk(62,94,g=>tree(g,31,92,24,2)));
+  put(-560,mk(96,72,g=>house(g,8,70,80,42,'#e6d3a8','#7a4a3a',{side:1,chimney:1})));
+  put(-400,mk(124,72,g=>shops(g,5,70,SHOPS2)));
+  put(-205,mk(62,124,g=>bldg(g,4,122,54,92,['#b0886a','#8f6a50','#33406a'],{tank:1})));
+  put(-108,mk(66,162,g=>bldg(g,4,160,58,136,['#c9b79a','#a8977c','#3a4a70'],{awn:'#2c6b4f'})));
+  return L})();
+  // PAR: the street's sprites, painted in the team's colours when a parade begins · par: the parade under way {t, pop, c0}
 /* ON TO THE CHAMPIONSHIP (v442). David: "When you click 'try championship mode' after the parade, it should bring you to the parking lot
    scene, not straight into the game. What might be even cooler is if the bus somehow got bedazzled on the way from the parade to the
    parking lot (just moving horizontally still of course). But as if the championship levels sit to the right of the classic ones, after
@@ -3443,6 +3500,20 @@ let PAR=null,par=null;   // PAR: the street's sprites, painted in the team's col
    puts the city's end mid-screen (at every depth), kE: the last of the far towers, land: the roof is on, bunt: the first pole strung
    with pennants, tg: the team as champions, gold/top/white: the champions' bus, its roof as it comes down, its outline in white} */
 const OT=5.6,OLEN=2200,ODUCK=1.9,ODROP=2.05,OLAND=2.9,OFLK=.24;   // seconds for the whole drive and px of road; when the team sits down, the roof appears and it lands; how long the bus then flickers (white for 60 ms, twice)
+/* BACK TO ROOKIE and PLAY LEGEND AGAIN (v454). David: "can we make it so if you play legend again you literally drive left (or back up?)
+   back to the legend venue? and "back to rookie" drives right to rookie. in either case the top has to drop back onto the bus."
+   home(): as onward(), but the roof that comes down is the bus's own (plain, or gold in championship mode, where the bus already is the
+   champions'), nothing flickers, and the bus drives on past TEAM PARKING to ROOKIE: the same second world as onward's, with ROOKIE
+   OLEN−LOT·D px on from where the bus began.
+   back(): the bus stops, the team sits down, the roof comes down, and the bus turns round and drives back out of town to the farm. Here
+   the second world lies behind the bus: it is the first one moved W px on, W being how far the city's beginning is moved on, to the last
+   block boundary 60 px or more off the left of the screen (E0, in the wall's own coordinates; e0 = PW0+W, the camera position that puts
+   that new beginning mid-screen). So the drive back out of town is the drive in, played backwards, wherever the bus was in the street.
+   The far towers stay in the first world and begin at kS, the first one in view when the bus turned round (by the time it is at the farm
+   they have all gone off the right of the screen again, as they were before the bus first left it).
+   onw.k: 'champ' (onward), 'home', 'back' · T, L: seconds and px of the drive (champ, home) · duck, drop, landT: when the team sits down,
+   the roof appears, it lands · dest: the stop it ends at · top, fc: the roof as it comes down, and whether the pennant and trophy ride on it */
+const HT=7,BSTOP=.5,BDUCK=.2,BDROP=.45,BLAND=1.3,BGO=1.65,BT=5.4;   // home: seconds for the whole drive · back: stopped at .5 s, the team down from .2, the roof from .45 to 1.3, turning round at 1.65, then 5.4 s of road (4.6 until the edge of town was added, v455)
 let drift=0,onw=null,arrived=false;
 
 /* state */
@@ -3457,7 +3528,7 @@ function lose(){if(moving())return;if(at>0){at--;drive(at,'loss')}else{mode='ret
 function jump(i){at=i;cam=(i-.42)*D;puffs.length=0;drive(i,'arrive')}
 function nextTeam(){teamI=(teamI+1)%TEAMS.length;paintBus()}
 function team(tm){TEAMS[teamI=0]=tm;paintBus()}                                                                   // the game paints the bus in the player's own colours; tm.champ (challenge mode) makes it the champions' bus
-function place(i){par=null;onw=null;arrived=false;at=i;from=to=i;cam=i*D;u=1;vel=0;dir=1;mode='park';modeT=9;puffs.length=0;sparks.length=0}   // parked at a stop, no drive
+function place(i,d=1){par=null;onw=null;arrived=false;at=i;from=to=i;cam=i*D;u=1;vel=0;dir=d;mode='park';modeT=9;puffs.length=0;sparks.length=0}   // parked at a stop, no drive
 function lot(){par=null;onw=null;arrived=false;at=0;from=to=LOT;cam=LOT*D;u=1;vel=0;dir=1;mode='lot';modeT=9;puffs.length=0;sparks.length=0}          // parked outside the garage, before the first game
 function start(){if(moving())return;at=0;drive(0,'start');dur=4.66}                                             // out of the lot to the first park, unhurried: it parks as the tune's last note starts to fade
 function skip(){if(onw){arrive();puffs.length=0;sparks.length=0;return}if(par){if(par.t<PT1){par.t=PT1;cam=PW1;vel=PVP}if(par.pop<0)pop();return}if(u<1){u=1;cam=to*D;vel=0}}                                                                      // cut the drive short
@@ -3468,28 +3539,42 @@ function parade(){if(u<1)skip();paradePrep();onw=null;arrived=false;dir=1;mode='
 // on from the parade to the championship's own lot (only once the roof is off and the street is painted)
 // (the camera is first put on a whole pixel, forwards, less than two frames of walking pace: the drive then ends on a whole pixel too, and
 // nothing sits on a rounding edge when the second lot is swapped for the first)
-function onward(){if(!par||par.pop<0||onw)return;cam=Math.ceil(cam);const tg={...TEAMS[teamI],champ:true},o=(cam-PW0)*PWALL;let E=0;
+function onward(k='champ'){if(!par||par.pop<0||onw)return;const champ0=!!TEAMS[teamI].champ;
+  if(k==='back'){const o=(cam-PW0)*PWALL;let E0=0;   // the city will begin at the last block boundary 60 px or more off the left of the screen (48 until v457: the car park at the edge of town reaches a little into the city)
+    for(let n=0;n*PAR.P<=o;n++)for(const b of PAR.wall){const r=n*PAR.P+b.x;if(180+r-o<=-60&&r>E0)E0=r}
+    let kS=Math.max(0,Math.floor((cam*PFAR-PFX-40)/25));for(;;kS++)if(Math.round(PFX+kS*25+h2(kS,1,41)*8-cam*PFAR)+15+Math.floor(h2(kS,2,41)*13)>0)break;   // the first far tower in view
+    onw={k,t:0,c0:cam,c1:cam+PVP*BSTOP/2,E0,e0:PW0+E0/PWALL,W:E0/PWALL,kS,land:false,bunt:-Infinity,duck:BDUCK,drop:BDROP,landT:BLAND,dest:4,top:PAR.top,fc:champ0};
+    mode='onward';modeT=0;arrived=false;return}
+  cam=Math.ceil(cam);const tg={...TEAMS[teamI],champ:true},o=(cam-PW0)*PWALL;let E=0;
   for(let n=Math.max(0,Math.floor((o-180)/PAR.P));!E;n++)for(const b of PAR.wall){const r=n*PAR.P+b.x+b.w;if(180+r-o>=SW+24){E=r;break}}   // the city ends at the first block boundary still off the right of the screen
-  onw={t:0,c0:cam,W:cam+OLEN-LOT*D,E,e:PW0+E/PWALL,kE:Math.ceil((cam*PFAR+SW+30-PFX)/25)+7,land:false,bunt:Infinity,tg,
-    gold:mk(BUSW,BUSH,g=>drawBus(g,1,tg)),top:mk(118,30,g=>g.drawImage(mk(BUSW,BUSH,gg=>drawBus(gg,1,tg,{empty:1})),-4,0))};
-  onw.white=mk(BUSW,BUSH,g=>{g.drawImage(onw.gold,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#fffbe6';g.fillRect(0,0,BUSW,BUSH)});
+  onw={k,t:0,c0:cam,W:cam+OLEN-LOT*D,E,e:PW0+E/PWALL,kE:Math.ceil((cam*PFAR+SW+30-PFX)/25)+7,land:false,bunt:Infinity,tg,T:OT,L:OLEN,duck:ODUCK,drop:ODROP,landT:OLAND,dest:LOT,fc:true};
+  if(k==='champ'){onw.gold=mk(BUSW,BUSH,g=>drawBus(g,1,tg));onw.top=mk(118,30,g=>g.drawImage(mk(BUSW,BUSH,gg=>drawBus(gg,1,tg,{empty:1})),-4,0));
+    onw.white=mk(BUSW,BUSH,g=>{g.drawImage(onw.gold,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#fffbe6';g.fillRect(0,0,BUSW,BUSH)})}
+  else Object.assign(onw,{T:HT,L:OLEN-LOT*D,dest:0,bunt:-Infinity,top:PAR.top,fc:champ0});   // home: on past the lot to ROOKIE, under the bus's own roof
   dir=1;mode='onward';modeT=0;arrived=false}
+const home=()=>onward('home'),back=()=>onward('back');
 // the gold roof is on: from here it is the champions' bus (trophy, pennant, bulbs, gold dust), and the road ahead is strung with pennants
-function land(){onw.land=true;par=null;TEAMS[teamI]=onw.tg;paintBus();
+function land(){onw.land=true;par=null;if(onw.k!=='champ')return;   // (home, back: the bus's own roof is back on, and that is all)
+  TEAMS[teamI]=onw.tg;paintBus();
   onw.bunt=Math.min(onw.W+Math.ceil((cam+200-onw.W-230)/460)*460+230,onw.W-1150);   // from the first pole still off the right of the screen (and no later than the two the lot's own view shows)
   const x0=busX()-BUSW/2,C=[BUSG[0],BUSG[2],'#ffffff',BUSG[3]];
   for(let i=0;i<80;i++){const a=-Math.PI*(.04+.92*Math.random()),sp=50+Math.random()*180;sparks.push({x:x0+8+Math.random()*118,y:RY+Math.random()*10,vx:Math.cos(a)*sp-60,vy:Math.sin(a)*sp,l:1+Math.random()*.5,c:C[i%4]})}}
 // stopped at the second lot: it becomes the first (see above)
-function arrive(){if(!onw.land)land();drift+=onw.W;cam=LOT*D;onw=null;par=null;arrived=true;at=0;from=to=LOT;u=1;vel=0;dir=1;mode='lot';modeT=9}
+function arrive(){if(!onw.land)land();drift+=onw.W;const k=onw.k,i=onw.dest;onw=null;par=null;arrived=true;u=1;vel=0;modeT=9;
+  if(k==='champ'){cam=LOT*D;at=0;from=to=LOT;dir=1;mode='lot'}else{cam=i*D;at=i;from=to=i;dir=k==='back'?-1:1;mode='park'}}   // (back: still facing the way it came)
 // the roof comes off like a cork: paper bursts out of the bus and a few puffs of white are left where it sat
 function pop(){par.pop=0;const x0=busX()-BUSW/2,C=PCONF.concat(PAR.T.c1,PAR.T.shirt);
   for(let i=0;i<90;i++){const a=-Math.PI*(.12+.76*Math.random()),s=60+Math.random()*190;sparks.push({x:x0+12+Math.random()*100,y:RY+6+Math.random()*10,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1.3+Math.random()*.5,c:C[i%C.length]})}
   for(let i=0;i<5;i++)puffs.push({x:x0+14+i*24,y:RY+8,r:5,a:.75,g:245})}
 function step(dt){t+=dt;modeT+=dt;
-  if(onw){const c0=cam;onw.t+=dt;const x=Math.min(1,onw.t/OT),tt=Math.min(OT,onw.t);   // away from walking pace, and to a stop OLEN px on
-    cam=onw.c0+(OLEN-PVP*OT/2)*(x*x*x*(x*(6*x-15)+10))+PVP*(tt-tt*tt/(2*OT));if(dt>0)vel=(cam-c0)/dt;
+  if(onw){const c0=cam;onw.t+=dt;let x;
+    if(onw.k==='back'){const tt=Math.min(BSTOP,onw.t);x=clamp((onw.t-BGO)/BT,0,1);   // to a stop; then, with the roof on, round and back down the road
+      cam=onw.t<BGO?onw.c0+PVP*(tt-tt*tt/(2*BSTOP)):onw.c1-(onw.c1-onw.dest*D-onw.W)*(x*x*x*(x*(6*x-15)+10));if(onw.t>=BGO)dir=-1}
+    else{x=Math.min(1,onw.t/onw.T);const tt=Math.min(onw.T,onw.t);   // away from walking pace, and to a stop L px on
+      cam=onw.c0+(onw.L-PVP*onw.T/2)*(x*x*x*(x*(6*x-15)+10))+PVP*(tt-tt*tt/(2*onw.T))}
+    if(dt>0)vel=(cam-c0)/dt;
     if(par)par.pop+=dt;
-    if(!onw.land&&onw.t>=OLAND)land();
+    if(!onw.land&&onw.t>=onw.landT)land();
     if(x>=1)arrive()}
   else if(par){par.t+=dt;const c0=cam,x=Math.min(1,par.t/PT1),S=PW1-par.c0;   // the usual drive, but it ends at walking pace instead of a stop
     cam=par.c0+(par.t<PT1?(S-PVP*PT1/2)*(x*x*x*(x*(6*x-15)+10))+PVP*par.t*par.t/(2*PT1):S+PVP*(par.t-PT1));if(dt>0)vel=(cam-c0)/dt;
@@ -3521,9 +3606,11 @@ function label(g,s,y,size,col){g.font=size+'px "Press Start 2P",monospace';g.tex
 const NLIFT=.5;   // how much of its day colour the champions' bus keeps at night
 // championship mode: the two floodlit parks carry their trophy in a copy of their sprite, painted the first time it is wanted (see venueChamp)
 const VSPRC=[],vspr=(i,champ)=>champ&&(i===2||i===3)?VSPRC[i]||(VSPRC[i]=mk(VSPR[i].width,VSPR[i].height,g=>{g.drawImage(VSPR[i],0,0);venueChamp(i,g,VM,0)})):VSPR[i];
-function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.min(1,onw.t/OT):0,i1=onw?0:Math.min(5,i0+1),f=onw?ow*ow*(3-2*ow):p-i0,   // on the way to the second lot the parade's morning becomes the first lot's noon (the same sky; the sun crosses it)
+function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clamp((onw.t-BGO)/BT,0,1):0,   // bk: driving back to the farm · fw: on out of town to the right (the championship's lot, or ROOKIE)
+    p=bk?5-bx0*bx0*bx0*(bx0*(6*bx0-15)+10):clamp(cam/D,0,5),i0=Math.floor(p),ow=fw?Math.min(1,onw.t/onw.T):0,i1=fw?0:Math.min(5,i0+1),f=fw?ow*ow*(3-2*ow):p-i0,   // on the way to the second lot the parade's morning becomes the first lot's noon (the same sky; the sun crosses it); on the way back to the farm it turns back into first light, in step with the road
     L=a=>lerp(a[i0],a[i1],f),night=L(NIGHT),lit=L(LIT),dc=cam+drift,                                                              // dc: the camera for what is only decoration
-    xr=pp=>onw?Math.round(180+(onw.e-cam)*pp):1e6,champ=!!TEAMS[teamI].champ;                                                                              // xr: where the parade's city ends on the screen, at each depth
+    xr=pp=>fw?Math.round(180+(onw.e-cam)*pp):1e6,champ=!!TEAMS[teamI].champ,                                                                              // xr: where the parade's city ends on the screen, at each depth
+    cs=bk?onw.e0:PW0,cr=bk?cam-onw.W:cam,WS=bk?[cam-onw.W]:onw?[cam,cam-onw.W]:[cam];   // cs: where the city begins (as a camera position) · cr: the camera for the farm's side of the world · WS: the camera of each world whose places may be in view
   ctx.imageSmoothingEnabled=false;
   /* --- sky, sun, moon, stars, clouds (straight onto the screen) --- */
   paintSky(p);ctx.drawImage(skyCv,0,0,SW,HZ);
@@ -3544,28 +3631,28 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
   // far hills
   for(let sx=0;sx<SW;sx+=2){const wx=sx+dc*.1,h=Math.round(20+10*Math.sin(wx*.013)+7*Math.sin(wx*.031+1.3));fr(g,'#86bcae',sx,HZ-h,2,h)}
   // nearer ridge: wooded hills, then the city, then open plains
-  for(let sx=0;sx<SW;sx+=2){const wx=sx+cam*PF,b=(wx-180)/(D*PF),wH=clamp((2.45-b)/.35,0,1),wP=clamp((b-3.5)/.3,0,1);
+  for(let sx=0;sx<SW;sx+=2){const wx=sx+cr*PF,b=(wx-180)/(D*PF),wH=clamp((2.45-b)/.35,0,1),wP=clamp((b-3.5)/.3,0,1);
     let h=(30+16*Math.sin(wx*.011+1)+9*Math.sin(wx*.027)+3*Math.abs(Math.sin(wx*.21)))*wH+7+3*wP,pl=wP>.5;
-    if(onw){const w2=sx+(cam-onw.W)*PF,k=clamp(((w2-180)/(D*PF)+1.75)/.45,0,1);   // the second world's hills, the same ones that stand behind the first lot
+    if(fw){const w2=sx+(cam-onw.W)*PF,k=clamp(((w2-180)/(D*PF)+1.75)/.45,0,1);   // the second world's hills, the same ones that stand behind the first lot
       if(k>0){const hh=(30+16*Math.sin(w2*.011+1)+9*Math.sin(w2*.027)+3*Math.abs(Math.sin(w2*.21)))+7;h=k>=1?hh:lerp(h,hh,k);if(k>.5)pl=false}}
     h=Math.round(h);fr(g,pl?'#8fae45':'#3f9a48',sx,HZ-h,2,h+1);fr(g,pl?'#c9b64e':'#5bb55a',sx,HZ-h,2,2)}
-  for(const s of SKYL){const sx=Math.round(s.x-cam*PF);if(sx>SW||sx+s.w<0)continue;fr(g,s.c?'#5a6890':'#4c5980',sx,HZ-s.h,s.w,s.h);fr(g,'#7482a8',sx,HZ-s.h,2,s.h);
+  for(const s of SKYL){const sx=Math.round(s.x-cr*PF);if(sx>SW||sx+s.w<0)continue;fr(g,s.c?'#5a6890':'#4c5980',sx,HZ-s.h,s.w,s.h);fr(g,'#7482a8',sx,HZ-s.h,2,s.h);
     if(s.sp)fr(g,'#4c5980',sx+(s.w>>1),HZ-s.h-12,1,12);for(const [xx,yy] of s.lit)fr(g,'#3c486c',sx+xx,HZ-s.h+yy,2,3)}
-  for(let k=0;k<6;k++){const wx=1262+k*74+h2(k,1,8)*30,sx=Math.round(wx-cam*PF);if(sx<-12||sx>SW)continue;
+  for(let k=0;k<6;k++){const wx=1262+k*74+h2(k,1,8)*30,sx=Math.round(wx-cr*PF);if(sx<-12||sx>SW)continue;
     if(k&1){fr(g,'#b3312a',sx,HZ-15,9,7);pol(g,'#5b5f6c',[[sx-1,HZ-15],[sx+4.5,HZ-19],[sx+10,HZ-15]])}else{fr(g,'#c9ced6',sx,HZ-21,4,13);fr(g,'#8e949e',sx+3,HZ-21,1,13)}}
   // the parade city's towers, pale with distance, climbing as the bus comes nearer; the street wall will stand in front of them
-  if(cam*PFAR+SW>PFX)for(let k=Math.max(0,Math.floor((cam*PFAR-PFX-40)/25));;k++){const sx=Math.round(PFX+k*25+h2(k,1,41)*8-cam*PFAR);if(sx>SW||onw&&k>onw.kE)break;   // (on the way out of town they stop, the last few stepping down)
-    const w=15+Math.floor(h2(k,2,41)*13),hh=Math.round((150+h2(k,3,41)*200)*Math.min(1,.4+k*.12,onw?.3+(onw.kE-k)*.1:9)),y=HZ+4-hh;
+  if(cam*PFAR+SW>PFX)for(let k=Math.max(bk?onw.kS:0,Math.floor((cam*PFAR-PFX-40)/25));;k++){const sx=Math.round(PFX+k*25+h2(k,1,41)*8-cam*PFAR);if(sx>SW||fw&&k>onw.kE)break;   // (on the way out of town they stop, the last few stepping down; on the way back to the farm they begin at kS, the first few settling lower as the bus pulls away)
+    const w=15+Math.floor(h2(k,2,41)*13),hh=Math.round((150+h2(k,3,41)*200)*Math.min(1,.4+k*.12,fw?.3+(onw.kE-k)*.1:9,bk?lerp(1,.4+(k-onw.kS)*.12,clamp(bx0*3,0,1)):9)),y=HZ+4-hh;
     fr(g,k&1?'#93a9cc':'#a3b7d6',sx,y,w,hh);fr(g,'#bccbe2',sx,y,2,hh);fr(g,'#8298be',sx+w-3,y,3,hh);if(h2(k,4,41)<.3)fr(g,'#93a9cc',sx+(w>>1),y-14,1,14);
     for(let yy=y+10;yy<HZ-6;yy+=16)fr(g,'#8ba1c6',sx+2,yy,w-5,2)}
   flush();
   if(night>.05){ctx.globalAlpha=night;                                   // office lights in the skyline, behind everything nearer
-    for(const s of SKYL){const sx=Math.round(s.x-cam*PF);if(sx>SW||sx+s.w<0)continue;for(const [xx,yy] of s.lit)fr(ctx,'#ffd98a',sx+xx,HZ-s.h+yy,2,3)}ctx.globalAlpha=1}
+    for(const s of SKYL){const sx=Math.round(s.x-cr*PF);if(sx>SW||sx+s.w<0)continue;for(const [xx,yy] of s.lit)fr(ctx,'#ffd98a',sx+xx,HZ-s.h+yy,2,3)}ctx.globalAlpha=1}
   // ground
   fr(g,'#3aa63a',0,HZ,SW,SH-HZ);fr(g,'#57bd4f',0,HZ,SW,3);fr(g,'#46b043',0,HZ+3,SW,5);
-  for(const c of onw?[cam,cam-onw.W]:[cam])for(const it of FILL){const sx=Math.round(180+it.x-c*PV-it.w/2);if(sx<SW&&sx>-it.w)g.drawImage(it.c,sx,VY-it.h)}   // (and what stands near the second lot)
-  for(const c of onw?[cam,cam-onw.W]:[cam]){const sx=Math.round(180+LOT*VS-c*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM)g.drawImage(LOTSPR,sx-VM,VY-VB)}   // (and the second lot)
-  for(let i=0;i<5;i++){const sx=Math.round(180+i*VS-cam*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM){g.drawImage(vspr(i,champ),sx-VM,VY-VB);venueAnim(i,g,sx,VY-VB,t);if(champ&&i!==2&&i!==3)venueChamp(i,g,sx,VY-VB)}}   // (championship mode: a little trophy at each park, v443)
+  for(const c of WS)for(const it of FILL){if(it.ch&&!(onw&&onw.k==='champ'||champ))continue;const sx=Math.round(180+it.x-c*PV-it.w/2);if(sx<SW&&sx>-it.w)g.drawImage(it.c,sx,VY-it.h)}   // (and what stands near the second lot)
+  for(const c of WS){const sx=Math.round(180+LOT*VS-c*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM)g.drawImage(LOTSPR,sx-VM,VY-VB)}   // (and the second lot)
+  for(const c of WS)for(let i=0;i<5;i++){const sx=Math.round(180+i*VS-c*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM){g.drawImage(vspr(i,champ),sx-VM,VY-VB);venueAnim(i,g,sx,VY-VB,t);if(champ&&i!==2&&i!==3)venueChamp(i,g,sx,VY-VB)}}   // (championship mode: a little trophy at each park, v443)
   for(const [y,pp] of [[HZ+86,.62],[HZ+102,.74],[HZ+120,.88]]){const off=dc*pp;
     for(let k=Math.floor(off/38)-1;k<(off+SW)/38+1;k++){const sx=Math.round(k*38+h2(k,y,1)*24-off),v=h2(k,y,2);
       fr(g,'#2e8f30',sx,y,2,3);fr(g,'#2e8f30',sx+3,y+1,1,2);fr(g,'#57bd4f',sx-2,y+1,1,2);if(v>.8)fr(g,v>.9?'#f6f1e4':'#f2c21a',sx+6,y-1,2,2)}}
@@ -3576,10 +3663,19 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
     for(let y=y0;y<y1;y++){const q=(y-y0)/(y1-y0),sh=dwx*lerp(PV,1,q),fl=q>.7?Math.round(18*((q-.7)/.3)**2):0,l=Math.round(lerp(16,2,q)-fl-sh),r=Math.round(lerp(64,72,q)+fl-sh);
       if(r>0&&l<SW){fr(g,'#5d616d',l,y,r-l,1);fr(g,'#8a8478',l,y,1,1);fr(g,'#8a8478',r-1,y,1,1)}if(y===y1-1)mouth=[l,r]}}
   // the parade's street: pavement, the wall of buildings with fans waving at the windows and on the roofs, the crowd on the far kerb
-  const pe=pp=>Math.round(180+(PW0-cam)*pp),pon=PAR&&pe(PFRONT)<SW&&xr(PWALL)>-12;   // pe: where the city begins on the screen, at each depth (xr: where it ends)
+  const pe=pp=>Math.round(180+(cs-cam)*pp),pon=PAR&&pe(PFRONT)<SW&&xr(PWALL)>-12;   // pe: where the city begins on the screen, at each depth (xr: where it ends)
+  // the middle row at the edge of town, and its forecourt (c0: where the city begins, s=1, or ends, s=−1, as a camera position)
+  {const row=(c0,s)=>{const X=(d,pp)=>180+(c0+s*d-cam)*pp,lo=Math.min(X(-700,APP_PP),X(8,APP_PP)),hi=Math.max(X(-700,APP_PP),X(8,APP_PP));if(hi<-8||lo>SW+8)return;
+      const R=(d,pp)=>Math.round(X(d,pp)),PB=.915;   // PB: the depth of the car park's front edge, at the roadside pavement (RY−15)
+      pol(g,'#5d616d',[[R(APPF,APP_PP),APP_Y-2],[R(8,APP_PP),APP_Y-2],[R(8,PB),RY-15],[R(APPF,PB),RY-15]]);
+      pol(g,'#c2bba8',[[R(APPF,APP_PP),APP_Y-2],[R(8,APP_PP),APP_Y-2],[R(8,.675),APP_Y+3],[R(APPF,.675),APP_Y+3]]);fr(g,'#aaa28e',Math.min(R(APPF,.675),R(8,.675)),APP_Y+3,Math.abs(R(8,.675)-R(APPF,.675)),1);
+      for(let d=APPF+34;d<-14;d+=42)lin(g,'#e8e4d4',R(d,.695),APP_Y+7,R(d,.86),RY-26);
+      for(const [d,c,L] of CARS)g.drawImage(carSpr(c,s*L),R(d,.75)-14,APP_Y+21-15);
+      for(const it of APP){const w=it.c.width,sx=Math.round(X(it.d,APP_PP)-(s>0?0:w));if(sx<SW&&sx+w>0)g.drawImage(it.c,sx,APP_Y+2-it.c.height)}};
+   row(cs,1);if(fw)row(onw.e,-1)}
   if(pon){const o=(cam-PW0)*PWALL,TM=[PAR.T.c0,PAR.T.c1];
-    pol(g,'#c2bba8',[[pe(PWALL),PGY-2],[onw?xr(PWALL):SW,PGY-2],[onw?xr(1):SW,RY-3],[pe(1),RY-3]]);
-    for(let n=Math.max(0,Math.floor((o-180)/PAR.P));n*PAR.P<o+180;n++)for(const b of PAR.wall){const sx=Math.round(180+n*PAR.P+b.x-o)-4,oy=PGY-b.h;if(sx>=SW||sx+b.w+8<=0||onw&&n*PAR.P+b.x+b.w>onw.E)continue;
+    pol(g,'#c2bba8',[[pe(PWALL),PGY-2],[fw?xr(PWALL):SW,PGY-2],[fw?xr(1):SW,RY-3],[pe(1),RY-3]]);
+    for(let n=Math.max(0,Math.floor((o-180)/PAR.P));n*PAR.P<o+180;n++)for(const b of PAR.wall){const sx=Math.round(180+n*PAR.P+b.x-o)-4,oy=PGY-b.h;if(sx>=SW||sx+b.w+8<=0||fw&&n*PAR.P+b.x+b.w>onw.E||bk&&n*PAR.P+b.x<onw.E0)continue;
       g.drawImage(b.c,sx,oy);
       for(const f of b.fans){const X=sx+f.x,Y=oy+f.y;if(Y<-6||X<-5||X>SW+5)continue;const up=Math.sin(t*(5+f.ph*5)+f.ph*40)>0;fr(g,f.sk,X-2,up?Y-3:Y,1,3);fr(g,f.sk,X+2,up?Y-3:Y,1,3);if(f.pen&&up)fr(g,f.pen,X+3,Y-5,3,2)}
       for(const f of b.flags)flag(g,sx+f.x,oy+f.y,t,TM,12,8)}
@@ -3587,9 +3683,9 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
     for(let x=-(((oc%W)+W)%W);x<SW;x+=W)g.drawImage(C,Math.round(x),PGY+32-C.height);g.restore();
     const a=Math.max(0,pe(1)),a2=Math.min(SW,xr(1)),os=((cam%26)+26)%26;if(a2>a)fr(g,'#aaa28e',a,RY-4,a2-a,1);for(let x=-os;x<a2;x+=26)if(x>=a)fr(g,'#aaa28e',Math.round(x),RY-12,1,8)}
   // roadside: a sidewalk through town, poles and wires in the country, street lamps in the city
-  {const a=clamp(Math.round(180+1.45*D-cam),0,SW),b=clamp(Math.round(180+3.45*D-cam),0,SW);
+  for(const [w0,w1] of [[1.45*D,3.45*D],[cs-TAPP,cs+1]].concat(fw?[[onw.e-1,onw.e+TAPP]]:[])){const a=clamp(Math.round(180+w0-cam),0,SW),b=clamp(Math.round(180+w1-cam),0,SW);   // (and from the shops into the parade's city, and out of it: v457)
    if(b>a){fr(g,'#c2bba8',a,RY-15,b-a,12);fr(g,'#aaa28e',a,RY-4,b-a,1);const o=((cam%26)+26)%26;for(let x=-o;x<SW;x+=26)if(x>=a&&x<b)fr(g,'#aaa28e',Math.round(x),RY-15,1,11)}}
-  const town=wx=>wx/D>1.45&&wx/D<3.45,city=wx=>wx>PW0-60&&(!onw||wx<onw.e+60),lamps=[];
+  const town=wx=>wx/D>1.45&&wx/D<3.45||wx>cs-TAPP&&wx<cs||fw&&wx>onw.e&&wx<onw.e+TAPP,city=wx=>wx>cs-60&&(!fw||wx<onw.e+60),lamps=[];
   /* CHAMPIONSHIP MODE (the game's variable is still `challenge`; David, v433: "There should be some obvious visual distinction to the
      road scene based on whether or not you are in challenge mode. My best idea is to bedazzle the bus and make it obviously a
      championship level bus"). The same road and parks, with these laid over them: the champions' bus (art_props: a gold body, a studded
@@ -3612,13 +3708,13 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
     if(champ&&wx>=bf&&!city(wx+460))bunt(sx);
     if(town(wx)){lamp(g,sx,RY-3,72);lamps.push(sx)}
     else{pole(g,sx,RY-3,64);const nx=wx+460;if(!town(nx)&&!city(nx))for(const dx of [-8,10]){let px=sx+dx,py=RY-3-64+3;for(let i=1;i<=14;i++){const q=i/14,x=Math.round(sx+dx+460*q),y=Math.round(RY-64+9*4*q*(1-q));lin(g,'#2b2f3d',px,py,x,y);px=x;py=y}}}}};
-  poles(0,wx=>wx<=PW0-60,-Infinity);if(onw)poles(onw.W,wx=>wx>=onw.e+60,onw.bunt);
+  if(!bk)poles(0,wx=>wx<=PW0-60,-Infinity);if(fw)poles(onw.W,wx=>wx>=onw.e+60,onw.bunt);else if(bk)poles(onw.W,wx=>wx<=onw.e0-60,onw.bunt);
   // the road
   fr(g,'#8a8478',0,RY-3,SW,3);fr(g,'#50545f',0,RY,SW,RH);fr(g,'#5b5f6b',0,RY,SW,10);fr(g,'#454953',0,RY+RH-8,SW,8);fr(g,'#e8e4d4',0,RY+5,SW,2);fr(g,'#e8e4d4',0,RY+RH-6,SW,2);
   {const o=((dc%56)+56)%56;for(let x=-o;x<SW;x+=56)fr(g,'#f2c21a',Math.round(x),RY+30,30,3)}
   if(mouth&&mouth[1]>0&&mouth[0]<SW){fr(g,'#5b5f6b',mouth[0]+1,RY-3,mouth[1]-mouth[0]-2,5);fr(g,'#5b5f6b',mouth[0]+1,RY+5,mouth[1]-mouth[0]-2,2)}   // no kerb or edge line across the driveway's mouth
   // paper on the ground, and in the air behind the bus
-  if(pon)for(let k=Math.floor((cam-180)/6);k<(cam+180)/6+1;k++){const wx=k*6+h2(k,1,31)*5;if(wx<PW0+30||onw&&wx>onw.e-30||h2(k,2,31)>.62)continue;const v=h2(k,3,31),w=h2(k,6,31)<.5;
+  if(pon)for(let k=Math.floor((cam-180)/6);k<(cam+180)/6+1;k++){const wx=k*6+h2(k,1,31)*5;if(wx<cs+30||fw&&wx>onw.e-30||h2(k,2,31)>.62)continue;const v=h2(k,3,31),w=h2(k,6,31)<.5;
     fr(g,PCONF[Math.floor(h2(k,4,31)*PCONF.length)],Math.round(180+wx-cam),v<.25?RY-14+Math.floor(v*40):RY+3+Math.floor(h2(k,5,31)*(RH-7)),w?2:1,w?1:2)}
   const paper=front=>{if(!pon)return;for(const c of PCF){if((c.pp>1)!==front)continue;const y=Math.round((c.y0+c.vy*t)%780-30);if(y>c.fl)continue;
       const sx=Math.round((((c.u-cam*c.pp+Math.sin(t*c.sf+c.ph)*c.sw)%420)+420)%420-30);if(sx<pe(c.pp)-8||sx>xr(c.pp)+8)continue;
@@ -3626,28 +3722,28 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
       else{const w=Math.floor(t*c.ff+c.ph*3)&1;fr(g,w?c.c:c.c2,sx,y,w?c.s+1:c.s,w?c.s:c.s+1)}}};
   paper(false);
   // the bus
-  const bx=Math.round(busX()-BUSW/2),bob=(Math.abs(vel)>20?Math.round(Math.sin(t*22)*.9):(Math.sin(t*9)>.72?1:0))+(onw&&onw.land&&onw.t-OLAND<.09?2:0),by=RY-8,shake=mode==='retry'&&modeT<1?Math.round(Math.sin(t*50)*1.5):0;
+  const bx=Math.round(busX()-BUSW/2),bob=(Math.abs(vel)>20?Math.round(Math.sin(t*22)*.9):(Math.sin(t*9)>.72?1:0))+(onw&&onw.land&&onw.t-onw.landT<.09?2:0),by=RY-8,shake=mode==='retry'&&modeT<1?Math.round(Math.sin(t*50)*1.5):0;
   g.globalAlpha=.3;elp(g,'#000000',bx+(BUSW>>1)+shake,RY+58,64,4);g.globalAlpha=1;
   if(!champ||par)for(const p2 of puffs){g.globalAlpha=Math.max(0,p2.a);dsc(g,rgb(p2.g,p2.g,p2.g+8),Math.round(p2.x),Math.round(p2.y),Math.round(p2.r))}g.globalAlpha=1;
   if(par&&par.pop>=0){const q=par.pop,s=clamp((q-.12)/.38,0,1)-1,up=Math.round(13*-(2.2*s*s*s+1.2*s*s)),X=bx+shake,Y=by+bob,   // the roof is off: the team stands up (a little too far, then settles)
-      sit=onw?clamp((onw.t-ODUCK)/.28,0,1):0,dn=Math.round(36*sit*sit);                                                   // (on the way out of town it sits down again, out of sight)
+      sit=onw?clamp((onw.t-onw.duck)/.28,0,1):0,dn=Math.round(36*sit*sit);                                                   // (on the way out of town it sits down again, out of sight)
     fr(g,'#b9b2a2',X+6,Y+27,115,2);
     if(sit<1)for(let i=0;i<5;i++)pChamp(g,X+17+i*21,Y+30+dn+(q<.62?up:Math.sin(t*6+i*1.7)>.55?-1:0),i,q<.5?0:Math.floor(t*(i===2?2:3)+i*.37)&1,PAR.T);
     g.drawImage(PAR.bus,X,Y);
     if(!sit&&q>.7&&Math.floor(t*4)%3===0){fr(g,'#ffffff',X+52,Y-3,5,1);fr(g,'#ffffff',X+54,Y-5,1,5)}
     const ty=-(1000*q-300*q*q);if(q<1&&ty>-640){g.save();g.translate(X+63,Y+15+ty);g.rotate(-.55*q);g.drawImage(PAR.top,-59,-15);g.restore()}
-    if(onw&&onw.t>=ODROP){const qd=.85*clamp((OLAND-onw.t)/(OLAND-ODROP),0,1),ty2=-(1000*qd-300*qd*qd);   // ...and a gold roof comes down the way the old one went up, the trophy and the pennant riding on it
-      g.save();g.translate(X+63,Y+15+ty2);g.rotate(-.55*qd);g.drawImage(onw.top,-59,-15);busFlag(g,-63,-15);busCup(g,1,-19);g.restore()}}
+    if(onw&&onw.t>=onw.drop){const qd=.85*clamp((onw.landT-onw.t)/(onw.landT-onw.drop),0,1),ty2=-(1000*qd-300*qd*qd);   // ...and a roof comes down the way the old one went up: a gold one with the trophy and the pennant riding on it, or (home, back) the bus's own
+      g.save();g.translate(X+63,Y+15+ty2);g.rotate(-.55*qd);g.drawImage(onw.top,-59,-15);if(onw.fc){busFlag(g,-63,-15);busCup(g,1,-19)}g.restore()}}
   else{g.drawImage(busSpr[dir],bx+shake,by+bob);
     if(champ){const X=bx+shake,Y=by+bob;   // on the roof rack: the trophy, and the team's pennant on a staff at the back, streaming behind
       busFlag(g,X,Y);
       busCup(g,X+(dir>0?64:BUSW-65),Y-4)}
-    if(onw&&onw.land&&onw.t-OLAND<OFLK&&Math.floor((onw.t-OLAND)/.06)%2===0)g.drawImage(onw.white,bx+shake,by+bob)}   // the roof has landed: the bus flickers white as the gold takes
+    if(onw&&onw.white&&onw.land&&onw.t-OLAND<OFLK&&Math.floor((onw.t-OLAND)/.06)%2===0)g.drawImage(onw.white,bx+shake,by+bob)}   // the roof has landed: the bus flickers white as the gold takes
   wheel(g,bx+shake+(dir>0?28:BUSW-28),by+57,dir*dc/9,champ);wheel(g,bx+shake+(dir>0?116:BUSW-116),by+57,dir*dc/9+.5,champ);   // 34 and 110 until v436
   paper(true);
   // verge in front of the road (moves fastest); corn crowds in near the farm
   {const top=RY+RH,off=dc*1.6;fr(g,'#2f9a32',0,top,SW,SH-top);fr(g,'#46b043',0,top,SW,3);fr(g,'#237a28',0,SH-16,SW,16);
-   for(let k=Math.floor(off/13)-1;k<(off+SW)/13+1;k++){const wx=k*13+h2(k,1,7)*8,sx=Math.round(wx-off),hh=6+Math.floor(h2(k,2,7)*12),y=top+12+Math.floor(h2(k,3,7)*38),ww=wx/1.6-drift,b=ww/D;if(pon&&ww>PW0-6&&(!onw||ww<onw.e+6))continue;   // ww: where on the road this tuft is
+   for(let k=Math.floor(off/13)-1;k<(off+SW)/13+1;k++){const wx=k*13+h2(k,1,7)*8,sx=Math.round(wx-off),hh=6+Math.floor(h2(k,2,7)*12),y=top+12+Math.floor(h2(k,3,7)*38),ww=wx/1.6-drift-(bk?onw.W:0),b=ww/D;if(pon&&ww>PW0-6&&(!fw||ww<onw.e+6))continue;   // ww: where on the road this tuft is
      if(b>3.5&&b<4.8){const ch=30+Math.floor(h2(k,5,7)*14),cy=top+30+Math.floor(h2(k,3,7)*24);if(k%2===0){fr(g,'#2f7a26',sx,cy-ch,3,ch);fr(g,'#56a83c',sx+3,cy-ch+2,1,ch-2);
          for(let yy=cy-ch+7,q=k;yy<cy-4;yy+=7,q++){const d2=q&1?3:-4;fr(g,'#4c9e36',sx+d2,yy,4,2);fr(g,'#6dbb4a',sx+(q&1?7:-6),yy+2,2,1)}fr(g,'#e6c95e',sx,cy-ch-3,3,4);fr(g,'#c9a640',sx+(k&2?-2:3),cy-ch-1,2,3)}continue}
      fr(g,'#237a28',sx,y-hh,2,hh);fr(g,'#46b043',sx+2,y-hh+2,1,hh-2);fr(g,'#237a28',sx-2,y-hh+4,1,hh-4);
@@ -3659,14 +3755,14 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
 
   /* --- everything near that gives off light --- */
   if(night>.05){ctx.globalAlpha=night;
-    for(const it of FILL){if(!it.wins)continue;const sx=Math.round(180+it.x-cam*PV-it.w/2);if(sx>=SW||sx<=-it.w)continue;
+    for(const c of WS)for(const it of FILL){if(!it.wins)continue;const sx=Math.round(180+it.x-c*PV-it.w/2);if(sx>=SW||sx<=-it.w)continue;
       it.wins.forEach(([x,y,w,h],k)=>{if(h2(k,it.x,6)<.55)fr(ctx,h2(k,it.x,7)<.8?'#ffd98a':'#bfe6ff',sx+x,VY-it.h+y,w,h)})}
     ctx.globalAlpha=1;for(const sx of lamps){glow(ctx,sx+9,RY-71,24,'#ffe9b0',night);fr(ctx,'#fff8d8',sx+7,RY-72,4,2)}
     // headlights, tail light, cabin lights
     const fx=bx+shake+(dir>0?BUSW-8:8);ctx.globalAlpha=night*.2;pol(ctx,'#fff3b0',[[fx,by+41],[fx+dir*120,by+26],[fx+dir*120,by+62],[fx,by+46]]);
     ctx.globalAlpha=night*.3;for(let i=0;i<6;i++)fr(ctx,'#ffe9b0',bx+shake+(dir>0?12+i*16:BUSW-25-i*16),by+bob+17,13,13);ctx.globalAlpha=1;
     glow(ctx,fx,by+43,9,'#fff3b0',night);glow(ctx,bx+shake+(dir>0?7:BUSW-7),by+44,6,'#ff4030',night)}
-  for(let i=0;i<5;i++){const sx=Math.round(180+i*VS-cam*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM){
+  for(const c of WS)for(let i=0;i<5;i++){const sx=Math.round(180+i*VS-c*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM){
     if(i===2||i===3){ctx.globalAlpha=lit*(i===3?.5:.2);ctx.drawImage(vspr(i,champ),sx-VM,VY-VB);ctx.globalAlpha=1}   // floodlit: the park itself stays bright after dark
     venueGlow(i,ctx,sx,VY-VB,t,lit);if(champ)venueChamp(i,ctx,sx,VY-VB,lit)}}
   if(champ){const X=bx+shake,Y=by+bob;
@@ -3682,12 +3778,12 @@ function draw(ctx,o={}){const p=clamp(cam/D,0,5),i0=Math.floor(p),ow=onw?Math.mi
   /* --- words (o.hud===false leaves them out, for a title laid over the scene) --- */
   if(o.hud===false)return;
   const GOLD='#ffd642';
-  if(mode==='onward'){label(ctx,'NEXT STOP',84,16,'#ffffff');label(ctx,'CHAMPIONSHIP',110,24,GOLD)}
+  if(mode==='onward'){if(onw&&onw.k!=='champ'){label(ctx,'BACK TO',84,16,'#ffffff');label(ctx,NAMES[onw.dest],110,32,GOLD)}else{label(ctx,'NEXT STOP',84,16,'#ffffff');label(ctx,'CHAMPIONSHIP',110,24,GOLD)}}
   else if(mode==='champ'||mode==='parade'){label(ctx,'YOU BEAT',84,16,'#ffffff');label(ctx,'THE GAME!',110,32,GOLD)}
   else if(moving()&&mode==='win'){label(ctx,'NEXT STOP',84,16,'#ffffff');label(ctx,NAMES[to],110,32,GOLD)}
   else if(moving()&&mode==='loss'){label(ctx,'BACK TO',84,16,'#ffb9a8');label(ctx,NAMES[to],110,32,'#ffffff')}
   else{label(ctx,mode==='retry'&&modeT<2?'TRY AGAIN':'LEVEL '+(at+1)+' OF 5',84,16,'#ffffff');label(ctx,NAMES[at],110,32,GOLD);label(ctx,TGT[at]+' RUNS TO WIN',154,16,'#ffffff')}}
-return{step,draw,win,lose,jump,place,lot,start,skip,nextTeam,team,moving,parade,paradePrep,onward,get pstage(){return!par?-1:par.pop<0?0:par.pop<.62?1:2},
+return{step,draw,win,lose,jump,place,lot,start,skip,nextTeam,team,moving,parade,paradePrep,onward,home,back,PT1,get pstage(){return!par?-1:par.pop<0?0:par.pop<.62?1:2},
   get ostage(){return onw?(onw.land?1:0):arrived?2:-1},   // on to the championship: 0 leaving town · 1 the gold roof is on · 2 stopped at the lot (−1: not on that road)
   get at(){return at},get mode(){return mode},NAMES,TGT}})();
 /* ===== THE FIVE PARKS (the game's module; made once from the mock's park_body.js by mk_park_game.py, edited here since) =====
@@ -3991,8 +4087,8 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 const NOTE={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 const n2m=s=>{const m=/^([A-G])([#b]?)(-?\d)$/.exec(s);if(!m)throw Error('bad note '+s);return 12*(+m[3]+1)+NOTE[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0)};
 const ST=(a,b=a)=>`-:3 ${a}:2 -:4 ${b}:2 -:1`;                       // strum on beats 2 and 4 (shuffle)
-// win: SWING (the STEPS melody whistled, in the whistled tunes' lilt), the drive to VETERAN and the parade · win2, win3, win4: the same
-// melody dressed for the drives to ALL-STAR (ballpark organ, claps), MVP (horns, guitar, crash) and LEGEND (flute with echoes, held
+// win: SWING (the STEPS melody whistled, in the whistled tunes' lilt), the drive to VETERAN · win2, win3, win4: the same
+// melody dressed for the drives to ALL-STAR (ballpark organ, claps), MVP (horns, guitar, crash; the parade too) and LEGEND (flute with echoes, held
 // chords, music box) · loss: WHISTLE · go: two honks and the first seven notes of
 // "Take Me Out to the Ball Game" (1908) as the campaign sets off, its last note held and dying away · field: TA-DA, two organ chords
 // as a game takes the field. In a bar, NOTE:ticks plays, -:ticks rests, A+B is a chord, and NOTE> dies away over its second half;
@@ -4203,11 +4299,14 @@ function roadFrame(ts){if(!roadOn)return;if(roadOffAt&&performance.now()>roadOff
   const dt=roadLast?Math.min(.05,(ts-roadLast)/1000):0;roadLast=ts;ROAD.step(dt);ROAD.draw(rcx,{hud:false});
   if(trip&&trip.ph==='road'&&ROAD.moving()!==trip.mv){trip.mv=ROAD.moving();tripPaint()}
   if(trip&&trip.par){const s=ROAD.pstage,now=performance.now();   // the parade: 0 driving in · 1 the roof has come off · 2 the team is on its feet
-    if(s>=1&&trip.par<2){trip.par=2;sfx.ooh(ROARS.h4)}            // the grand-slam roar as the roof goes (straight to the sound: roar() stays silent after a quiet last out)
+    if(s>=1&&trip.par<2){trip.par=2;if(devOldParade)sfx.ooh(ROARS.h4);else crowdBig()}            // the grand-slam roar as the roof goes (straight to the sound: roar() stays silent after a quiet last out)
     if(s>=2&&trip.par<3&&(trip.skip||now>=(trip.chT||(trip.chT=now+PARADE_LOOK)))){trip.par=3;trip.at=now;TUNE.stop(.2);musicPlay();tripPaint()}}   // a look at the champions, then the choices, to the title song
   if(trip&&trip.par===4){const s=ROAD.ostage;                     // on to the championship: 0 leaving town · 1 the gold roof is on · 2 stopped at its lot
     if(s===1&&!trip.bz){trip.bz=true;sfx.bling()}
-    if(s===2&&!menuOpen())tripLand()}}
+    if(s===2&&!menuOpen())tripLand()}
+  if(trip&&trip.par>=5){const s=ROAD.ostage;                      // v454: back to LEGEND (5) or ROOKIE (6): the roof goes back on with a thud; parked, it is the usual LEVEL n OF 5 and TAP TO PLAY
+    if(s===1&&!trip.bz){trip.bz=true;sfx.thud()}
+    if(s===2){trip.par=0;trip.champ=false;trip.won=true;trip.open=false;trip.mv=false;tripPaint();const me=trip;setTimeout(()=>{if(trip===me)PARK.field(nextRound)},120)}}}
 // 1 · the finish, on the field: the result in big letters, the score, the summary stats the result card used to show, and the win or
 //     lose sound doInnBreak() has just played. It stays until a tap (David, v421: "You should have to tap to get to the cut screen")
 function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:false,...r};
@@ -4226,10 +4325,11 @@ function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:fal
 //     the player chooses what to play next (David, 2026-11-22). trip.par: 1 driving in · 2 roof off · 3 the choices are up
 function tripDrive(){if(!trip||trip.ph!=='fin')return;hide('finScr');
   trip.ph='road';trip.at=performance.now();busPaint();ROAD.place(round);if(trip.champ){trip.par=1;ROAD.parade()}else if(trip.won)ROAD.win();else ROAD.lose();trip.mv=ROAD.moving();
-  TUNE.play(!trip.won?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win');tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade gets the MVP version ("the vet version doesn't fit there")
+  TUNE.play(!trip.won?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win');if(trip.champ&&!devOldParade)crowdSwell(ROAD.PT1+.2);tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade got the MVP version ("the vet version doesn't fit there"); v452: a parade version was tried, "MVP is better than parade song", so MVP it stays; v452: the crowd builds under it (DEV OLD PARADE plays v451's crowd)
 function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('tpN'),B=el('tpB'),go=el('tpGo'),nm=nmHTML(RD(nextRound).name);
-  A.style.color='';N.style.color='';B.className='tpB';go.style.display='';go.textContent='TAP TO PLAY';el('tpCh').style.display='none';el('tpMenu').style.display=trip.par===4?'none':'';
-  if(trip.par===4){A.textContent='NEXT STOP';N.textContent='CHAMPIONSHIP MODE';B.textContent='';go.style.display='none'}   // on the way to its lot (no menu for these few seconds: the bus changes on the way)
+  A.style.color='';N.style.color='';B.className='tpB';go.style.display='';go.textContent='TAP TO PLAY';el('tpCh').style.display='none';el('tpMenu').style.display=trip.par>=4?'none':'';
+  if(trip.par===4){A.textContent='NEXT STOP';N.textContent='CHAMPIONSHIP MODE';B.textContent='';go.style.display='none'}
+  else if(trip.par>=5){A.textContent='BACK TO';N.innerHTML=nm;B.textContent='';go.style.display='none'}   // v454: on the way back to LEGEND or ROOKIE (a tap starts the game, as on any drive)   // on the way to its lot (no menu for these few seconds: the bus changes on the way)
   else if(trip.champ){A.textContent='YOU BEAT';N.textContent=challenge?'CHAMPIONSHIP MODE!':'THE GAME!';
     B.innerHTML=trip.unlock?'CHAMPIONSHIP MODE<br>UNLOCKED!!':'';if(trip.unlock)B.className='tpB chalTxt';go.style.display='none';
     if(trip.par===3){const n=ROUNDS.length-1;el('tpCh').style.display='';el('tpC0').style.display=challenge?'none':'';   // challenge mode is offered after a classic win
@@ -4240,6 +4340,7 @@ function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('
 // 3 · a tap leaves the finish for the road, or starts the next game (during the drive too: nobody has to watch it)
 function tripTap(){const dt=performance.now()-trip.at;if(trip.ph==='fin'){if(dt>FIN_GUARD)tripDrive()}
   else if(trip.par===4){if(!trip.skip2&&dt>DRIVE_GUARD){trip.skip2=true;ROAD.skip()}}          // on the way to the championship's lot: a tap cuts to the lot
+  else if(trip.par>=5){if(dt>DRIVE_GUARD)startGame()}                                          // on the way back to LEGEND or ROOKIE: a tap starts the game, as on any drive
   else if(trip.par){if(trip.par<3&&!trip.skip&&dt>DRIVE_GUARD){trip.skip=true;ROAD.skip()}}   // the parade: a tap hurries it along to the choices; then it takes a button
   else if(dt>DRIVE_GUARD)startGame()}
 // 4 · the end of the parade: 0 try championship mode · 1 LEGEND again · 2 back to ROOKIE, in the mode just played. 1 and 2 start the game.
@@ -4250,7 +4351,7 @@ function tripTap(){const dt=performance.now()-trip.at;if(trip.ph==='fin'){if(dt>
 //     comes up with the mode on (tripLand). trip.par is 4 on that road.
 function tripPick(k){if(!trip||trip.par!==3||performance.now()-trip.at<PICK_GUARD)return;chalJustUnlocked=false;exhibitionMode=false;
   if(k===0){trip.par=4;trip.at=performance.now();ROAD.onward();tripPaint();return}
-  nextRound=k===1?ROUNDS.length-1:0;startGame()}
+  nextRound=k===1?ROUNDS.length-1:0;trip.par=k===1?5:6;trip.at=performance.now();if(k===1)ROAD.back();else ROAD.home();tripPaint()}   // v454: the bus drives there (5: turns round, back to LEGEND · 6: on out of town, past the lot to ROOKIE)
 function tripLand(){setChallenge(true);toMenu(true)}   // the mode goes on as the bus arrives (it is already the champions' bus on the screen); the title song, if it is still playing, plays on
 function tripEnd(){if(!trip)return;trip=null;hide('finScr');hide('tripScr');TUNE.stop()}
 tap('tpMenu',()=>openMenu('tripScr'));[0,1,2].forEach(k=>tap('tpC'+k,()=>tripPick(k)));
