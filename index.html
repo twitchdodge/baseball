@@ -682,7 +682,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v439';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v441';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -3822,10 +3822,16 @@ function boardManual(cx,v,T,D){const {bx,by,bw,bh}=BXY(),S=MAN[v],X=x=>bx+x,Y=y=
   if(T.sup)drawTrophy(cx,TROPHY12,X(5)+T.name.length*6+1,v===1?Y(4):Y(3.75),.5);                 // challenge mode: the little trophy after the name
   let xl=cards(X(126),Y(1.5),T.hi,T.hiLive?S.hi:undefined);txt3(cx,S.ink,'HI',xl-9,Y(4));xl=cards(xl-17,Y(1.5),T.tgt,T.tgtOn?S.tg:undefined);txt3(cx,S.ink,'TGT',xl-13,Y(4));
   // innings and runs
-  ['1','2','3','R'].forEach((h,i)=>{const cx0=X(i<3?13+i*14:60);txt3(cx,i===D.cur-1?(v===0?'#fff3b0':'#ffd642'):S.ink,h,cx0-1.5,Y(14.5));
+  ['1','2','3','R'].forEach((h,i)=>{const cx0=X(i<3?13+i*14:60);{const on=i===D.cur-1;   // the inning being played. v441: at the sandlot a bright yellow number with a dark shadow (it was pale yellow on the cream lettering; v440's red tag was not wanted)
+    if(on&&v===0){txt3(cx,'#4a3420',h,cx0-1,Y(15));txt3(cx,'#ffe033',h,cx0-1.5,Y(14.5))}
+    else txt3(cx,on?'#ffd642':S.ink,h,cx0-1.5,Y(14.5))}
     const val=i<3?D.inn[i]:D.runs,cur=i===D.cur-1;
-    if(i<3&&(i>D.cur-1||(cur&&val===0&&D.flip>=1)))slot(cx0,Y(21.5));
-    else if(cur||i===3){slot(cx0,Y(21.5));const s=''+val,o=''+(i===3?D.wasRuns:D.was);if(s.length>1){card(cx0-4.25,Y(21.5),s[0],D.flip,o.length>1?o[0]:' ');card(cx0+4.25,Y(21.5),s[1],D.flip,o[o.length-1])}else card(cx0,Y(21.5),s,D.flip,o)}
+    // v440 (David: "there should be a dash for the current inning on the rookie scoreboard, so you know that's the inning you are in before
+    // you score"): the inning being played hangs a '-' card until it scores (it was an empty slot, like the innings still to come); once
+    // the game is over (D.done) a scoreless last inning shows its 0
+    if(i<3&&i>D.cur-1)slot(cx0,Y(21.5));
+    else if(cur&&i<3&&val===0&&D.flip>=1)card(cx0,Y(21.5),D.done?'0':'-');
+    else if(cur||i===3){slot(cx0,Y(21.5));const s=''+val,o=i===3?''+D.wasRuns:D.was===0&&!D.done?'-':''+D.was;if(s.length>1){card(cx0-4.25,Y(21.5),s[0],D.flip,o.length>1?o[0]:' ');card(cx0+4.25,Y(21.5),s[1],D.flip,o[o.length-1])}else card(cx0,Y(21.5),s,D.flip,o)}
     else card(cx0,Y(21.5),''+val)});
   // outs, and the speed of the last pitch (not at the sandlot)
   for(let i=0;i<3;i++){const lx=X(88+i*13),ly=Y(27);
@@ -3971,7 +3977,7 @@ function parkBoard(){const now=performance.now(),iv=innScores[inning-1]||0;
   const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),hiLive=!exhibitionMode&&runs>hiScores[round];
   PARK.board(cx,venue,{name:sup?rnm.slice(0,-1):rnm,sup,tgt:target,hi:hiLive?runs:hiScores[round],hiLive,
       tgtOn:!(runs<target||(tgtFlash>0&&Math.floor((5*TGT_PH-tgtFlash)/TGT_PH)%2===1))},
-    {inn:innScores,cur:Math.min(inning,MAX_INN),runs,outs:innOuts,radar,flip:Math.min(1,(now-sbF.t0)/370),was:sbF.was,wasRuns:sbF.wasRuns,msg:venue===3?marqNow(now):null},now/1000)}
+    {inn:innScores,cur:Math.min(inning,MAX_INN),done:inning>MAX_INN,runs,outs:innOuts,radar,flip:Math.min(1,(now-sbF.t0)/370),was:sbF.was,wasRuns:sbF.wasRuns,msg:venue===3?marqNow(now):null},now/1000)}
 /* MVP's ribbon board talks about the game (venue 3 only). David, v421: "This should display messages related to the game. Like MAKE SOME
    NOISE!! when the winning run is on base or up to bat. HOME RUN!!! after homers. Etc, have some fun with it".
    Three layers; the first with something to say has the ribbon:
