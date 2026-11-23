@@ -47,6 +47,11 @@ body{background:var(--bg);color:var(--fg);font-family:'Press Start 2P',monospace
 #stage{container-type:inline-size;   /* labels size to the field (cqw), not the window — desktop stays phone-proportioned */
   position:relative;width:180px;height:360px;border:2px solid #181830;border-radius:6px;
   overflow:hidden;box-shadow:0 0 40px rgba(60,80,200,.12)}
+/* a phone held upright (v445, David: "It doesn't quite fill the horizontal space of my phone. I'd like to keep the same aspect ratio but
+   make sure it reaches the right and left edges of the screen"): when the width is what limits the field, the side margins, the frame and
+   the desktop's height cap go, and the field runs from edge to edge (fitStage sets .edge) */
+body.edge{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body.edge #stage{border:0;border-radius:0;box-shadow:none}
 canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 /* HUD */
 /* zones: an SVG overlay sharing the canvas's 180×360 coordinate space.
@@ -683,7 +688,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v444';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v445';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -2648,8 +2653,9 @@ musicBtn.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();aud
   if(ac.state==='suspended')ac.resume().then(musicPlay,musicPlay);else musicPlay()});
 
 /* ===== stage sizing: largest 1:2 box inside #wrap, capped at 380×760 ===== */
-function fitStage(){const w=document.getElementById('wrap'),s=document.getElementById('stage');
-  const h=Math.max(2,Math.min(w.clientHeight-4,(w.clientWidth-4)*2,760)); // -4: stage border
+function fitStage(){const w=document.getElementById('wrap'),s=document.getElementById('stage'),edge=window.innerWidth*2<=w.clientHeight;
+  if(document.body.classList.contains('edge')!==edge)document.body.classList.toggle('edge',edge);
+  const h=edge?Math.max(2,w.clientWidth*2):Math.max(2,Math.min(w.clientHeight-4,(w.clientWidth-4)*2,760)); // -4: stage border
   s.style.height=h+'px';s.style.width=(h/2)+'px'}
 fitStage();new ResizeObserver(()=>{fitStage();fitLine(document.getElementById('tSub'))}).observe(document.getElementById('wrap'));
 if(document.fonts)document.fonts.ready.then(()=>fitLine(document.getElementById('tSub')));
