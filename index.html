@@ -688,7 +688,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v445';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v451';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
@@ -2239,9 +2239,9 @@ function setChallenge(on){challenge=on&&chalUnlocked;try{localStorage.setItem('b
 document.getElementById('chalBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setChallenge(!challenge)});
 paintChal();
 // developer toggles (test builds only): every challenge pitch SUPER FAST, and how much faster than a heater
-if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="odds">NEW ODDS</span>';
+if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span>';   // (v446: hear the win tune of each drive)
   for(const id of ['titleScr','pauseScr']){const d=document.createElement('div');d.className='devP';d.innerHTML=html;document.getElementById(id).appendChild(d);
-    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const k=e.target.dataset.d;if(!k)return;
+    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const tn0=e.target.dataset.t;if(tn0){musicStop();TUNE.play(tn0);return}const k=e.target.dataset.d;if(!k)return;
       if(k==='all')devAllSF=!devAllSF;else if(k==='odds'){newOdds=!newOdds;paintChal()}else if(k==='unl'){devUnlockDemo();return}else SF_PLUS=+k;
       try{localStorage.setItem('bbDevOdds',newOdds?'1':'0');localStorage.setItem('bbDevAllSF',devAllSF?'1':'0');localStorage.setItem('bbDevSF',''+SF_PLUS)}catch(err){}paintDev()})}
   paintDev()}
@@ -3991,14 +3991,35 @@ const mtof=m=>440*Math.pow(2,(m-69)/12);
 const NOTE={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 const n2m=s=>{const m=/^([A-G])([#b]?)(-?\d)$/.exec(s);if(!m)throw Error('bad note '+s);return 12*(+m[3]+1)+NOTE[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0)};
 const ST=(a,b=a)=>`-:3 ${a}:2 -:4 ${b}:2 -:1`;                       // strum on beats 2 and 4 (shuffle)
-// win: SWING (the STEPS melody whistled, in the whistled tunes' lilt) · loss: WHISTLE · go: two honks and the first seven notes of
+// win: SWING (the STEPS melody whistled, in the whistled tunes' lilt), the drive to VETERAN and the parade · win2, win3, win4: the same
+// melody dressed for the drives to ALL-STAR (ballpark organ, claps), MVP (horns, guitar, crash) and LEGEND (flute with echoes, held
+// chords, music box) · loss: WHISTLE · go: two honks and the first seven notes of
 // "Take Me Out to the Ball Game" (1908) as the campaign sets off, its last note held and dying away · field: TA-DA, two organ chords
 // as a game takes the field. In a bar, NOTE:ticks plays, -:ticks rests, A+B is a chord, and NOTE> dies away over its second half;
 // a track with late:s plays s seconds late (the pause between the honks and the song).
 const SONGS={win:{title:'Steps, whistled, swung',bpm:112,tpb:3,beats:4,loop:false,vol:1,
   tracks:[{i:'whistle',v:1,oct:1,gate:.95,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
-   {i:'pluck',v:.75,bars:[ST('E4+G4+C5','F4+A4+C5'),ST('D4+G4+B4','E4+G4+C5')]},
+   {i:'pluck',v:.75,bars:[ST('E4+G4+C5','F4+A4+C5'),'-:3 D4+G4+B4:2 -:1 G4+C4+E4+C5:6']},   // round 11: the last strum on beat 3 with the whistle's last note, a ukulele's own C chord on all four strings, strummed down from the high G (his pick of two; until v446 E4+G4+C5 came on beat 4; round 9 had it higher, "super shrill")
    {i:'bass',v:.4,gate:.85,bars:['C3:5 -:1 F2:5 -:1','G2:5 -:1 C3:6']}]},
+ win2:{title:'Swing at the ballpark (to ALL-STAR)',bpm:112,tpb:3,beats:4,loop:false,vol:1,dv:2.5,
+  tracks:[{i:'whistle',v:1,oct:1,gate:.95,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
+   {i:'organ',v:.34,gate:.8,bars:['-:2 E4+G4:1 -:2 E4+G4:1 -:2 F4+A4:1 -:2 F4+A4:1','-:2 G4+B4:1 -:3 E4+G4+C5:6']},   // round 9 A, his pick: two notes on the off-beats, softer (the three-note stabs were "almost a little too funky"). Round 10: none on the last off-beat
+   {i:'bass',v:.42,gate:.8,bars:['C3:2 G2:1 C3:2 G2:1 F2:2 C3:1 F2:2 A2:1','G2:2 D3:1 G2:2 B2:1 C3:6']}],   // round 12, his pick: the bass steps B2-C3 into the last note (round 11 tried holding G2 there; "Old for the win")
+  drums:{kick:['X.....x.....','X.....X.....'],snare:['...o.....o..','...o........'],clap:['...x.....x..','...x........'],hat:['x.ox.ox.ox.o','x.ox........'],open:['............','......x.....']}},
+ win3:{title:'Swing under the lights (to MVP)',bpm:112,tpb:3,beats:4,loop:false,vol:1,dv:2,
+  tracks:[{i:'whistle',v:.85,oct:1,gate:.95,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
+   {i:'brass',v:.75,gate:.9,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
+   {i:'brass',v:.5,gate:.9,bars:['G3:2 C4:1 E4:3 A3:2 C4:1 F4:3','B3:2 D4:1 G4:3 E4+G4:6']},
+   {i:'gtr',v:.95,gate:.72,bars:['C3+G3+C4:2 C3+G3+C4:1 C3+G3+C4:2 C3+G3+C4:1 F2+C3+F3:2 F2+C3+F3:1 F2+C3+F3:2 F2+C3+F3:1','G2+D3+G3:2 G2+D3+G3:1 G2+D3+G3:2 G2+D3+G3:1 C3+G3+C4:6']},
+   {i:'bass',v:.42,gate:.85,bars:['C3:3 C3:3 F2:3 F2:3','G2:3 G2:3 C3:6']}],
+  drums:{kick:['X.....X.x...','X.....X.....'],snare:['...X.....X..','...Xxx......'],hat:['x.xx.xx.xx.x','x.xx.x......'],crash:['X...........','......X.....']}},
+ win4:{title:'Swing at first light (to LEGEND)',bpm:112,tpb:3,beats:4,loop:false,vol:1,
+  tracks:[{i:'flute',v:.85,oct:1,gate:.95,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
+   {i:'flute',v:.24,oct:1,gate:.95,late:.357,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
+   {i:'flute',v:.085,oct:1,gate:.95,late:.714,bars:['C4:2 E4:1 G4:3 C4:2 F4:1 A4:3','D4:2 G4:1 B4:3 C5:6']},
+   {i:'pad',v:.6,bars:['C4+E4+G4:6 C4+F4+A4:6','D4+G4+B4:6 C4+E4+G4+D5:6']},
+   {i:'box',v:.45,oct:1,bars:['-:3 E5:3 -:3 F5:3','-:3 B4:3 C5:6']},   // round 9 C, his pick (confirmed over four more endings in round 11): B5 then C6, with the melody's last two notes (was D6, E6, G6 until v446)
+   {i:'bass',v:.3,gate:1,bars:['C3:6 F2:6','G2:6 C3:6']}]},
  loss:{title:'Whistle',bpm:104,tpb:3,beats:4,loop:false,vol:1.2,
   tracks:[{i:'whistle',v:1,oct:1,gate:.95,bars:['C5:2 A4:1 G4:3 A4:2 G4:1 E4:3','D4:2 E4:1 D4:3 C4:5 -:1']},
    {i:'pluck',v:.75,bars:[ST('E4+G4+C5','E4+A4+C5'),ST('D4+G4+B4','E4+G4+C5')]},
@@ -4029,6 +4050,8 @@ function engine(ctx,dest){const comp=ctx.createDynamicsCompressor(),master=ctx.c
   const N=(S,t,d,v,type,f,q)=>{const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.value=f;if(q)fl.Q.value=q;
     const g=G(0);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(fl);fl.connect(g);g.connect(S.bus);s.start(t,Math.random()*.5);s.stop(t+d+.02);keep(S,s);return fl};
 
+  const DIST=(()=>{const n=2048,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(4*x)/Math.tanh(4)}return c})();   // the guitar's overdrive
+
   const I={
    whistle(S,m,t,d,v,o){const f=mtof(m),os=O(S,'sine',f,t,t+d+.05),o2=O(S,'sine',f*2,t,t+d+.05),g=G(),g2=G(.1);
      if(o&&o.fade){const sus=.21*v,a=t+d*.5,L=d*.5;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25*v,t+.035);g.gain.linearRampToValueAtTime(sus,t+.105);g.gain.setValueAtTime(sus,a);
@@ -4042,19 +4065,40 @@ function engine(ctx,dest){const comp=ctx.createDynamicsCompressor(),master=ctx.c
        if(cut){g.gain.exponentialRampToValueAtTime(pk*Math.pow(.001/pk,d/dur),t+d);g.gain.linearRampToValueAtTime(0,t+d+.035)}else g.gain.exponentialRampToValueAtTime(.001,t+dur);
        os.connect(fl);fl.connect(g);g.connect(S.bus)}},
    bass(S,m,t,d,v){const f=mtof(m),os=O(S,'triangle',f,t,t+d+.02),o2=O(S,W[.25],f*2,t,t+d+.02),g=G(),g2=G(.09),fl=LP(900,.5);hold(g,t,d,.8*v,.7*v,.006);os.connect(g);o2.connect(fl);fl.connect(g2);g2.connect(g);g.connect(S.bus)},
+   gtr(S,m,t,d,v){const f=mtof(m),g=G(),pre=G(.9),ws=ctx.createWaveShaper(),fl=LP(2200,.8);ws.curve=DIST;     // an overdriven guitar (each note of a power chord driven on its own, so it stays clean of mud)
+     for(const dt of [-8,8]){const os=O(S,'sawtooth',f,t,t+d+.04);os.detune.value=dt;os.connect(pre)}pre.connect(ws);ws.connect(fl);fl.connect(g);hold(g,t,d,.1*v,.075*v,.004,.035);g.connect(S.bus)},
+   flute(S,m,t,d,v){const f=mtof(m),end=t+d+.18,os=O(S,'sine',f,t,end),o2=O(S,'triangle',f,t,end),g=G(),g2=G(.2),fl=LP(f*3,.5);   // a soft flute: a slow breath in, gentle vibrato, a soft breath at the start
+     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.24*v,t+.07);g.gain.setValueAtTime(.24*v,Math.max(t+.07,t+d-.02));g.gain.linearRampToValueAtTime(0,end-.01);
+     vib(S,os,t,end,4.8,10,.15);vib(S,o2,t,end,4.8,10,.15);os.connect(g);o2.connect(g2);g2.connect(fl);fl.connect(g);g.connect(S.bus);N(S,t,Math.min(d,.25),.012*v,'bandpass',f*2,3)},
+   brass(S,m,t,d,v){const f=mtof(m),os=O(S,W[.25],f,t,t+d+.02),fl=LP(700,1.2),g=G();hold(g,t,d,.3*v,.24*v,.02);
+     fl.frequency.setValueAtTime(600,t);fl.frequency.exponentialRampToValueAtTime(2800,t+.05);fl.frequency.exponentialRampToValueAtTime(1900,t+.25);
+     if(d>.3)vib(S,os,t,t+d+.02,5.5,9,.22);os.connect(fl);fl.connect(g);g.connect(S.bus)},
    organ(S,m,t,d,v){const f=mtof(m),os=O(S,W.organ,f,t,t+d+.03),g=G(),tr=G(.9),l=O(S,'sine',6.2,t,t+d+.03),ld=G(.1),lv=G(5);hold(g,t,d,.26*v,.26*v,.004,.025);
      l.connect(ld);ld.connect(tr.gain);l.connect(lv);lv.connect(os.detune);os.connect(tr);tr.connect(g);g.connect(S.bus)},
+   pad(S,m,t,d,v){const f=mtof(m),g=G(),fl=LP(1100,.4),a=Math.min(.25,d*.4);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12*v,t+a);g.gain.setValueAtTime(.12*v,Math.max(t+a,t+d-.05));g.gain.linearRampToValueAtTime(0,t+d+.3);
+     for(const dt of [-6,6]){const os=O(S,'triangle',f,t,t+d+.35);os.detune.value=dt;os.connect(fl)}fl.connect(g);g.connect(S.bus)},
+   box(S,m,t,d,v){const f=mtof(m),ring=Math.max(1,d+.4),c=O(S,'sine',f,t,t+ring+.02),mo=O(S,'sine',f*3.5,t,t+ring+.02),mg=G(),g=G();
+     mg.gain.setValueAtTime(f*1.3,t);mg.gain.exponentialRampToValueAtTime(f*.05,t+.35);mo.connect(mg);mg.connect(c.frequency);
+     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.42*v,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+ring);c.connect(g);g.connect(S.bus)},
    horn(S,m,t,d,v,o){const f=mtof(m),g=G(),fl=ctx.createBiquadFilter();fl.type='bandpass';fl.frequency.value=1300;fl.Q.value=.7;hold(g,t,d,.4*v,.36*v,.012,.05);
      for(const dt of [-8,9]){const os=O(S,W[.25],f,t,t+d+.05);os.detune.value=dt;os.frequency.setValueAtTime(f*.95,t);os.frequency.linearRampToValueAtTime(f,t+.03);   // a honk bends up into its note
        if(o.fall){os.frequency.setValueAtTime(f,t+d*.3);os.frequency.exponentialRampToValueAtTime(f*.8,t+d)}os.connect(fl)}                                              // and a tired one sinks
      fl.connect(g);g.connect(S.bus)}};
-  return{I,comp,G}}
+  const D={
+   kick(S,t,v){const os=O(S,'triangle',160,t,t+.2),g=G();os.frequency.exponentialRampToValueAtTime(42,t+.11);g.gain.setValueAtTime(.8*v,t);g.gain.exponentialRampToValueAtTime(.001,t+.17);os.connect(g);g.connect(S.bus);N(S,t,.025,.3*v,'highpass',3000)},
+   snare(S,t,v){N(S,t,.11,.3*v,'bandpass',1700,.7);const os=O(S,'triangle',210,t,t+.12),g=G();os.frequency.exponentialRampToValueAtTime(130,t+.07);g.gain.setValueAtTime(.4*v,t);g.gain.exponentialRampToValueAtTime(.001,t+.09);os.connect(g);g.connect(S.bus)},
+   hat(S,t,v){N(S,t,.035,.11*v,'highpass',7000)},
+   open(S,t,v){N(S,t,.16,.09*v,'highpass',6500)},
+   crash(S,t,v){N(S,t,.7,.2*v,'highpass',5000)},
+   clap(S,t,v){for(const dt of [0,.012,.026])N(S,t+dt,.07,.2*v,'bandpass',1300,.9)}};
+  return{I,D,comp,G}}
 function stop(d=.12){const S=cur;cur=null;if(!S)return;const n=ac.currentTime;try{S.bus.gain.cancelScheduledValues(n);S.bus.gain.setValueAtTime(S.bus.gain.value,n);S.bus.gain.linearRampToValueAtTime(0,n+d)}catch(e){}
   setTimeout(()=>{for(const x of S.live){try{x.stop()}catch(e){}}S.live.clear();try{S.bus.disconnect()}catch(e){}},(d+.15)*1000)}
 // the whole tune is put on the audio clock at once (the longest is five seconds), so nothing has to keep feeding it
 function play(name){try{aud();if(!E)E=engine(ac,out);stop(.08);const s=SONGS[name],td=60/s.bpm/s.tpb,S={bus:E.G(s.vol||1),live:new Set()},t0=ac.currentTime+.06;S.bus.connect(E.comp);
     for(const tr of s.tracks){let tick=0;for(const bar of tr.bars)for(const tok of bar.trim().split(/\s+/)){const [nn,ls]=tok.split(':'),len=+ls;
         if(nn!=='-'){const fade=nn.endsWith('>');(fade?nn.slice(0,-1):nn).split('+').forEach((n,k)=>E.I[tr.i](S,n2m(n)+12*(tr.oct||0),t0+tick*td+(tr.late||0)+(tr.i==='pluck'?k*.016:0),len*td*(tr.gate||.92),tr.v,{fade}))}tick+=len}}
+    for(const k in s.drums||{})s.drums[k].forEach((p,bi)=>{for(let i=0;i<p.length;i++)if(p[i]!=='.')E.D[k](S,t0+(bi*p.length+i)*td,(p[i]==='X'?1:p[i]==='x'?.8:.45)*(s.dv||1))});   // drums: X loud, x medium, o soft; dv the song's drum level
     cur=S}catch(e){}}
 return{play,stop,SONGS,busy:()=>!!cur}})();
 /*TUNE:END*/
@@ -4182,7 +4226,7 @@ function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:fal
 //     the player chooses what to play next (David, 2026-11-22). trip.par: 1 driving in · 2 roof off · 3 the choices are up
 function tripDrive(){if(!trip||trip.ph!=='fin')return;hide('finScr');
   trip.ph='road';trip.at=performance.now();busPaint();ROAD.place(round);if(trip.champ){trip.par=1;ROAD.parade()}else if(trip.won)ROAD.win();else ROAD.lose();trip.mv=ROAD.moving();
-  TUNE.play(trip.won?'win':'loss');tripPaint();show('tripScr');roadShow(true)}
+  TUNE.play(!trip.won?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win');tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade gets the MVP version ("the vet version doesn't fit there")
 function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('tpN'),B=el('tpB'),go=el('tpGo'),nm=nmHTML(RD(nextRound).name);
   A.style.color='';N.style.color='';B.className='tpB';go.style.display='';go.textContent='TAP TO PLAY';el('tpCh').style.display='none';el('tpMenu').style.display=trip.par===4?'none':'';
   if(trip.par===4){A.textContent='NEXT STOP';N.textContent='CHAMPIONSHIP MODE';B.textContent='';go.style.display='none'}   // on the way to its lot (no menu for these few seconds: the bus changes on the way)
