@@ -589,7 +589,7 @@ function roarPts(p){const L=p.L,a=Math.min(p.a/1000,L*.6),f=Math.min(p.f/1000,L-
   if(p.sh==='burst'){const s2=Math.min(a+.18,hold);return [[0,0],[a,v],[s2,v*.62],[hold,v*.58],[L,0]]}
   if(p.sh==='double'){const d1=Math.min(a+.3,hold),d2=Math.min(a+.65,hold);return [[0,0],[a,v*.85],[d1,v*.6],[d2,v],[hold,v*.85],[L,0]]}
   return [[0,0],[a,v],[hold,v*.8],[L,0]]}
-function crowdOoh(p=ROARS.pp){PARK.cheer(p.L);try{aud();   /* (v458: the people in the stands throw their arms up for as long as the roar lasts) */const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+function crowdOoh(p=ROARS.pp){if(p===ROARS.pp)PARK.cheer('hit',.2);try{aud();   /* (v471: the crowd's arms follow the plays themselves, PARK.cheer; this "ooh" for a runner sent home gets a few of them up) */const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
   const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=p.hz;bp.Q.value=.6;const g=ac.createGain();
   g.gain.setValueAtTime(.0001,t);roarPts(p).slice(1).forEach(([s2,v])=>g.gain.linearRampToValueAtTime(Math.max(v,.0001),t+s2));
@@ -636,7 +636,7 @@ function homeArrivalMs(){let m=Infinity;for(const a of runnerAnims){if(a.hold||a
 // 480 Hz) that surges twice, the shouting above it (1.25 kHz), a little air (3.2 kHz), and a scatter of whistles; 4.2 s long, louder and
 // longer than the grand slam's (ROARS.h4: one band, 2.45 s).
 const BIG={v:.355,L:4.2};   // about 4 dB above the grand slam's roar over its first second and a half, and 1.7 s longer (v453: v .34 → .355 makes up the 0.4 dB the whistles gave)
-function crowdBig(p=BIG){PARK.cheer(p.L);try{aud();const t=ac.currentTime+.01,L=p.L,v=p.v,sr=ac.sampleRate,len=Math.ceil(sr*(L+.15)),buf=ac.createBuffer(1,len,sr),x=buf.getChannelData(0);
+function crowdBig(p=BIG){PARK.cheer('big',p.L);try{aud();const t=ac.currentTime+.01,L=p.L,v=p.v,sr=ac.sampleRate,len=Math.ceil(sr*(L+.15)),buf=ac.createBuffer(1,len,sr),x=buf.getChannelData(0);
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;
   const layer=(hz,q,pts,k)=>{const sc=ac.createBufferSource();sc.buffer=buf;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=hz;bp.Q.value=q;const g=ac.createGain();
     g.gain.setValueAtTime(.0001,t);for(const [s2,a] of pts)g.gain.linearRampToValueAtTime(Math.max(.0001,a*v*k),t+s2);sc.connect(bp).connect(g).connect(out);sc.start(t,Math.random()*.1);sc.stop(t+L+.05)};
@@ -735,7 +735,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v470';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v473';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 /* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
@@ -800,7 +800,7 @@ const STEAL_OK=.7,STEAL_FR=30;let steal=null;   // 0.5s run to the bag
 function stealReveal(){const st=steal;steal=null;
   if(!st.ok)st.lead.out=true;
   for(const a of runnerAnims)if(a.hold){a.hold=false;if(!a.out)basePending[a.dest]=false}
-  if(st.ok){sfx.tada();roar(0,ROARS.r1,true);showLbl('resLbl',st.dbl?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
+  if(st.ok){sfx.tada();roar(0,ROARS.r1,true);PARK.cheer('hit',.18);showLbl('resLbl',st.dbl?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
     spawnP(st.wx,st.wy+6,5,['#7ff0e0','#bffff5'],1.2);resultT=30;return}
   // caught: the lead runner is out at the bag he was going for; a trailing runner still makes it
   st.lead.out=true;bases[st.lead.dest]=false;basePending[st.lead.dest]=false;innOuts++;hrOK=false;
@@ -955,8 +955,8 @@ function updExits(){for(const e of exits){e.f++;
 // THROWS: a runner going for a base the defence can throw to (home on a hit or sac fly, 3rd on a tag-up)
 // runs with footsteps for his last 0.5 s and the answer comes when he gets there: safe (chime) or out.
 let throws=[];
-function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();PARK.mascot('run');
-  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!',true)}
+function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();PARK.mascot('run');PARK.cheer('run');
+  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4);PARK.cheer('big')}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!',true)}
 function throwStep(){for(const P of throws.slice()){P.f++;if(!P.quiet&&P.f===(P.stepsAt??Math.max(1,P.T-30)))(P.stepsFn||sfx.steps)();
     for(const [fr,fn] of P.at||[])if(P.f===fr)fn();
     if(P.f<P.T)continue;throws.splice(throws.indexOf(P),1);P.anim.hold=false;
@@ -978,8 +978,8 @@ function fcStep(){const P=fcPlay;P.f++;
     spawnP(P.wx,P.wy+6,8,['#aa2222','#661111','#ff6666'],2)}
   else{bases[0]=batterSk;sfx.fcSafe();showLbl('resLbl',OUT_LBL.FC[0],OUT_LBL.FC[1],1100);
     spawnP(P.wx,P.wy+6,5,['#ffaa44','#ffd8a0'],1.5)}
-  if(P.sc>0&&innOuts<3){for(let i=0;i<P.sc;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();PARK.mascot('run');
-    if(runs>=target&&runs-P.sc<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4)}
+  if(P.sc>0&&innOuts<3){for(let i=0;i<P.sc;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();PARK.mascot('run');PARK.cheer('run');
+    if(runs>=target&&runs-P.sc<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4);PARK.cheer('big')}
     runLbl(P.sc,P.sc===1?'RUN SCORED!':P.sc+' RUNS!')}
   checkInning()}   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
 let sfOutP=.06;   // this fly ball's thrown-out chance for a tagging runner (set per play)
@@ -1885,12 +1885,12 @@ function resolveHit(){if(bp){bpLand();return}
         onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
       if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}{const k='h'+Math.min(4,Math.max(hrRuns,hrStreak));if(walkOff(hrTgt))roarBig(0);else roar(0,ROARS[hrTgt?ROAR_UP[k]:k])}   // back-to-back homers: 2nd = 2-run roar, 3rd = 3-run, 4th+ = grand slam
-      mqHomer=hrRuns;showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);mqHomer=1;PARK.mascot('hr',isGrand?5.6:4.4);   /* (v469: ALL-STAR's mascot dances) */
+      mqHomer=hrRuns;showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);mqHomer=1;PARK.mascot('hr',isGrand?5.6:4.4);PARK.cheer('big',isGrand?4.6:3.8);   /* (v469: ALL-STAR's mascot dances; v471: and the whole crowd is up) */
       if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
     }else{endStreak();
       const hc=hitRes==='3B'?'#5aa9ff':hitRes==='2B'?'#6fd6ff':'#e8f6ff'; // single → double → triple: white → sky → blue, like the wall's blues
-      sfx[hitRes==='3B'?'hit3B':hitRes==='2B'?'hit2B':'hit1B']();
+      sfx[hitRes==='3B'?'hit3B':hitRes==='2B'?'hit2B':'hit1B']();PARK.cheer('hit',hitRes==='3B'?.25:hitRes==='2B'?.17:.1);   /* (v471: a few fans, one arm each) */
       const hitName=hitRes==='3B'?'TRIPLE':hitRes==='2B'?'DOUBLE':'SINGLE';
       showLbl('resLbl',hitName+'!',hc,900);
       runCall(runMsgs);
@@ -2026,8 +2026,8 @@ function update(){
       // runner to finish (that gap was the flash). Steal runners wait for the reveal.
       if(!r.out&&!r.hold){const bi=[B1,B2,B3].findIndex(b=>Math.abs(endX-b.x)<1&&Math.abs(endY-b.y)<1);if(bi>=0)basePending[bi]=false}
       if(Math.abs(endX-HOME.x)<5&&Math.abs(endY-HOME.y)<5&&pendingRuns>0&&!r.noRun){
-        sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;PARK.mascot('run');   /* (v469: ALL-STAR's mascot throws his wings up) */
-        if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4)}   /* (v470: the mascot dances for the target too, David: "let's have him do the dance when the target is reached also") */
+        sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;PARK.mascot('run');PARK.cheer('run');   /* (v469: ALL-STAR's mascot throws his wings up; v471: and half the crowd its arms) */
+        if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4);PARK.cheer('big')}   /* (v470: the mascot dances for the target too, David: "let's have him do the dance when the target is reached also") */
 }}
     const keep=r.t<(r.out?1+10/r.dur:1.05);if(!keep&&!r.out)scoredExit(r);return keep});   // out: holds ~10 frames blinking, then gone
   updExits();
@@ -3858,10 +3858,30 @@ const GF=[
    area". The people nearest the wall are little figures now (person, below) where they were specks, and each park has more going on.
    The boards' legs are painted here too (they were drawn with the boards, 16 px long): whoever is in front of them stands in front. */
 const puff=(g,x,y)=>{for(const [dx,dy,r] of [[0,0,6],[9,-3,8],[20,0,7],[11,2,7]])dsc(g,'#ffffff',x+dx,y+dy,r);fr(g,'#e3f1fc',x-4,y+7,30,2)};
-/* When the crowd roars it throws its arms up (v458; my addition to "more ... details to the crowd"): LIVE[v] lists the people of park v who
-   were painted with their arms down (fine px x, y, skin, shirt, big), filled as the park is painted; cheer(L) is called by the game's own
-   crowd sounds (crowdOoh, crowdBig) with the sound's length, and fx draws the arms for as long as it lasts. No dice are thrown for it. */
-const LIVE=[[],[],[],[],[]];let CUR=null,cheerEnd=0,cheerLen=1;
+/* The crowd reacts to the game, in every park (v458 for the big parks' stands; v471 for all of them, David: "the fans at rookie and
+   veteran should raise their arms when runs score at least ... Maybe a couple of them react with one arm when base hits happen, with more
+   of them doing both arms for homers and target reaches? I like to think these environments are alive. maybe even the legend ghosts could
+   raise their arms or do a little ghostly wiggle").
+   LIVE[v]: everyone in park v who can throw his arms up, as the rectangles of each arm, hand end first (fine px [x,y,w,h,colour]):
+   {L, R, g}. Filled as the park is painted: person() for anyone painted with his arms down, ROOKIE's kids at and on the fence, LEGEND's
+   old-timers (g: a ghost, drawn faint, his hands swaying). Someone already holding something up offers only his free arm.
+   The game calls cheer(kind, s): 'hit' (a base hit, a steal, a runner sent home: a few of them, s of the crowd, one arm each), 'run'
+   (about half, both arms), 'big' (a homer, the target reached, the walk-off roar: nearly all, both arms, pumping; s = seconds). A smaller
+   cheer doesn't cut into a bigger one; more of the same keeps it going. No dice: who joins in is fixed per person (h2). */
+const LIVE=[[],[],[],[],[]];let CUR=null;const CH={k:0,frac:0,arms:2,t0:0,end:0};
+const armsOf=(x,y,sk,sh,big)=>big?{L:[[x-1,y-12,1,6,sk],[x-1,y-6,1,2,sh]],R:[[x+7,y-12,1,6,sk],[x+7,y-6,1,2,sh]]}:{L:[[x-1,y-9,1,4,sk],[x-1,y-5,1,2,sh]],R:[[x+5,y-9,1,4,sk],[x+5,y-5,1,2,sh]]};
+/* Who joins in, in order: the fans of a park ranked once (by h2), so a cheer gets exactly its share of them (a single at ROOKIE or LEGEND:
+   two), the first ones up are the last ones down, and each has his own beat when they pump and his own arm when it's one arm. */
+const GLV=[[],[],[],[],[]];   /* (v472: the fans whose glove fx draws: ALL-STAR's kids at the rail) */
+function rankLive(v){const L=LIVE[v];GLV[v]=L.filter(p=>p.gl);L.forEach((p,i)=>{p.h=h2(i,v,97);p.ph=h2(i,v,98)*6.28;p.one=h2(i,v,99)<.5?p.L||p.R:p.R||p.L});
+  const key=p=>p.ea?p.h*.4:p.h;   /* the keen ones (ALL-STAR's kids at the rail) come in the first half: up for every run and homer, now and then for a hit */
+  L.slice().sort((a,b)=>key(a)-key(b)).forEach((p,r)=>p.q=(r+.5)/L.length)}
+function armDraw(cx,A,sw){if(A)for(let j=0;j<A.length;j++){const r=A[j];fr(cx,r[4],(r[0]+(j?0:sw))/2,r[1]/2,r[2]/2,r[3]/2)}}   /* one arm, its hand end moved sw */
+function cheer(kind,s){const t=performance.now()/1000,lv=kind==='hit'?1:kind==='big'?3:2;
+  if(CH.k>lv&&t<CH.end-.3)return;                                               /* a bigger cheer is still going */
+  const P=lv===1?{frac:s||.12,arms:1,len:1.6}:lv===2?{frac:.5,arms:2,len:2.2}:{frac:.9,arms:2,len:s||3.6};
+  if(CH.k===lv&&t<CH.end){CH.end=Math.max(CH.end,t+P.len);CH.frac=Math.max(CH.frac,P.frac);return}   /* more of the same: it goes on */
+  CH.k=lv;CH.frac=P.frac;CH.arms=P.arms;CH.t0=t;CH.end=t+P.len}
 /* ALL-STAR's mascot (v469). David: "Let's have that chicken mascot celebrate- raise his arms after runs and dance during home runs."
    He was painted into the backdrop; now he is drawn every frame (about twenty little rectangles, the kind of drawing every park
    already does) from where the painter left him (MXY: his feet, fine px). At rest he stands as he always did, one wing up. The game
@@ -3887,13 +3907,38 @@ function drawMascot(cx,t){if(!MXY)return;const [x,y]=MXY,k=t<MASC.end?MASC.k:'',
   if(wr==='up')f(Y,x+7,y-19,3,8);else if(wr==='down')f(Y,x+7,y-12,3,6);else f(Y,x+7,y-12,4,3);
   if(kick<0){f(Y,x-7,y-5,4,2);f(O,x-10,y-6,3,2)}else{f(Y,x-4,y-4,3,2);f(O,x-5,y-2,4,2)}
   if(kick>0){f(Y,x+4,y-5,4,2);f(O,x+8,y-6,3,2)}else{f(Y,x+2,y-4,3,2);f(O,x+2,y-2,4,2)}}
-function cheer(L){cheerLen=Math.max(.6,L);cheerEnd=performance.now()/1000+cheerLen}
 const HAIRC=['#2a1c14','#4a3020','#8a5a2a','#d8b860','#16161c','#b9b9b9','#a8482a'],CAPC=['#c8322a','#23408a','#1c2a5a','#f6f1e4','#2c6b4f','#22252e'],
   WAVEC=['#c8322a','#ffd642','#23408a','#f6f1e4'],SIGNS=['GO!','#1','WIN','HI','WOW'],EYE='#22252e';
+/* ROOKIE's rooftop dog (v473). David: "Can we add a dog to that top right rooftop on roomoe? He just kinda chills, but during runs he wags
+   his tail and during homers and winning runs he howls." A beagle lying along the ridge of the blue house's roof (house(g,312,208,70,68,...,
+   {side:1}): ridge at y 122), right of the power pole, drawn every frame from little pictures, one letter a pixel (DOGF; made into runs of
+   one colour once, DOGR). He follows the crowd's cheer (CH): at rest his head is down on his paws and every 9 s he looks up for a moment;
+   a hit (CH.k 1) makes him look up, a run (2) sets his tail wagging, and a homer, the target reached or the walk-off roar (3) have him
+   throw his head back and howl, little notes rising, until it is over. */
+const DOGC={W:'#f6f1e4',w:'#d8d0c0',T:'#c98a4a',t:'#a86e36',D:'#2e2622',B:'#7a4a26',E:EYE,N:EYE,P:'#e8707a',O:'#4a1e1e',n:'#2b2f3d'},DOGX=334,DOGY=208-68-Math.round(70*.26)-1;
+const DOGF={
+  chill:["........DDDDDD......","......DDDDDDDDDD....",".TTBB.DDDDDDDDDDT...","TTTBBTTDDDDDDDTTTTww","NtTBBTTTTTTTTTTTTT..","WWWWTTTTTTTTTTTTTT..","WWWW.WWT....TWWT...."],
+  look:["..TTB...............",".TTTBB..............","NTETBB..DDDDDD......","WWTTBDDDDDDDDDDD....",".WWTTDDDDDDDDDDDT...","..WTTTTDDDDDDDTTTTww","..WTTTTTTTTTTTTTT...","WWWWTTTTTTTTTTTTT...","WWWW.WWT....TWWT...."],
+  wag1:["..................w.","..TTB............Tw.",".TTTBB...........T..","NTETBB..DDDDDD..T...","WPTTBDDDDDDDDDDT....",".WWTTDDDDDDDDDDDT...","..WTTTTDDDDDDDTTT...","..WTTTTTTTTTTTTTT...","WWWWTTTTTTTTTTTTT...","WWWW.WWT....TWWT...."],
+  wag2:["..TTB...............",".TTTBB..............","NTETBB..DDDDDD......","WPTTBDDDDDDDDDDD....",".WWTTDDDDDDDDDDDTTww","..WTTTTDDDDDDDTTT...","..WTTTTTTTTTTTTTT...","WWWWTTTTTTTTTTTTT...","WWWW.WWT....TWWT...."],
+  howl0:[".N..................",".TT.................",".TTB................",".TETB...............",".WTTBB..............","..WTTB..DDDDDD......","..WWTDDDDDDDDDDD....","..WWTTDDDDDDDDDDT...","..WTTTTDDDDDDDTTTTww","..WTTTTTTTTTTTTTT...","WWWWTTTTTTTTTTTTT...","WWWW.WWT....TWWT...."],
+  howl1:["N...................","TO..................",".TTB................",".TETB...............",".WTTBB..............","..WTTB..DDDDDD......","..WWTDDDDDDDDDDD....","..WWTTDDDDDDDDDDT...","..WTTTTDDDDDDDTTTTww","..WTTTTTTTTTTTTTT...","WWWWTTTTTTTTTTTTT...","WWWW.WWT....TWWT...."],
+  note:[".nn",".n.",".n.","nn.","nn."]};
+const DOGR={};
+function dogRuns(k){if(DOGR[k])return DOGR[k];const rows=DOGF[k],R=[];
+  rows.forEach((row,r)=>{for(let c=0;c<row.length;){const ch=row[c];if(ch==='.'){c++;continue}let e=c;while(e<row.length&&row[e]===ch)e++;R.push([c,r-rows.length+1,e-c,DOGC[ch]]);c=e}});
+  return DOGR[k]=R}
+function dogPic(cx,k,x,y){const R=dogRuns(k);for(let i=0;i<R.length;i++){const q=R[i];fr(cx,q[3],(x+q[0])/2,(y+q[1])/2,q[2]/2,.5)}}   /* x: its left column, y: its bottom row (fine px) */
+function drawDog(cx,t){const on=CH.k&&t<CH.end,a=t-CH.t0;let k=(t%9)>6.2&&(t%9)<7.8?'look':'chill';   /* at rest: now and then he looks up */
+  if(on&&CH.k===1)k='look';
+  else if(on&&CH.k===2)k=Math.floor(a/.12)%2?'wag1':'wag2';                                     /* wag wag wag */
+  else if(on&&CH.k===3&&t<CH.end-.4){const p=a%1.8;k=p<.15?'look':p<.3||p>=1.45&&p<1.6?'howl0':p<1.45?'howl1':'look';   /* head back, a long howl, again */
+    for(const b of [.35,.75]){const g=p-b;if(g>=0&&g<1){cx.globalAlpha=1-g*g;dogPic(cx,'note',DOGX-1+Math.round(g*4),DOGY-15-Math.round(g*9));cx.globalAlpha=1}}}   /* the notes of it, rising */
+  dogPic(cx,k,DOGX,DOGY)}
 /* one spectator from the waist up. x: his left, y: the row under him. o.sh shirt, o.sk skin, o.cap (a colour) or o.hair; o.act: 1 both
    arms up, 2 one arm up, 3 waving a pennant (o.c), 4 a foam finger (o.c), 5 a sign held overhead (o.txt). o.big: 7 wide and 11 tall, with
    eyes (the rows nearest the wall); otherwise 5 wide and 8 tall */
-function person(g,x,y,o){const sh=o.sh,sk=o.sk,top=o.cap||o.hair,a=o.act|0;if(CUR&&!a)CUR.push([x,y,sk,sh,o.big?1:0]);   /* (he can throw his arms up when the crowd roars: see fx) */
+function person(g,x,y,o){const sh=o.sh,sk=o.sk,top=o.cap||o.hair,a=o.act|0;if(CUR&&a!==1&&a!==5){const A=armsOf(x,y,sk,sh,o.big);CUR.push(a?{L:A.L}:A)}   /* (he can throw his arms up when the crowd cheers, see cheer and fx; one waving something with his right throws up his left) */
   if(o.big){fr(g,sh,x,y-5,7,5);fr(g,dk(sh,.2),x+6,y-5,1,5);fr(g,sk,x+1,y-9,5,4);fr(g,top,x+1,y-11,5,2);
     if(o.cap)fr(g,dk(o.cap,.3),x+1,y-9,5,1);else{fr(g,top,x+1,y-9,1,1);fr(g,top,x+5,y-9,1,1)}
     fr(g,EYE,x+2,y-7,1,1);fr(g,EYE,x+4,y-7,1,1);
@@ -3950,7 +3995,9 @@ const BACK=[
   g.restore();
   legs(g,[92,262],6,'#7d5226');
   // kids behind the fence: t 0 just his eyes over it, 1 head and shoulders
-  const peek=(x,t,sh,cap,sk)=>{const y=wt(x+3)-(t?12:4);if(t)fr(g,sh,x-2,y,11,9);fr(g,sk,x,y-7,7,7);fr(g,cap,x,y-10,7,3);fr(g,cap,x+(t?7:-2),y-8,2,1);fr(g,EYE,x+1,y-5,1,2);fr(g,EYE,x+5,y-5,1,2);if(t)fr(g,'#9a4a3a',x+3,y-2,2,1)};
+  const peek=(x,t,sh,cap,sk)=>{const y=wt(x+3)-(t?12:4),hy=wt(x+3)-9;
+    if(CUR)CUR.push(t?{L:[[x-3,y-9,2,7,sk],[x-3,y-2,2,3,sh]],R:[[x+8,y-9,2,7,sk],[x+8,y-2,2,3,sh]]}:{L:[[x-3,hy-8,2,10,sk]],R:[[x+8,hy-8,2,10,sk]]});   /* (v471: his arms, up over the fence) */
+    if(t)fr(g,sh,x-2,y,11,9);fr(g,sk,x,y-7,7,7);fr(g,cap,x,y-10,7,3);fr(g,cap,x+(t?7:-2),y-8,2,1);fr(g,EYE,x+1,y-5,1,2);fr(g,EYE,x+5,y-5,1,2);if(t)fr(g,'#9a4a3a',x+3,y-2,2,1)};
   const dog=x=>{const y=wt(x+4)-4;fr(g,'#b9824a',x,y-9,8,9);fr(g,'#8a5a2a',x-1,y-10,2,5);fr(g,'#8a5a2a',x+7,y-10,2,5);fr(g,'#f6f1e4',x+2,y-5,4,5);fr(g,EYE,x+1,y-7,1,1);fr(g,EYE,x+6,y-7,1,1);fr(g,EYE,x+3,y-5,2,1);fr(g,'#e86a7a',x+3,y-3,2,2)};
   peek(18,0,KS[5],'#c8322a',SKN[0]);peek(110,1,KS[0],'#23408a',SKN[1]);dog(130);peek(152,0,KS[2],'#22252e',SKN[3]);peek(206,1,KS[3],'#c8322a',SKN[0]);peek(228,0,KS[6],'#23408a',SKN[2]);
   peek(246,1,KS[4],'#f6f1e4',SKN[1]);peek(300,0,KS[1],'#2c6b4f',SKN[0]);peek(332,1,KS[2],'#22252e',SKN[2]);peek(348,0,KS[0],'#23408a',SKN[1]);peek(36,1,KS[7],'#22252e',SKN[3]);
@@ -3960,7 +4007,8 @@ const BACK=[
   // hands on the fence, paws on the fence, and the ones who climbed up to sit on it
   for(const x of [18,152,228,300,348]){const y=wt(x+3)-9;fr(g,SKN[x&3],x-3,y,2,2);fr(g,SKN[x&3],x+8,y,2,2)}
   fr(g,'#b9824a',127,wt(134)-9,3,2);fr(g,'#b9824a',138,wt(134)-9,3,2);
-  const sit=(x,sh,cap,sk,o={})=>{const y=wt(x+4)-6;fr(g,'#2b2f3d',x,y-3,9,4);fr(g,sh,x,y-12,9,9);fr(g,dk(sh,.2),x+8,y-12,1,9);fr(g,sk,x+1,y-19,7,7);fr(g,cap,x+1,y-22,7,3);fr(g,cap,x+8,y-20,2,1);
+  const sit=(x,sh,cap,sk,o={})=>{const y=wt(x+4)-6,aL={L:[[x-2,y-20,2,8,sk],[x-2,y-12,2,3,sh]]},aR={R:[[x+9,y-20,2,8,sk],[x+9,y-12,2,3,sh]]};
+    if(CUR)CUR.push(o.wave?aL:o.glove?aR:{...aL,...aR});   /* (v471: the arm he isn't already holding up) */fr(g,'#2b2f3d',x,y-3,9,4);fr(g,sh,x,y-12,9,9);fr(g,dk(sh,.2),x+8,y-12,1,9);fr(g,sk,x+1,y-19,7,7);fr(g,cap,x+1,y-22,7,3);fr(g,cap,x+8,y-20,2,1);
     fr(g,EYE,x+2,y-17,1,2);fr(g,EYE,x+6,y-17,1,2);fr(g,'#9a4a3a',x+4,y-14,2,1);
     if(o.wave){fr(g,sk,x+9,y-18,2,7);fr(g,sk,x+9,y-20,3,2)}
     else if(o.glove){fr(g,sk,x-2,y-17,2,7);fr(g,'#8a5a2a',x-4,y-23,6,6);fr(g,'#6a4420',x-3,y-22,3,3)}
@@ -4034,7 +4082,16 @@ const BACK=[
     const f=fanAt(x,7,93,CW,{gap:0});f.act=0;person(g,x+3,y+1,f)}
   {const x=162,y=ly(162,10,15);kid(g,x,y,'#f6f1e4','#c8322a');fr(g,'#8a5a2a',x-5,y-9,11,1);fr(g,'#e8a030',x-5,y-8,11,3);fr(g,'#c8322a',x-4,y-7,2,1);fr(g,'#c8322a',x,y-7,2,1);fr(g,'#c8322a',x+4,y-7,2,1)}
   MXY=[258,ly(258,13,28)];   /* the mascot, a big yellow chicken in the home shirt: drawn every frame since v469 (drawMascot), so he can celebrate */
-  for(const [x,sh,cp,o] of [[118,'#c8322a','#1c2a5a',{glove:1}],[140,'#f6f1e4','#c8322a',{up:1}],[176,'#23408a','#23408a',{glove:1,left:1}],[198,'#f2c21a','#22252e',{glove:1}],[222,'#3a8a5a','#f6f1e4',{up:1}],[244,'#e86a9a','#23408a',{glove:1,left:1}]])kid(g,x,ly(x,5.5)+1,sh,cp,o);
+  for(const [x,sh,cp,o] of [[118,'#c8322a','#1c2a5a',{glove:1}],[140,'#f6f1e4','#c8322a',{up:1}],[176,'#23408a','#23408a',{glove:1,left:1}],[198,'#f2c21a','#22252e',{glove:1}],[222,'#3a8a5a','#f6f1e4',{up:1}],[244,'#e86a9a','#23408a',{glove:1,left:1}]]){const y=ly(x,5.5)+1;kid(g,x,y,sh,cp,CUR&&o.glove?{left:o.left}:o);
+    /* (v472, David: "can we get a reaction out of the folks in the center of the first row behind the all star wall": they cheer with the rest.
+       The two already waving reach higher. A kid with a glove holds it up with his arm when that arm goes up, so his glove is no longer painted
+       here: fx draws it at his chest the rest of the time (gl: kid()'s hand and glove, gk: its side). kid()'s skin and sides.) */
+    if(CUR){const sk=SKN[(x*7+y)&3],arm=ax=>[[ax,y-17,1,6,sk],[ax,y-11,1,2,sh]];
+      if(o.up)CUR.push({L:[[x-4,y-17,1,4,sk]],R:[[x+3,y-17,1,4,sk]],ea:1});   /* (ea: keen, see rankLive) */
+      else if(o.glove){const Lf=o.left?-1:1,ax=Lf>0?x+3:x-4,G='#8a5a2a',up=[[ax-1,y-18,3,3,G],[ax,y-15,1,4,sk],[ax,y-11,1,2,sh]],
+          gl=[[x+Lf*3,y-9,2,1,sk],[x+Lf*4+(Lf<0?-2:0),y-10,3,3,G]],free=arm(Lf>0?x-4:x+3);
+        CUR.push(Lf>0?{L:free,R:up,gl,gk:'R',ea:1}:{L:up,R:free,gl,gk:'L',ea:1})}
+      else CUR.push({L:arm(x-4),R:arm(x+3),ea:1})}}
   // the people in the four rows nearest the wall, and a few on the walkway
   arcRow(g,22.9,-92,-58,11,0,70,CW,{gap:.45,busy:0});arcRow(g,22.9,60,92,11,1,71,CW,{gap:.45,busy:0});
   for(let r=3;r>=0;r--)for(const [a0,a1] of [[-92,-58],[59,92]])arcRow(g,5.5+4.25*r+.5,a0,a1,r?3.6:5,r,72+r,CW,{big:!r,skip:a=>aisle(a,r?2.4:3.2)});
@@ -4082,7 +4139,9 @@ const BACK=[
   legs(g,[92,262],6,'#6b4526');
   // the old-timers, head and shoulders out of the corn (the front row, drawn next, hides the rest of them): grey flannels and dark caps, as at the roadside farm
   [[30,0,{}],[76,2,{glove:1}],[126,1,{}],[168,3,{left:1,glove:1}],[210,0,{}],[244,2,{left:1}],[290,1,{glove:1}],[334,3,{left:1}]].forEach(([x,sk,o])=>{
-    const c=mk(16,20,gg=>kid(gg,7,20,'#cfcabb','#3a3f4c',{skin:SKN[sk],pants:'#cfcabb',...o}));g.globalAlpha=.66;g.drawImage(c,0,0,16,20,x-14,wt(x)-8-40,32,40);g.globalAlpha=1});
+    const c=mk(16,20,gg=>kid(gg,7,20,'#cfcabb','#3a3f4c',{skin:SKN[sk],pants:'#cfcabb',...o}));g.globalAlpha=.66;g.drawImage(c,0,0,16,20,x-14,wt(x)-8-40,32,40);g.globalAlpha=1;
+    const Y0=wt(x)-48,aL={L:[[x-8,Y0+8,2,10,SKN[sk]],[x-8,Y0+18,2,6,'#cfcabb']]},aR={R:[[x+6,Y0+8,2,10,SKN[sk]],[x+6,Y0+18,2,6,'#cfcabb']]};
+    if(CUR)CUR.push({...(o.glove&&o.left?{}:aL),...(o.glove&&!o.left?{}:aR),g:1})});   /* (v471: a ghost's arms; one with a glove (kid(): his right hand unless left) raises the other) */
   // the front row stands taller than the top of the wall
   for(let xf=0,i=0;xf<FW;xf+=4,i++){const base=wt(xf)+4,hh=19+Math.floor(h2(i,4,9)*9),top=base-hh;fr(g,i%2?'#3a8a2c':'#2f7a26',xf,top+2,2,hh);fr(g,'#56a83c',xf+2,top+3,1,hh);
     for(let y=top+5,k=i;y<base-2;y+=5,k++){const d2=k&1?2:-2;fr(g,'#4c9e36',xf+d2,y,2,1);fr(g,'#6dbb4a',xf+(k&1?4:-3),y+1,1,1)}
@@ -4143,7 +4202,7 @@ function fieldFor(v){if(FIELDS.has(v)){const c0=FIELDS.get(v);FIELDS.delete(v);F
       rowFill(OD_Y-2-ry,OD_Y-2+ry+1,(y,yc)=>{const k=(yc-ccy)/(ry+.5);if(Math.abs(k)>1)return;const ext=q(rx*Math.sqrt(1-k*k)+.5);fc.fillRect(ccx-ext,y,2*ext,s)})}}}   // (no batter's boxes or on-deck circles at the sandlot, v444)
   fc.setTransform(1,0,0,1,0,0);
   if(v===4){fc.globalCompositeOperation='multiply';fc.fillStyle='#ffe9cc';fc.fillRect(0,0,FW,FH);fc.globalCompositeOperation='source-over'}   // evening light
-  fc.drawImage(mk(FW,ringYMax*RS,g=>{CUR=LIVE[v];CUR.length=0;BACK[v](g);CUR=null;g.globalCompositeOperation='destination-in';g.drawImage(MASK,0,0)}),0,0);
+  fc.drawImage(mk(FW,ringYMax*RS,g=>{CUR=LIVE[v];CUR.length=0;BACK[v](g);CUR=null;rankLive(v);g.globalCompositeOperation='destination-in';g.drawImage(MASK,0,0)}),0,0);
   FIELDS.set(v,c);if(FIELDS.size>2)FIELDS.delete(FIELDS.keys().next().value);return c}
 // The sandlot is a literal sandlot (David, v430: "no official infield grass besides maybe some patches. The outfield should be mostly
 // grass though"): inside the base paths the dirt keeps only clumps of the lot's own grass, where a slow noise says so, clear of the mound.
@@ -4311,18 +4370,23 @@ const SEATS=[];{const rnd=rng(5);while(SEATS.length<70){const x=rnd()*W,y=rnd()*
 
 // what moves in each park (field pixels, drawn straight after the field): rags and flags, camera flashes, fireflies
 function fx(cx,v,t){
-  if(t<cheerEnd){const left=cheerEnd-t,k=Math.min(1,left/.8,(cheerLen-left)/.2+.25);   /* how much of the crowd is on its feet: up quickly, down more slowly */
-    LIVE[v].forEach(([x,y,sk,sh,big],i)=>{if(h2(i,v,97)>k*.8||Math.sin(t*10+h2(i,v,98)*6.28)<-.25)return;
-      if(big){fr(cx,sk,(x-1)/2,(y-12)/2,.5,3.5);fr(cx,sk,(x+7)/2,(y-12)/2,.5,3.5);fr(cx,sh,(x-1)/2,(y-6)/2,.5,1);fr(cx,sh,(x+7)/2,(y-6)/2,.5,1)}
-      else{fr(cx,sk,(x-1)/2,(y-9)/2,.5,2.5);fr(cx,sk,(x+5)/2,(y-9)/2,.5,2.5);fr(cx,sh,(x-1)/2,(y-5)/2,.5,1);fr(cx,sh,(x+5)/2,(y-5)/2,.5,1)}})}
+  if(CH.k&&t<CH.end){const k=Math.min(1,(CH.end-t)/.8,(t-CH.t0)/.2+.25),one=CH.arms===1,pump=CH.k===3?-.25:CH.k===2?-.6:-2;   /* how much of the crowd is up: quickly up, more slowly down */
+    const L=LIVE[v],fr0=CH.k===1?Math.max(CH.frac,2.2/L.length):CH.frac;   /* (a base hit gets at least a couple of them, even at ROOKIE and LEGEND) */
+    for(let i=0;i<L.length;i++){const p=L[i];if(p.q>k*fr0||Math.sin(t*10+p.ph)<pump)continue;   /* (the bigger the cheer, the more they pump) */
+      const sw=p.g?Math.round(Math.sin(t*4.5+i*1.7)*2):0;if(p.g)cx.globalAlpha=.66;   /* a ghost: faint, his hands swaying over his head */
+      if(one)armDraw(cx,p.one,sw);else{armDraw(cx,p.L,sw);armDraw(cx,p.R,sw)}
+      if(p.gl&&(!one||p.one===p[p.gk]))p.gu=t;   /* his glove went up with his arm */
+      if(p.g)cx.globalAlpha=1}}
+  for(const p of GLV[v])if(p.gu!==t)armDraw(cx,p.gl,0);   /* a glove that isn't up, at his chest */
   if(v===0)for(const px of [POLE_X,W-POLE_X])flag(cx,px+(px<90?1:-6),POLE_Y-40,t+px,['#c8322a','#c8322a'],5,3);   // the rag on each two-by-four foul pole
+  if(v===0)drawDog(cx,t);
   if(v===1)flag(cx,12,21,t,['#c8322a','#f6f1e4'],6,4);
   if(v===2)drawMascot(cx,t);
   if(v===2)[[6.5,0],[28.5,1],[W-6,2],[W-28,3]].forEach(([x,k])=>flag(cx,x,(wt(Math.round(x*RS))-126)/RS-5,t+k,[['#c8322a','#c8322a'],['#ffd642','#ffd642'],['#23408a','#23408a'],['#c8322a','#c8322a']][k],5,3,true));
   if(v===3)SEATS.forEach(([x,y],i)=>{const k=Math.floor(t*9+i*.37);if(h2(k,i,91)<.03){fr(cx,'#ffffff',x,y,1,1);cx.globalAlpha=.5;fr(cx,'#ffffff',x-1,y,3,1);fr(cx,'#ffffff',x,y-1,1,3);cx.globalAlpha=1}});
   if(v===4)for(let i=0;i<16;i++){const ph=t*.5+i*1.9,x=((i*47+Math.sin(ph)*9)%176+176)%176+2,y=60+(i*29%80)+Math.cos(ph*1.3)*4,on=Math.sin(t*2.2+i*2.4);
     if(on>.2&&!(x>22&&x<158&&y<54)){cx.globalAlpha=Math.min(1,(on-.2)*2);fr(cx,'#f6ff9a',Math.round(x*2)/2,Math.round(y*2)/2,1,1);cx.globalAlpha*=.3;fr(cx,'#f6ff9a',Math.round(x*2)/2-.5,Math.round(y*2)/2-.5,2,2);cx.globalAlpha=1}}}
-return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
+return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,live:LIVE,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
 return ROAD})();
 /*ROAD:END*/
 /*TUNE:BEGIN*/
