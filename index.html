@@ -735,7 +735,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v468';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v470';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 /* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
@@ -955,8 +955,8 @@ function updExits(){for(const e of exits){e.f++;
 // THROWS: a runner going for a base the defence can throw to (home on a hit or sac fly, 3rd on a tag-up)
 // runs with footsteps for his last 0.5 s and the answer comes when he gets there: safe (chime) or out.
 let throws=[];
-function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();
-  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!',true)}
+function addRunsNow(n){if(n<=0||innOuts>=3)return;for(let i=0;i<n;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();PARK.mascot('run');
+  if(runs>=target&&runs-n<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4)}runLbl(n,n===1?'RUN SCORED!':n+' RUNS!',true)}
 function throwStep(){for(const P of throws.slice()){P.f++;if(!P.quiet&&P.f===(P.stepsAt??Math.max(1,P.T-30)))(P.stepsFn||sfx.steps)();
     for(const [fr,fn] of P.at||[])if(P.f===fr)fn();
     if(P.f<P.T)continue;throws.splice(throws.indexOf(P),1);P.anim.hold=false;
@@ -978,8 +978,8 @@ function fcStep(){const P=fcPlay;P.f++;
     spawnP(P.wx,P.wy+6,8,['#aa2222','#661111','#ff6666'],2)}
   else{bases[0]=batterSk;sfx.fcSafe();showLbl('resLbl',OUT_LBL.FC[0],OUT_LBL.FC[1],1100);
     spawnP(P.wx,P.wy+6,5,['#ffaa44','#ffd8a0'],1.5)}
-  if(P.sc>0&&innOuts<3){for(let i=0;i<P.sc;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();
-    if(runs>=target&&runs-P.sc<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
+  if(P.sc>0&&innOuts<3){for(let i=0;i<P.sc;i++){runs++;innScores[Math.min(inning,MAX_INN)-1]++}sfx.coin();PARK.mascot('run');
+    if(runs>=target&&runs-P.sc<target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4)}
     runLbl(P.sc,P.sc===1?'RUN SCORED!':P.sc+' RUNS!')}
   checkInning()}   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
 let sfOutP=.06;   // this fly ball's thrown-out chance for a tagging runner (set per play)
@@ -1885,7 +1885,7 @@ function resolveHit(){if(bp){bpLand();return}
         onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
       if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}{const k='h'+Math.min(4,Math.max(hrRuns,hrStreak));if(walkOff(hrTgt))roarBig(0);else roar(0,ROARS[hrTgt?ROAR_UP[k]:k])}   // back-to-back homers: 2nd = 2-run roar, 3rd = 3-run, 4th+ = grand slam
-      mqHomer=hrRuns;showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);mqHomer=1;
+      mqHomer=hrRuns;showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);mqHomer=1;PARK.mascot('hr',isGrand?5.6:4.4);   /* (v469: ALL-STAR's mascot dances) */
       if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
     }else{endStreak();
@@ -2026,8 +2026,8 @@ function update(){
       // runner to finish (that gap was the flash). Steal runners wait for the reveal.
       if(!r.out&&!r.hold){const bi=[B1,B2,B3].findIndex(b=>Math.abs(endX-b.x)<1&&Math.abs(endY-b.y)<1);if(bi>=0)basePending[bi]=false}
       if(Math.abs(endX-HOME.x)<5&&Math.abs(endY-HOME.y)<5&&pendingRuns>0&&!r.noRun){
-        sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;
-        if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150)}
+        sfx.coin();runs++;innScores[Math.min(inning,MAX_INN)-1]++;pendingRuns--;PARK.mascot('run');   /* (v469: ALL-STAR's mascot throws his wings up) */
+        if(runs===target){tgtFlash=5*TGT_PH;setTimeout(sfx.target,150);PARK.mascot('hr',4.4)}   /* (v470: the mascot dances for the target too, David: "let's have him do the dance when the target is reached also") */
 }}
     const keep=r.t<(r.out?1+10/r.dur:1.05);if(!keep&&!r.out)scoredExit(r);return keep});   // out: holds ~10 frames blinking, then gone
   updExits();
@@ -3862,6 +3862,31 @@ const puff=(g,x,y)=>{for(const [dx,dy,r] of [[0,0,6],[9,-3,8],[20,0,7],[11,2,7]]
    were painted with their arms down (fine px x, y, skin, shirt, big), filled as the park is painted; cheer(L) is called by the game's own
    crowd sounds (crowdOoh, crowdBig) with the sound's length, and fx draws the arms for as long as it lasts. No dice are thrown for it. */
 const LIVE=[[],[],[],[],[]];let CUR=null,cheerEnd=0,cheerLen=1;
+/* ALL-STAR's mascot (v469). David: "Let's have that chicken mascot celebrate- raise his arms after runs and dance during home runs."
+   He was painted into the backdrop; now he is drawn every frame (about twenty little rectangles, the kind of drawing every park
+   already does) from where the painter left him (MXY: his feet, fine px). At rest he stands as he always did, one wing up. The game
+   calls mascot('run') when a run scores: both wings up and hopping, for about two seconds (each run keeps it going), and
+   mascot('hr', s) on a home run and (v470) when the target is reached: a chicken dance for s seconds (flap, then lean and kick side to
+   side, then hop with his wings up). */
+let MXY=null;const MASC={k:'',t0:0,end:0};
+function mascot(k,len){const t=performance.now()/1000;
+  if(k==='hr'){if(MASC.k==='hr'&&t<MASC.end)MASC.end=Math.max(MASC.end,t+(len||4.4));else{MASC.k='hr';MASC.t0=t;MASC.end=t+(len||4.4)}return}   /* already dancing (the target reached on the homer's trot): dance on, from where he is */
+  if(MASC.k==='hr'&&t<MASC.end)return;                                       /* the runs of the homer's own trot: he keeps dancing */
+  if(!(MASC.k==='run'&&t<MASC.end))MASC.t0=t;MASC.k='run';MASC.end=Math.max(MASC.end,t+2.2)}
+function drawMascot(cx,t){if(!MXY)return;const [x,y]=MXY,k=t<MASC.end?MASC.k:'',a=t-MASC.t0,hop=p=>-Math.round(3*Math.sin(Math.PI*((a/p)%1)));
+  let ox=0,oy=0,wl='up',wr='down',kick=0;
+  if(k==='run'){wl=wr='up';oy=hop(.4)}
+  else if(k==='hr'){if(t>MASC.end-.7){wl=wr='up';oy=hop(.3)}                 /* the finish: wings up, hopping */
+    else if(Math.floor(a/1.6)%2===0){wl=wr=Math.floor(a/.12)%2?'out':'down';oy=-(Math.floor(a/.24)%2)}   /* flap flap flap */
+    else{const s=Math.floor(a/.25)%2?1:-1;ox=s;kick=s;wl=s<0?'out':'up';wr=s<0?'up':'out'}}            /* lean and kick, side to side */
+  if(oy<0){cx.globalAlpha=.22;fr(cx,'#000',(x-6)/2,(y-1)/2,6.5,1);cx.globalAlpha=1}                  /* his shadow while he is off the ground */
+  const f=(c,X,Y,w,h)=>fr(cx,c,(X+ox)/2,(Y+oy)/2,w/2,h/2),Y='#f2c21a',O='#e8762a',R='#c8322a';
+  f(R,x-3,y-27,3,4);f(R,x,y-28,3,5);f(Y,x-5,y-23,11,11);f('#ffe066',x-4,y-22,4,2);f('#ffffff',x-4,y-20,4,4);f('#ffffff',x+1,y-20,4,4);f(EYE,x-2,y-19,1,2);f(EYE,x+2,y-19,1,2);
+  f(O,x-2,y-16,5,3);f(R,x-6,y-12,13,8);f('#f6f1e4',x-1,y-11,3,4);
+  if(wl==='up')f(Y,x-9,y-19,3,8);else if(wl==='down')f(Y,x-9,y-12,3,6);else f(Y,x-10,y-12,4,3);
+  if(wr==='up')f(Y,x+7,y-19,3,8);else if(wr==='down')f(Y,x+7,y-12,3,6);else f(Y,x+7,y-12,4,3);
+  if(kick<0){f(Y,x-7,y-5,4,2);f(O,x-10,y-6,3,2)}else{f(Y,x-4,y-4,3,2);f(O,x-5,y-2,4,2)}
+  if(kick>0){f(Y,x+4,y-5,4,2);f(O,x+8,y-6,3,2)}else{f(Y,x+2,y-4,3,2);f(O,x+2,y-2,4,2)}}
 function cheer(L){cheerLen=Math.max(.6,L);cheerEnd=performance.now()/1000+cheerLen}
 const HAIRC=['#2a1c14','#4a3020','#8a5a2a','#d8b860','#16161c','#b9b9b9','#a8482a'],CAPC=['#c8322a','#23408a','#1c2a5a','#f6f1e4','#2c6b4f','#22252e'],
   WAVEC=['#c8322a','#ffd642','#23408a','#f6f1e4'],SIGNS=['GO!','#1','WIN','HI','WOW'],EYE='#22252e';
@@ -4008,9 +4033,7 @@ const BACK=[
     for(let k=-7;k<=7;k++){const hh=Math.max(1,Math.round(6*Math.sqrt(1-(k/7.6)**2)));fr(g,Math.floor((k+9)/3)&1?'#f6f1e4':c,x+k,y-13-hh,1,hh)}fr(g,dk(c,.35),x-7,y-13,15,1);
     const f=fanAt(x,7,93,CW,{gap:0});f.act=0;person(g,x+3,y+1,f)}
   {const x=162,y=ly(162,10,15);kid(g,x,y,'#f6f1e4','#c8322a');fr(g,'#8a5a2a',x-5,y-9,11,1);fr(g,'#e8a030',x-5,y-8,11,3);fr(g,'#c8322a',x-4,y-7,2,1);fr(g,'#c8322a',x,y-7,2,1);fr(g,'#c8322a',x+4,y-7,2,1)}
-  {const x=258,y=ly(258,13,28);   /* the mascot: a big yellow bird in the home shirt, one wing in the air */
-   fr(g,'#c8322a',x-3,y-27,3,4);fr(g,'#c8322a',x,y-28,3,5);fr(g,'#f2c21a',x-5,y-23,11,11);fr(g,'#ffe066',x-4,y-22,4,2);fr(g,'#ffffff',x-4,y-20,4,4);fr(g,'#ffffff',x+1,y-20,4,4);fr(g,EYE,x-2,y-19,1,2);fr(g,EYE,x+2,y-19,1,2);
-   fr(g,'#e8762a',x-2,y-16,5,3);fr(g,'#c8322a',x-6,y-12,13,8);fr(g,'#f6f1e4',x-1,y-11,3,4);fr(g,'#f2c21a',x-9,y-19,3,8);fr(g,'#f2c21a',x+7,y-12,3,6);fr(g,'#f2c21a',x-4,y-4,3,2);fr(g,'#f2c21a',x+2,y-4,3,2);fr(g,'#e8762a',x-5,y-2,4,2);fr(g,'#e8762a',x+2,y-2,4,2)}
+  MXY=[258,ly(258,13,28)];   /* the mascot, a big yellow chicken in the home shirt: drawn every frame since v469 (drawMascot), so he can celebrate */
   for(const [x,sh,cp,o] of [[118,'#c8322a','#1c2a5a',{glove:1}],[140,'#f6f1e4','#c8322a',{up:1}],[176,'#23408a','#23408a',{glove:1,left:1}],[198,'#f2c21a','#22252e',{glove:1}],[222,'#3a8a5a','#f6f1e4',{up:1}],[244,'#e86a9a','#23408a',{glove:1,left:1}]])kid(g,x,ly(x,5.5)+1,sh,cp,o);
   // the people in the four rows nearest the wall, and a few on the walkway
   arcRow(g,22.9,-92,-58,11,0,70,CW,{gap:.45,busy:0});arcRow(g,22.9,60,92,11,1,71,CW,{gap:.45,busy:0});
@@ -4294,11 +4317,12 @@ function fx(cx,v,t){
       else{fr(cx,sk,(x-1)/2,(y-9)/2,.5,2.5);fr(cx,sk,(x+5)/2,(y-9)/2,.5,2.5);fr(cx,sh,(x-1)/2,(y-5)/2,.5,1);fr(cx,sh,(x+5)/2,(y-5)/2,.5,1)}})}
   if(v===0)for(const px of [POLE_X,W-POLE_X])flag(cx,px+(px<90?1:-6),POLE_Y-40,t+px,['#c8322a','#c8322a'],5,3);   // the rag on each two-by-four foul pole
   if(v===1)flag(cx,12,21,t,['#c8322a','#f6f1e4'],6,4);
+  if(v===2)drawMascot(cx,t);
   if(v===2)[[6.5,0],[28.5,1],[W-6,2],[W-28,3]].forEach(([x,k])=>flag(cx,x,(wt(Math.round(x*RS))-126)/RS-5,t+k,[['#c8322a','#c8322a'],['#ffd642','#ffd642'],['#23408a','#23408a'],['#c8322a','#c8322a']][k],5,3,true));
   if(v===3)SEATS.forEach(([x,y],i)=>{const k=Math.floor(t*9+i*.37);if(h2(k,i,91)<.03){fr(cx,'#ffffff',x,y,1,1);cx.globalAlpha=.5;fr(cx,'#ffffff',x-1,y,3,1);fr(cx,'#ffffff',x,y-1,1,3);cx.globalAlpha=1}});
   if(v===4)for(let i=0;i<16;i++){const ph=t*.5+i*1.9,x=((i*47+Math.sin(ph)*9)%176+176)%176+2,y=60+(i*29%80)+Math.cos(ph*1.3)*4,on=Math.sin(t*2.2+i*2.4);
     if(on>.2&&!(x>22&&x<158&&y<54)){cx.globalAlpha=Math.min(1,(on-.2)*2);fr(cx,'#f6ff9a',Math.round(x*2)/2,Math.round(y*2)/2,1,1);cx.globalAlpha*=.3;fr(cx,'#f6ff9a',Math.round(x*2)/2-.5,Math.round(y*2)/2-.5,2,2);cx.globalAlpha=1}}}
-return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
+return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
 return ROAD})();
 /*ROAD:END*/
 /*TUNE:BEGIN*/
