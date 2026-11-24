@@ -735,7 +735,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v478';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v479';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 /* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
@@ -4657,9 +4657,12 @@ function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:fal
    comes 4.07 s after the tap, just after the bus parks (ROAD's WINDUR, 3.95 s). v478: "Start song at 0.4s after tap, shorten up drive 50ms, shorten
    up songs 150ms": WIN_AT .4, the last note 3.51 s in (112 bpm -> 102), 3.97 s after the tap; the drive 3.9 s. The parade keeps win3 as it was. */
 const WIN_AT=.4,WIN_K=(3.2143+.2+.25-.15)/3.2143;
+/* A loss's drive (v479, David: "Let's delay the "losing bus" music by 350ms, we can stretch out that song by 150ms"): WHISTLE starts .35 s late,
+   every note LOSS_K times as long (104 bpm -> 99.7), so its last note (18 ticks: 3.46 s, now 3.61 s) comes 4.02 s after the tap; the drive stays 4.4 s. */
+const LOSS_AT=.35,LOSS_K=(3.4615+.15)/3.4615;
 function tripDrive(){if(!trip||trip.ph!=='fin')return;hide('finScr');
   trip.ph='road';trip.at=performance.now();busPaint();ROAD.place(round);if(trip.champ){trip.par=1;ROAD.parade()}else if(trip.won)ROAD.win();else ROAD.lose();trip.mv=ROAD.moving();
-  {const w=trip.won&&!trip.champ;TUNE.play(!trip.won?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win',w?WIN_AT:0,w?WIN_K:1)}if(trip.champ&&!devOldParade)crowdSwell(ROAD.PT1+.2);   /* a win's tune: see WIN_K; the parade and a loss as before */tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade got the MVP version ("the vet version doesn't fit there"); v452: a parade version was tried, "MVP is better than parade song", so MVP it stays; v452: the crowd builds under it (DEV OLD PARADE plays v451's crowd)
+  {const w=trip.won&&!trip.champ,l=!trip.won;TUNE.play(l?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win',w?WIN_AT:l?LOSS_AT:0,w?WIN_K:l?LOSS_K:1)}if(trip.champ&&!devOldParade)crowdSwell(ROAD.PT1+.2);   /* a win's tune: see WIN_K; the parade and a loss as before */tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade got the MVP version ("the vet version doesn't fit there"); v452: a parade version was tried, "MVP is better than parade song", so MVP it stays; v452: the crowd builds under it (DEV OLD PARADE plays v451's crowd)
 function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('tpN'),B=el('tpB'),go=el('tpGo'),nm=nmHTML(RD(nextRound).name);
   A.style.color='';N.style.color='';B.className='tpB';go.style.display='';go.textContent='TAP TO PLAY';el('tpCh').style.display='none';el('tpMenu').style.display=trip.par>=4?'none':'';
   if(trip.par===4){A.textContent='NEXT STOP';N.textContent='CHAMPIONSHIP MODE';B.textContent='';go.style.display='none'}
