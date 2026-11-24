@@ -735,7 +735,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v474';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v478';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 /* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
@@ -2299,7 +2299,7 @@ paintChal();
 // developer toggles (test builds only): every challenge pitch SUPER FAST, and how much faster than a heater
 if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="oldp">OLD PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span><b>CROWD</b><span data-c="slam">SLAM</span><span data-c="big">BIG</span><b>FRAMES</b><span data-d="fps">METER</span><b>TARGET</b><span data-d="t1">1 RUN</span><b>MVP BOARD</b><span data-d="ledold">OLD</span><span data-d="ledoff">OFF</span>';   // (v446: hear the win tune of each drive)
   for(const id of ['titleScr','pauseScr']){const d=document.createElement('div');d.className='devP';d.innerHTML=html;document.getElementById(id).appendChild(d);
-    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const tn0=e.target.dataset.t;if(tn0){musicStop();TUNE.play(tn0);return}const cr=e.target.dataset.c;if(cr){if(cr==='big')crowdBig();else sfx.ooh(ROARS.h4);return}const k=e.target.dataset.d;if(!k)return;
+    d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const tn0=e.target.dataset.t;if(tn0){musicStop();TUNE.play(tn0,0,/^win/.test(tn0)?WIN_K:1);return}const cr=e.target.dataset.c;if(cr){if(cr==='big')crowdBig();else sfx.ooh(ROARS.h4);return}const k=e.target.dataset.d;if(!k)return;
       if(k==='all')devAllSF=!devAllSF;else if(k==='odds'){newOdds=!newOdds;paintChal()}else if(k==='unl'||k==='oldp'){devOldParade=k==='oldp';devUnlockDemo();return}else if(k==='fps'){devFps=!devFps;fpsReset(true);try{localStorage.setItem('bbDevFps',devFps?'1':'0')}catch(err){}}
       else if(k==='t1'){dev1Run=!dev1Run;if(!bp&&state!=='title'&&state!=='gameover')target=RD(round).target;try{localStorage.setItem('bbDev1Run',dev1Run?'1':'0')}catch(err){}}   /* the game under way takes the new target at once */
       else if(k==='ledold'||k==='ledoff'){const m=k==='ledold'?'old':'off';devLED=devLED===m?'new':m;try{localStorage.setItem('bbDevLED',devLED)}catch(err){}PARK.fresh(3);if(venue===3)fCv=PARK.field(3)}   /* v468: MVP's board as up to v461 (lettered every frame), or none at all, to compare with the new one on the phone; the field's picture is painted again without a board in it */
@@ -3219,7 +3219,7 @@ const VENUE_FN=[vSandlot,vSchool,vBallpark,vStadium,vFarm];
 
 /* ----- moving parts painted before the time-of-day tint (flags, windmill) ----- */
 function venueAnim(i,g,ox,oy,t){const B=oy+VB,C=ox+180;
-  if(i===1)flag(g,ox+136,B-153,t,['#c8322a','#f6f1e4']);
+  if(i===1)flag(g,ox+136,B-153,t,['#c8322a','#c8322a']);   // v475: all red (red and white read as Poland's flag, David)
   if(i===2)[64,122,180,238,296].forEach((x,k)=>flag(g,ox+x+1,B-140,t+k,[['#c8322a','#c8322a'],['#23408a','#23408a'],['#ffd642','#ffd642']][k%3],10,6,true));
   if(i===3){let k=0;for(let x=24;x<340;x+=45){if(Math.abs(x-180)<60)continue;flag(g,ox+x+1,oy+stadRim(x)-14,t+k,k%2?['#23408a','#f6f1e4']:['#c8322a','#f6f1e4'],9,6);k++}
     flag(g,ox+141,B-180,t,['#23408a','#ffd642'],12,8);flag(g,ox+221,B-180,t+2,['#23408a','#ffd642'],12,8)}
@@ -3559,7 +3559,16 @@ function paintBus(){const tm=TEAMS[teamI];busSpr={1:mk(BUSW,BUSH,g=>drawBus(g,1,
 paintBus();
 function drive(i,m){par=null;onw=null;arrived=false;from=cam/D;to=i;u=0;dur=Math.max(2.4,Math.abs(to-from)*4.4);dir=to>=from?1:-1;mode=m;modeT=0}
 const moving=()=>u<1;
-function win(){if(moving())return;if(at<4){at++;drive(at,'win')}else{mode='champ';modeT=0}}
+function win(){if(moving())return;if(at<4){at++;drive(at,'win');dur*=WINDUR/4.4}else{mode='champ';modeT=0}}
+/* v475, David: "We need to delay the "winning bus" song by about 750ms, it basically finishes playing before you see the venue. We could also speed up
+   the bus a little bit to make up some time. Basically we want the final big note of the song to hit right after the bus stops moving." The game
+   starts the win tune .75 s late (TUNE.play(name,.75)): its last note (18 ticks at 112 bpm, 3.21 s in) comes 4.02 s after the tap. A win's drive
+   takes WINDUR (4.4 before): 3.9 s in v475, so the note landed 0.12 s after the bus was parked (LEVEL n OF 5). v476 (his plan): the tune .35 s
+   late and 6% slower (the game's WIN_K), its last note 3.82 s after the tap, and the drive 3.8 s: the note lands as the bus parks, 0.1 s sooner
+   than in v475; the bus has under half a pixel to go (even the near verge) from 97% of the drive, 3.69 s. v477: "slow down the bus 150ms and
+   add another 250ms to the songs": 3.95 s, the tune 14% slower (its last note 4.07 s after the tap, 0.1 s after the bus parks). v478: "Start song
+   at 0.4s after tap, shorten up drive 50ms, shorten up songs 150ms": 3.9 s (the game's WIN_AT, WIN_K). A loss's drive keeps 4.4 s. */
+const WINDUR=3.9;
 function lose(){if(moving())return;if(at>0){at--;drive(at,'loss')}else{mode='retry';modeT=0}}
 function jump(i){at=i;cam=(i-.42)*D;puffs.length=0;drive(i,'arrive')}
 function nextTeam(){teamI=(teamI+1)%TEAMS.length;paintBus()}
@@ -4383,7 +4392,7 @@ function fx(cx,v,t){
   for(const p of GLV[v])if(p.gu!==t)armDraw(cx,p.gl,0);   /* a glove that isn't up, at his chest */
   if(v===0)for(const px of [POLE_X,W-POLE_X])flag(cx,px+(px<90?1:-6),POLE_Y-40,t+px,['#c8322a','#c8322a'],5,3);   // the rag on each two-by-four foul pole
   if(v===0)drawDog(cx,t);
-  if(v===1)flag(cx,12,21,t,['#c8322a','#f6f1e4'],6,4);
+  if(v===1)flag(cx,12,21,t,['#c8322a','#c8322a'],6,4);   // the school's flag on its cupola, all red since v475 (as by the road)
   if(v===2)drawMascot(cx,t);
   if(v===2)[[6.5,0],[28.5,1],[W-6,2],[W-28,3]].forEach(([x,k])=>flag(cx,x,(wt(Math.round(x*RS))-126)/RS-5,t+k,[['#c8322a','#c8322a'],['#ffd642','#ffd642'],['#23408a','#23408a'],['#c8322a','#c8322a']][k],5,3,true));
   if(v===3)SEATS.forEach(([x,y],i)=>{const k=Math.floor(t*9+i*.37);if(h2(k,i,91)<.03){fr(cx,'#ffffff',x,y,1,1);cx.globalAlpha=.5;fr(cx,'#ffffff',x-1,y,3,1);fr(cx,'#ffffff',x,y-1,1,3);cx.globalAlpha=1}});
@@ -4432,11 +4441,11 @@ const SONGS={win:{title:'Steps, whistled, swung',bpm:112,tpb:3,beats:4,loop:fals
    {i:'pluck',v:.75,bars:[ST('E4+G4+C5','E4+A4+C5'),ST('D4+G4+B4','E4+G4+C5')]},
    {i:'bass',v:.4,gate:.85,bars:['C3:5 -:1 A2:5 -:1','G2:5 -:1 C3:5 -:1']}]},
  go:{title:'Go',bpm:176,tpb:4,beats:18,loop:false,vol:1,
-  tracks:[{i:'whistle',v:1,oct:1,gate:.95,late:.108,bars:['-:9 C4:8 C5:4 A4:4 G4:4 E4:4 G4:12 D4>:19.75 -:7.25']},
-   {i:'horn',v:1,gate:1.02,bars:['F4+A4:2 -:70']},
-   {i:'horn',v:1,gate:1.02,late:.029,bars:['-:4 F4+A4:2 -:66']},
-   {i:'pluck',v:.6,late:.108,bars:['-:13 E4+G4+C5:2 -:2 E4+G4+C5:2 -:6 E4+G4+C5:2 -:2 E4+G4+C5:2 -:6 D4+G4+B4:2 -:2 D4+G4+B4:2 -:6 D4+G4+B4:2 -:2 D4+G4+B4:2 -:17']},
-   {i:'bass',v:.4,gate:.85,late:.108,bars:['-:9 C3:4 -:8 C3:4 -:8 G2:4 -:8 G2:4 -:23']}]},
+  tracks:[{i:'whistle',v:1,oct:1,gate:.95,late:.1776,bars:['-:9 C4:8 C5:4 A4:4 G4:4 E4:4 G4:12 D4>:19.75 -:7.25']},   // v475: the honks 20% longer again (gate 1.02 -> 1.224, .174 -> .209 s) and what follows each pushed back as much (.0348 s a honk), so the 0.20-s gap between the honks and the 0.33-s pause before the song stay as he set them
+   {i:'horn',v:1,gate:1.224,bars:['F4+A4:2 -:70']},
+   {i:'horn',v:1,gate:1.224,late:.0638,bars:['-:4 F4+A4:2 -:66']},
+   {i:'pluck',v:.6,late:.1776,bars:['-:13 E4+G4+C5:2 -:2 E4+G4+C5:2 -:6 E4+G4+C5:2 -:2 E4+G4+C5:2 -:6 D4+G4+B4:2 -:2 D4+G4+B4:2 -:6 D4+G4+B4:2 -:2 D4+G4+B4:2 -:17']},
+   {i:'bass',v:.4,gate:.85,late:.1776,bars:['-:9 C3:4 -:8 C3:4 -:8 G2:4 -:8 G2:4 -:23']}]},
  field:{title:'Ta-da',bpm:110,tpb:4,beats:3,loop:false,vol:.63,
   tracks:[{i:'organ',v:.6,gate:.9,late:.525,bars:['G3+D4+G4+B4:2 C4+E4+G4+C5:6 -:4']}]}};
 let E=null,cur=null;
@@ -4502,9 +4511,9 @@ function engine(ctx,dest){const comp=ctx.createDynamicsCompressor(),master=ctx.c
 function stop(d=.12){const S=cur;cur=null;if(!S)return;const n=ac.currentTime;try{S.bus.gain.cancelScheduledValues(n);S.bus.gain.setValueAtTime(S.bus.gain.value,n);S.bus.gain.linearRampToValueAtTime(0,n+d)}catch(e){}
   setTimeout(()=>{for(const x of S.live){try{x.stop()}catch(e){}}S.live.clear();try{S.bus.disconnect()}catch(e){}},(d+.15)*1000)}
 // the whole tune is put on the audio clock at once (the longest is five seconds), so nothing has to keep feeding it
-function play(name){try{aud();if(!E)E=engine(ac,out);stop(.08);const s=SONGS[name],td=60/s.bpm/s.tpb,S={bus:E.G(s.vol||1),live:new Set()},t0=ac.currentTime+.06;S.bus.connect(E.comp);
+function play(name,at=0,sk=1){try{aud();if(!E)E=engine(ac,out);stop(.08);const s=SONGS[name],td=60/s.bpm/s.tpb*sk,S={bus:E.G(s.vol||1),live:new Set()},t0=ac.currentTime+.06+at;   /* at: seconds later than now; sk: every note sk times as long (v476: a win's drive .35 s late and 6% slower). (Not k: the chord's notes are k below.) */S.bus.connect(E.comp);
     for(const tr of s.tracks){let tick=0;for(const bar of tr.bars)for(const tok of bar.trim().split(/\s+/)){const [nn,ls]=tok.split(':'),len=+ls;
-        if(nn!=='-'){const fade=nn.endsWith('>');(fade?nn.slice(0,-1):nn).split('+').forEach((n,k)=>E.I[tr.i](S,n2m(n)+12*(tr.oct||0),t0+tick*td+(tr.late||0)+(tr.i==='pluck'?k*.016:0),len*td*(tr.gate||.92),tr.v,{fade}))}tick+=len}}
+        if(nn!=='-'){const fade=nn.endsWith('>');(fade?nn.slice(0,-1):nn).split('+').forEach((n,k)=>E.I[tr.i](S,n2m(n)+12*(tr.oct||0),t0+tick*td+(tr.late||0)*sk+(tr.i==='pluck'?k*.016:0),len*td*(tr.gate||.92),tr.v,{fade}))}tick+=len}}
     for(const k in s.drums||{})s.drums[k].forEach((p,bi)=>{for(let i=0;i<p.length;i++)if(p[i]!=='.')E.D[k](S,t0+(bi*p.length+i)*td,(p[i]==='X'?1:p[i]==='x'?.8:.45)*(s.dv||1))});   // drums: X loud, x medium, o soft; dv the song's drum level
     cur=S}catch(e){}}
 return{play,stop,SONGS,busy:()=>!!cur}})();
@@ -4610,7 +4619,7 @@ function busPaint(){const t=TM[myTeam],u=t.u[myPick]||t.u[0],c0=u[2],c1=(t.c||[]
 function titleRoad(){busPaint();ROAD.lot();roadShow(true)}   // behind the title: the bus waits outside its garage, nothing moving
 // 0 · the opening: a tap on the title lifts its veil and the bus pulls out of the lot for the first park, where the sign waits for the
 //     tap that starts the game (state is still 'title' until then). The bus honks twice and whistles the first seven notes of the title song.
-function tripOpen(){trip={ph:'road',open:true,won:true,at:performance.now(),mv:true};musicStop();ROAD.start();TUNE.play('go');tripPaint();show('tripScr')}
+function tripOpen(){trip={ph:'road',open:true,won:true,at:performance.now(),mv:true};musicStop();ROAD.start();TUNE.play('go');   /* v476: the honks at once again (v475 had it all .5 s later; "The honks should be more immediate after you tap to play. (Ok if take me out starts sooner accordingly.)") */tripPaint();show('tripScr')}
 function roadFrame(ts){if(!roadOn)return;if(roadOffAt&&performance.now()>roadOffAt){roadOn=false;return}
   if(roadOffAt&&!ROAD.moving())return;   /* v467: parked and fading out over a game that has begun: its last picture is left to fade. Drawing the scene under the fade as well as the field cost the game's first 0.4 s its frames on David's phone (the night scene at MVP: all 13 of them late) */
   const dt=roadLast?Math.min(.05,(ts-roadLast)/1000):0;roadLast=ts;ROAD.step(dt);ROAD.draw(rcx,{hud:false});
@@ -4640,9 +4649,17 @@ function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:fal
 // 2 · the road: one park up for a win, one down for a loss; at the bottom of the ladder the bus stays put. At the top (LEGEND beaten) it drives
 //     on into a ticker-tape parade: the roof comes off the bus, the team stands up in sports jackets (two of the five in sunglasses), and after a look at them
 //     the player chooses what to play next (David, 2026-11-22). trip.par: 1 driving in · 2 roof off · 3 the choices are up
+/* A win's drive (v475-v476, David: "we want the final big note of the song to hit right after the bus stops moving", then "it's weird that it
+   starts so late now. Can we change that 0.75 to 0.35. and maybe stretch out each of the notes to the songs slightly longer? Like we can make up
+   200ms by making the song longer, 100 ms by making the bus drive faster, and then the song ends 100ms sooner than before relative to the new
+   venue arrival"), then (v477) "The slower song is not noticeable at all. Let's slow down the bus 150ms and add another 250ms to the songs": the
+   tune starts .35 s after the tap, every note WIN_K times as long (112 bpm -> 98), so its last note (18 ticks: 3.21 s at 112 bpm, now 3.66 s)
+   comes 4.07 s after the tap, just after the bus parks (ROAD's WINDUR, 3.95 s). v478: "Start song at 0.4s after tap, shorten up drive 50ms, shorten
+   up songs 150ms": WIN_AT .4, the last note 3.51 s in (112 bpm -> 102), 3.97 s after the tap; the drive 3.9 s. The parade keeps win3 as it was. */
+const WIN_AT=.4,WIN_K=(3.2143+.2+.25-.15)/3.2143;
 function tripDrive(){if(!trip||trip.ph!=='fin')return;hide('finScr');
   trip.ph='road';trip.at=performance.now();busPaint();ROAD.place(round);if(trip.champ){trip.par=1;ROAD.parade()}else if(trip.won)ROAD.win();else ROAD.lose();trip.mv=ROAD.moving();
-  TUNE.play(!trip.won?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win');if(trip.champ&&!devOldParade)crowdSwell(ROAD.PT1+.2);tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade got the MVP version ("the vet version doesn't fit there"); v452: a parade version was tried, "MVP is better than parade song", so MVP it stays; v452: the crowd builds under it (DEV OLD PARADE plays v451's crowd)
+  {const w=trip.won&&!trip.champ;TUNE.play(!trip.won?'loss':trip.champ?'win3':['win','win2','win3','win4'][round]||'win',w?WIN_AT:0,w?WIN_K:1)}if(trip.champ&&!devOldParade)crowdSwell(ROAD.PT1+.2);   /* a win's tune: see WIN_K; the parade and a loss as before */tripPaint();show('tripScr');roadShow(true)}   // v446: the win dressed for where the bus is going (SWING to VETERAN); v451: the parade got the MVP version ("the vet version doesn't fit there"); v452: a parade version was tried, "MVP is better than parade song", so MVP it stays; v452: the crowd builds under it (DEV OLD PARADE plays v451's crowd)
 function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('tpN'),B=el('tpB'),go=el('tpGo'),nm=nmHTML(RD(nextRound).name);
   A.style.color='';N.style.color='';B.className='tpB';go.style.display='';go.textContent='TAP TO PLAY';el('tpCh').style.display='none';el('tpMenu').style.display=trip.par>=4?'none':'';
   if(trip.par===4){A.textContent='NEXT STOP';N.textContent='CHAMPIONSHIP MODE';B.textContent='';go.style.display='none'}
