@@ -589,7 +589,7 @@ function roarPts(p){const L=p.L,a=Math.min(p.a/1000,L*.6),f=Math.min(p.f/1000,L-
   if(p.sh==='burst'){const s2=Math.min(a+.18,hold);return [[0,0],[a,v],[s2,v*.62],[hold,v*.58],[L,0]]}
   if(p.sh==='double'){const d1=Math.min(a+.3,hold),d2=Math.min(a+.65,hold);return [[0,0],[a,v*.85],[d1,v*.6],[d2,v],[hold,v*.85],[L,0]]}
   return [[0,0],[a,v],[hold,v*.8],[L,0]]}
-function crowdOoh(p=ROARS.pp){if(p===ROARS.pp)PARK.cheer('hit',.2);try{aud();   /* (v471: the crowd's arms follow the plays themselves, PARK.cheer; this "ooh" for a runner sent home gets a few of them up) */const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+function crowdOoh(p=ROARS.pp){PARK.cheer(p===ROARS.pp?'hit':[ROARS.h1,ROARS.h2,ROARS.h3,ROARS.h4].includes(p)?'big':'run',p.L+.3,p===ROARS.pp?.2:0);try{aud();   /* (v474: whenever the crowd roars, it is seen cheering in the park, as the roar starts and as long as it sounds: the "ooh" of a play at the plate a few with one arm, a run or a steal half with both, a homer's roar nearly all) */const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
   const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=p.hz;bp.Q.value=.6;const g=ac.createGain();
   g.gain.setValueAtTime(.0001,t);roarPts(p).slice(1).forEach(([s2,v])=>g.gain.linearRampToValueAtTime(Math.max(v,.0001),t+s2));
@@ -735,7 +735,7 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v473';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v474';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 /* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
@@ -800,7 +800,7 @@ const STEAL_OK=.7,STEAL_FR=30;let steal=null;   // 0.5s run to the bag
 function stealReveal(){const st=steal;steal=null;
   if(!st.ok)st.lead.out=true;
   for(const a of runnerAnims)if(a.hold){a.hold=false;if(!a.out)basePending[a.dest]=false}
-  if(st.ok){sfx.tada();roar(0,ROARS.r1,true);PARK.cheer('hit',.18);showLbl('resLbl',st.dbl?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
+  if(st.ok){sfx.tada();roar(0,ROARS.r1,true);PARK.cheer('hit',0,.18);showLbl('resLbl',st.dbl?'DOUBLE STEAL!':'STOLEN BASE!','#7ff0e0',900);
     spawnP(st.wx,st.wy+6,5,['#7ff0e0','#bffff5'],1.2);resultT=30;return}
   // caught: the lead runner is out at the bag he was going for; a trailing runner still makes it
   st.lead.out=true;bases[st.lead.dest]=false;basePending[st.lead.dest]=false;innOuts++;hrOK=false;
@@ -1890,7 +1890,7 @@ function resolveHit(){if(bp){bpLand();return}
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
     }else{endStreak();
       const hc=hitRes==='3B'?'#5aa9ff':hitRes==='2B'?'#6fd6ff':'#e8f6ff'; // single → double → triple: white → sky → blue, like the wall's blues
-      sfx[hitRes==='3B'?'hit3B':hitRes==='2B'?'hit2B':'hit1B']();PARK.cheer('hit',hitRes==='3B'?.25:hitRes==='2B'?.17:.1);   /* (v471: a few fans, one arm each) */
+      sfx[hitRes==='3B'?'hit3B':hitRes==='2B'?'hit2B':'hit1B']();PARK.cheer('hit',0,hitRes==='3B'?.25:hitRes==='2B'?.17:.1);   /* (v471: a few fans, one arm each) */
       const hitName=hitRes==='3B'?'TRIPLE':hitRes==='2B'?'DOUBLE':'SINGLE';
       showLbl('resLbl',hitName+'!',hc,900);
       runCall(runMsgs);
@@ -3865,9 +3865,12 @@ const puff=(g,x,y)=>{for(const [dx,dy,r] of [[0,0,6],[9,-3,8],[20,0,7],[11,2,7]]
    LIVE[v]: everyone in park v who can throw his arms up, as the rectangles of each arm, hand end first (fine px [x,y,w,h,colour]):
    {L, R, g}. Filled as the park is painted: person() for anyone painted with his arms down, ROOKIE's kids at and on the fence, LEGEND's
    old-timers (g: a ghost, drawn faint, his hands swaying). Someone already holding something up offers only his free arm.
-   The game calls cheer(kind, s): 'hit' (a base hit, a steal, a runner sent home: a few of them, s of the crowd, one arm each), 'run'
-   (about half, both arms), 'big' (a homer, the target reached, the walk-off roar: nearly all, both arms, pumping; s = seconds). A smaller
-   cheer doesn't cut into a bigger one; more of the same keeps it going. No dice: who joins in is fixed per person (h2). */
+   The game calls cheer(kind, len, frac): 'hit' (a base hit, a steal, the "ooh" of a play at the plate: a few of them, frac of the crowd,
+   one arm each), 'run' (about half, both arms), 'big' (a homer, the target reached, the big roars: nearly all, both arms, pumping); len
+   in seconds (0: 1.6, 2.2, 3.6). v474 (David: "Basically any time you hear the crowd cheering there should be some visual indication of
+   it ... timed with the cheering. In all venues"): every crowd roar calls it too, as it starts and for as long as it sounds (crowdOoh,
+   crowdBig). A smaller cheer doesn't cut into a bigger one, but keeps it going as long as it lasts; more of the same keeps it going.
+   No dice: who joins in is fixed per person (h2). */
 const LIVE=[[],[],[],[],[]];let CUR=null;const CH={k:0,frac:0,arms:2,t0:0,end:0};
 const armsOf=(x,y,sk,sh,big)=>big?{L:[[x-1,y-12,1,6,sk],[x-1,y-6,1,2,sh]],R:[[x+7,y-12,1,6,sk],[x+7,y-6,1,2,sh]]}:{L:[[x-1,y-9,1,4,sk],[x-1,y-5,1,2,sh]],R:[[x+5,y-9,1,4,sk],[x+5,y-5,1,2,sh]]};
 /* Who joins in, in order: the fans of a park ranked once (by h2), so a cheer gets exactly its share of them (a single at ROOKIE or LEGEND:
@@ -3877,9 +3880,9 @@ function rankLive(v){const L=LIVE[v];GLV[v]=L.filter(p=>p.gl);L.forEach((p,i)=>{
   const key=p=>p.ea?p.h*.4:p.h;   /* the keen ones (ALL-STAR's kids at the rail) come in the first half: up for every run and homer, now and then for a hit */
   L.slice().sort((a,b)=>key(a)-key(b)).forEach((p,r)=>p.q=(r+.5)/L.length)}
 function armDraw(cx,A,sw){if(A)for(let j=0;j<A.length;j++){const r=A[j];fr(cx,r[4],(r[0]+(j?0:sw))/2,r[1]/2,r[2]/2,r[3]/2)}}   /* one arm, its hand end moved sw */
-function cheer(kind,s){const t=performance.now()/1000,lv=kind==='hit'?1:kind==='big'?3:2;
-  if(CH.k>lv&&t<CH.end-.3)return;                                               /* a bigger cheer is still going */
-  const P=lv===1?{frac:s||.12,arms:1,len:1.6}:lv===2?{frac:.5,arms:2,len:2.2}:{frac:.9,arms:2,len:s||3.6};
+function cheer(kind,len,frac){const t=performance.now()/1000,lv=kind==='hit'?1:kind==='big'?3:2;   /* len: seconds (0: the usual), frac: how many (hits) */
+  const P=lv===1?{frac:frac||.12,arms:1,len:len||1.6}:lv===2?{frac:frac||.5,arms:2,len:len||2.2}:{frac:frac||.9,arms:2,len:len||3.6};
+  if(CH.k>lv&&t<CH.end-.3){CH.end=Math.max(CH.end,t+P.len);return}               /* a bigger cheer is still going: it lasts as long as this one would have */
   if(CH.k===lv&&t<CH.end){CH.end=Math.max(CH.end,t+P.len);CH.frac=Math.max(CH.frac,P.frac);return}   /* more of the same: it goes on */
   CH.k=lv;CH.frac=P.frac;CH.arms=P.arms;CH.t0=t;CH.end=t+P.len}
 /* ALL-STAR's mascot (v469). David: "Let's have that chicken mascot celebrate- raise his arms after runs and dance during home runs."
@@ -4386,7 +4389,7 @@ function fx(cx,v,t){
   if(v===3)SEATS.forEach(([x,y],i)=>{const k=Math.floor(t*9+i*.37);if(h2(k,i,91)<.03){fr(cx,'#ffffff',x,y,1,1);cx.globalAlpha=.5;fr(cx,'#ffffff',x-1,y,3,1);fr(cx,'#ffffff',x,y-1,1,3);cx.globalAlpha=1}});
   if(v===4)for(let i=0;i<16;i++){const ph=t*.5+i*1.9,x=((i*47+Math.sin(ph)*9)%176+176)%176+2,y=60+(i*29%80)+Math.cos(ph*1.3)*4,on=Math.sin(t*2.2+i*2.4);
     if(on>.2&&!(x>22&&x<158&&y<54)){cx.globalAlpha=Math.min(1,(on-.2)*2);fr(cx,'#f6ff9a',Math.round(x*2)/2,Math.round(y*2)/2,1,1);cx.globalAlpha*=.3;fr(cx,'#f6ff9a',Math.round(x*2)/2-.5,Math.round(y*2)/2-.5,2,2);cx.globalAlpha=1}}}
-return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,live:LIVE,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
+return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,live:LIVE,ch:CH,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
 return ROAD})();
 /*ROAD:END*/
 /*TUNE:BEGIN*/
