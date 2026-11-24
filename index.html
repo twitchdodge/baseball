@@ -98,7 +98,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .ol.show{opacity:1}
 /* overlay labels: soft drop shadow */
 .ol{text-shadow:0 2px 8px rgba(0,0,0,.7)}
-#resLbl{top:30%;font-size:clamp(12px,5.1cqw,28px);white-space:pre-line;line-height:1.35}
+#resLbl{top:35.35%;font-size:clamp(12px,5.1cqw,28px);white-space:pre-line;line-height:1.35}
 #resLbl.gsl{animation:gsl .3s steps(1) infinite}
 #menuScr .tBtns{gap:2.4cqw}
 #stScr{justify-content:flex-start;padding-top:28cqw;gap:2.2cqw}   /* starts below the scoreboard, which shows through */
@@ -121,7 +121,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 .bpNote{font-size:clamp(5px,1.7cqw,9px);color:#778;margin-top:2.2cqw;text-align:center;line-height:1.6}
 #bpCode{width:calc(100% - 8cqw);max-height:16cqw;overflow:auto;margin:0;padding:2cqw;background:#141a30;color:#9aa;font:clamp(5px,1.7cqw,9px)/1.5 monospace;white-space:pre-wrap;word-break:break-all;user-select:text;-webkit-user-select:text}
 /* matchup at the start of a game: two same-width chips, the "at"/"vs" gap centred over 2nd base */
-#muLbl{top:34.2%;display:grid;grid-template-columns:1fr 8.4cqw 1fr;align-items:center;text-shadow:none}
+#muLbl{top:39.14%;display:grid;grid-template-columns:1fr 8.4cqw 1fr;align-items:center;text-shadow:none}
 #muLbl .mc{width:17.3cqw;font-size:clamp(9px,3.07cqw,17px);color:#fff;padding:1.7cqw 0 1.4cqw;letter-spacing:.3cqw;text-shadow:1px 1px 0 rgba(0,0,0,.55);box-shadow:0 .6cqw 0 rgba(0,0,0,.45)}
 #muLbl .l{justify-self:end}#muLbl .r{justify-self:start}
 #muLbl .at{font-size:clamp(7px,2.2cqw,12px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
@@ -152,9 +152,9 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 #tmHint{margin-top:.9cqw;font-size:clamp(6px,1.95cqw,11px);color:#aab}
 #tmDone{margin-top:auto;margin-bottom:13cqw;min-width:30%;text-align:center}
 @keyframes gsl{0%{color:#ffd642}33%{color:#fff}66%{color:#ffb347}}
-#innLbl{top:44%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
-#scorLbl{top:58.37%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(9px,3.4cqw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
-#streakLbl{top:25%;font-size:clamp(12px,5cqw,27px)}
+#innLbl{top:47.98%;font-size:clamp(12px,5.1cqw,28px);color:#fff}
+#scorLbl{top:61.43%;left:1.111%;right:-1.111%;   /* 2 field px right of centre */font-size:clamp(9px,3.4cqw,18px);color:var(--gold);text-shadow:0 0 12px rgba(255,214,66,.5)}
+#streakLbl{top:30.84%;font-size:clamp(12px,5cqw,27px)}
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;background:rgba(10,10,30,.82);gap:clamp(8px,2.73cqw,16px);
   pointer-events:none;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s linear .25s;z-index:6}
@@ -185,6 +185,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
 #pauseScr .devP{top:57%}   /* clear of PAUSED / TAP TO RESUME */
 .devP span{border:1px solid #3a8;border-radius:2px;padding:3px 5px;cursor:pointer;color:#8ba}
 .devP span.on{background:#3a8;color:#021}
+#fpsLbl{position:absolute;left:1.5%;top:76%;z-index:7;pointer-events:none;font:9px/1.3 monospace;white-space:pre;text-align:left;color:#9f9;background:rgba(0,0,0,.72);padding:2px 5px;border-radius:2px}   /* DEV frame meter (v462; v467: on the left, clear of SKIP) */
 /* high scores */
 #hiList{pointer-events:auto;width:86%;display:flex;flex-direction:column;gap:6px;margin:4px 0}
 .hiRow{display:flex;align-items:center;gap:8px;font-size:clamp(9px,2.73cqw,14px);padding:7px 10px;border-radius:4px;background:rgba(255,255,255,.07);color:#fff}
@@ -473,7 +474,31 @@ let shX=0,shY=0;
 
 /* ===== layout ===== */
 const HOME={x:90,y:305};
-const MOUND={x:90,y:195};
+/* THE FIELD'S DEPTH (v458). David: "can we increase by ~35% the space between the top of the canvas and the top of the wall (in game)? I
+   just think the crowd and scoreboard has become a very fun part of the game and I want to emphasize that ... The other reason for the
+   change is that once we made the screen hit the edges of the phone, the distance from the wall to home plate is slightly jarring for the
+   eye, it's a longish way to go back and forth from the wall to the pitcher's arm. None of the mechanics of the game should change: I
+   think the wall itself and the foul poles just shift downward. Home plate and on deck circles should not move, but I do think that the
+   pitching mound and the dirt and everything should shift proportionally. So the angle of the foul lines will be a little different than
+   before. The outfield gets smaller too, but actually the infield should lose the most arithmetic size because it's the majority of the
+   playing field right now".
+   So: the wall's top goes from row 64 to row 86 (STANDS_EXTRA 16 -> 38, +34%; the wall and the poles keep their shape), and every row of
+   the field between the wall and the plate moves toward the plate in proportion: FY(y) is where row y of the field up to v457 is now
+   (FIELD_K = 203/225 of its depth; the plate's own row stays). Columns do not change, so the foul lines lean out a little more.
+   The rules count frames, not px, with one exception: a swing's timing was measured in px along the pitch's path. MOUND_Y0 and PITCH_Y0
+   keep that path's old rows for that arithmetic alone (doSwing, the swing guide, the called strike, batting practice), so every window
+   is the same length of time it was.
+   v459, David: "One thing that stands out is the curve of the wall, it seems a little flat which makes the outfield a funny shape. Let's
+   make it a bit more curved, then split the difference on the height: the top of the wall should move up a bit, but the foul poles
+   should move equally down". v459 moved them 5 rows each; then (v460) "Instead of 5px up and 5 down, let's do 3px up and 3down".
+   So the middle of the wall comes up 3 rows (STANDS_EXTRA 38 -> 35) and the poles go down 3 (WALL_SAG 10 -> 16, below). The infield
+   stays where v458 put it: FIELD_K is fixed at v458's 203/225 instead of following the wall. */
+const STANDS_EXTRA=35;                             // extra stand height vs v200, whose wall apex was y=64 (16 until v457, 38 in v458, 33 in v459)
+const WALL_B=64+STANDS_EXTRA,WALL_H=16,WALL_T=WALL_B-WALL_H;   // apex of the band (centre field)
+const FIELD_K=203/225,FY=y=>Math.round(HOME.y-(HOME.y-y)*FIELD_K);   /* v458's (HOME.y-102)/(HOME.y-80), kept when the wall moved again */
+const SB_Y=15;                                     // the scoreboard's top row, where it has always been on the screen (it was WALL_T-37-12 until the wall moved down)
+const MOUND_Y0=195,PITCH_Y0=MOUND_Y0-5;            // the mound's and the release's rows up to v457: only for the swing-timing arithmetic
+const MOUND={x:90,y:FY(MOUND_Y0)};
 const PITCH_Y=MOUND.y-5; // release height: belt level (he stands on the rubber at MOUND.y)
 const GLOVE='#a06a2a';   // pitcher's mitt — lighter than it was so it reads against grass
 const PITCH_HAND=5;      // release is this far to the throwing-hand side of the mound centre
@@ -487,9 +512,7 @@ function plateX(){return pitchLefty?HOME.x+1.5:HOME.x-.5}
    foul-pole bases at (POLE_X, POLE_Y) / (W-POLE_X, POLE_Y). WALL_SAG is the only
    knob: how many px the wall drops from centre field to the poles. Everything else
    (radius, centre, sweep) is derived. The wall band is WALL_H deep radially. */
-const STANDS_EXTRA=16;                             // FORK: extra stand height vs v200 (wall apex was y=64)
-const WALL_B=64+STANDS_EXTRA,WALL_H=16,WALL_T=WALL_B-WALL_H;   // apex of the band (centre field)
-const WALL_SAG=10;
+const WALL_SAG=16;                                        // 10 until v458, 20 in v459 (see THE FIELD'S DEPTH)
 const POLE_X=2,POLE_Y=WALL_B+WALL_SAG;
 const WALL_R=((W/2-POLE_X)**2+WALL_SAG**2)/(2*WALL_SAG); // radius of the wall-bottom arc
 const ARC={x:HOME.x,y:WALL_B+WALL_R};                     // arc centre (far below home plate)
@@ -498,9 +521,9 @@ const TRACK_W=8;                                          // warning track depth
 const DIRT='#dc9440',DIRT_DK='#c27e30',DIRT_LT='#e6a655';   // infield/track/paths; mound rim; mound crown
 const WALL_COL='#1c2a5a';                                 // bare wall behind the zone panels
 const NUM_ZONES=7;
-const B1={x:132,y:193},B2={x:90,y:142},B3={x:47,y:193};  // 1B/3B: diamond's bottom corner sits just inside the foul line (left line is drawn 1px further out than the mirror of the right, hence 47 not 48)
+const B1={x:132,y:FY(193)},B2={x:90,y:FY(142)},B3={x:47,y:FY(193)};  // 1B/3B: diamond's bottom corner sits just inside the foul line (left line is drawn 1px further out than the mirror of the right, hence 47 not 48)
 // infield dirt ellipse: centred midway between 2B and the mound, top 17px above 2B
-const DIRT_ARC={cy:(B2.y+MOUND.y)/2,rx:56,ry:(B2.y+MOUND.y)/2-(B2.y-17)}; // wide enough to cross the foul lines and be clipped just foul of them
+const DIRT_ARC={cy:(B2.y+MOUND.y)/2,rx:56,ry:(B2.y+MOUND.y)/2-(B2.y-Math.round(17*FIELD_K))}; // wide enough to cross the foul lines and be clipped just foul of them
 const BASE_CUT_R=10.5; // base cutout radius: 1.5 × the bag's 7px diagonal
 const FOUL_DIRT=2; // dirt extends this far past the foul line (the foul-side half of the base path, and the ellipse's clip)
 const GRASS_LO=5;   // inner grass inset from home→1B / 3B→home path centrelines (horizontal px)
@@ -566,7 +589,7 @@ function roarPts(p){const L=p.L,a=Math.min(p.a/1000,L*.6),f=Math.min(p.f/1000,L-
   if(p.sh==='burst'){const s2=Math.min(a+.18,hold);return [[0,0],[a,v],[s2,v*.62],[hold,v*.58],[L,0]]}
   if(p.sh==='double'){const d1=Math.min(a+.3,hold),d2=Math.min(a+.65,hold);return [[0,0],[a,v*.85],[d1,v*.6],[d2,v],[hold,v*.85],[L,0]]}
   return [[0,0],[a,v],[hold,v*.8],[L,0]]}
-function crowdOoh(p=ROARS.pp){try{aud();const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
+function crowdOoh(p=ROARS.pp){PARK.cheer(p.L);try{aud();   /* (v458: the people in the stands throw their arms up for as long as the roar lasts) */const t=ac.currentTime,L=p.L,len=Math.ceil(ac.sampleRate*(L+.05)),buf=ac.createBuffer(1,len,ac.sampleRate),x=buf.getChannelData(0);
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource();src.buffer=buf;
   const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=p.hz;bp.Q.value=.6;const g=ac.createGain();
   g.gain.setValueAtTime(.0001,t);roarPts(p).slice(1).forEach(([s2,v])=>g.gain.linearRampToValueAtTime(Math.max(v,.0001),t+s2));
@@ -613,7 +636,7 @@ function homeArrivalMs(){let m=Infinity;for(const a of runnerAnims){if(a.hold||a
 // 480 Hz) that surges twice, the shouting above it (1.25 kHz), a little air (3.2 kHz), and a scatter of whistles; 4.2 s long, louder and
 // longer than the grand slam's (ROARS.h4: one band, 2.45 s).
 const BIG={v:.355,L:4.2};   // about 4 dB above the grand slam's roar over its first second and a half, and 1.7 s longer (v453: v .34 → .355 makes up the 0.4 dB the whistles gave)
-function crowdBig(p=BIG){try{aud();const t=ac.currentTime+.01,L=p.L,v=p.v,sr=ac.sampleRate,len=Math.ceil(sr*(L+.15)),buf=ac.createBuffer(1,len,sr),x=buf.getChannelData(0);
+function crowdBig(p=BIG){PARK.cheer(p.L);try{aud();const t=ac.currentTime+.01,L=p.L,v=p.v,sr=ac.sampleRate,len=Math.ceil(sr*(L+.15)),buf=ac.createBuffer(1,len,sr),x=buf.getChannelData(0);
   for(let i=0;i<len;i++)x[i]=Math.random()*2-1;
   const layer=(hz,q,pts,k)=>{const sc=ac.createBufferSource();sc.buffer=buf;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=hz;bp.Q.value=q;const g=ac.createGain();
     g.gain.setValueAtTime(.0001,t);for(const [s2,a] of pts)g.gain.linearRampToValueAtTime(Math.max(.0001,a*v*k),t+s2);sc.connect(bp).connect(g).connect(out);sc.start(t,Math.random()*.1);sc.stop(t+L+.05)};
@@ -691,7 +714,7 @@ const PITCHES=[
 const MPH={'SUPER FAST':[104,107],HEATER:[98,103],FASTBALL:[92,96],CURVEBALL:[82,87],KNUCKLEBALL:[76,79],CHANGEUP:[70,74]};
 // CHALLENGE: every pitch is bumped one notch faster; the heater becomes SUPER FAST, which only exists here.
 // SF_PLUS = how many frames quicker than the heater it reaches the plate.
-const SF_COLOR='#3d8bff';let SF_PLUS=3,devAllSF=false,devOldParade=false;   // devOldParade (DEV): set by OLD PARADE for that one parade, which then has v451's crowd (the grand slam's roar, no build-up); a real game clears it
+const SF_COLOR='#3d8bff';let SF_PLUS=3,devAllSF=false,devOldParade=false,devFps=false,dev1Run=false,devLED='new';const FPS={g:[],d:[],med:0,n:0,late:0,pn:0,plate:0,worst:0,ours:0,wmax:0,by:{},rn:0,rlate:0,pw:0,last:0,shown:0,el:null};   // devOldParade (DEV): set by OLD PARADE for that one parade, which then has v451's crowd (the grand slam's roar, no build-up); a real game clears it
    // +3 locked in (16 frames vs the heater's 19)
 const LEVEL_UP={CHANGEUP:'KNUCKLEBALL',KNUCKLEBALL:'CURVEBALL',CURVEBALL:'FASTBALL',FASTBALL:'HEATER'};
 function superFast(){return{n:'SUPER FAST',fr:PITCHES[3].fr-SF_PLUS,oX:t=>0,color:SF_COLOR}}
@@ -712,10 +735,13 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v457';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v468';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
 const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
-function RD(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
+/* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
+   then SKIP ends the game as a win. Test builds only; it stays on until switched off. */
+function RD(i){const r=RD0(i);return DEV&&dev1Run?{...r,target:1}:r}
+function RD0(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
   // CHALLENGE = the same levels and targets with every pitch one notch faster
   // out boxes per inning: ROOKIEᶜ 3/3/3, VETERANᶜ 3/3/4, ALL-STARᶜ 3/4/4, MVPᶜ 4/4/4, LEGENDᶜ 4/4/5
   if(newOdds)return{...r,name:r.name+'\u1D9C',...[{baseOuts:3},{inn3Outs:4},{inn2Outs:4,inn3Outs:4},{},{inn3Outs:5}][i]};
@@ -1230,7 +1256,7 @@ try{chalUnlocked=localStorage.getItem('bbChalUnlk')==='1';
   if(chalUnlocked)localStorage.setItem('bbChalUnlk','1')}catch(e){}
 if(DEV)chalUnlocked=true;
 try{challenge=chalUnlocked&&localStorage.getItem('bbChal')==='1'}catch(e){}
-if(DEV)try{const od=localStorage.getItem('bbDevOdds');if(od!==null)newOdds=od==='1';devAllSF=localStorage.getItem('bbDevAllSF')==='1';const v=+localStorage.getItem('bbDevSF');if(v>=2&&v<=5)SF_PLUS=v}catch(e){}
+if(DEV)try{const od=localStorage.getItem('bbDevOdds');if(od!==null)newOdds=od==='1';devAllSF=localStorage.getItem('bbDevAllSF')==='1';devFps=localStorage.getItem('bbDevFps')==='1';dev1Run=localStorage.getItem('bbDev1Run')==='1';{const m=localStorage.getItem('bbDevLED');if(m==='old'||m==='off')devLED=m}const v=+localStorage.getItem('bbDevSF');if(v>=2&&v<=5)SF_PLUS=v}catch(e){}
 loadModeScores();
 
 /* ===== base logic ===== */
@@ -1497,7 +1523,7 @@ function drawScoreboard(){if(venue===2||bp)PARK.frame(cx);if(bp){drawBPBoard();r
   //   1 2 3 R           ● ● ○     (out lamps, centred on the score line)
   //   values
   // width is set by the longest header row: 'ALL-STAR' + 'TGT 15' + 'HI 21' with 4px gaps
-  const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=WALL_T-bhgt-12;
+  const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=SB_Y;
   cx.fillStyle='#0d2418';cx.fillRect(bx,by,bwid,bhgt);                 // board face (dark green)
   cx.fillStyle='#2a5a3a';cx.fillRect(bx,by,bwid,1);cx.fillRect(bx,by+bhgt-1,bwid,1);
   cx.fillRect(bx,by,1,bhgt);cx.fillRect(bx+bwid-1,by,1,bhgt);          // frame
@@ -1545,7 +1571,7 @@ function spawnP(x,y,n,cols,spd,big){for(let i=0;i<n;i++){const a=Math.random()*M
 // grand slam: the label shimmers gold/white/orange and four fireworks pop over the outfield
 function grandSlamFx(){const e=document.getElementById('resLbl');e.classList.add('gsl');setTimeout(()=>e.classList.remove('gsl'),1900);
   const C=[['#ffd642','#fff','#ffb347'],['#ff5a4a','#fff','#ffd642'],['#7fd0ff','#fff','#9ec8ff'],['#5ee05e','#fff','#ffd642']];
-  C.forEach((c,k)=>setTimeout(()=>spawnP(45+Math.random()*90,100+Math.random()*45,34,c,2.6,true),250+k*260))}
+  C.forEach((c,k)=>setTimeout(()=>spawnP(45+Math.random()*90,FY(100)+Math.random()*41,34,c,2.6,true),250+k*260))}
 function updP(){particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.03;p.life--;return p.life>0})}
 function drwP(){particles.forEach(p=>{cx.fillStyle=p.color;cx.fillRect(0|p.x,0|p.y,p.sz,p.sz)})}
 
@@ -1569,7 +1595,7 @@ function basePitch(){
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 // drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
 function cancelPlay(){bpClearLbl();steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
-function startGame(){bp=null;paused=false;devOldParade=false;hide('pauseScr');gs=newGS();musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+function startGame(){bp=null;paused=false;devOldParade=false;if(devFps)fpsReset();hide('pauseScr');gs=newGS();musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;setVenue(round);sbF.cur=0;marqReset();TUNE.play('field');   // the park for this level, and two organ chords (ta-da) play us onto the field
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1642,7 +1668,7 @@ const FOUL_EXTRA=8;   // foul band beyond the fair zone (was 15): tighter, so ba
 const WHIFF=FAIR+FOUL_EXTRA+4; // beyond this = total miss
 // called strike: when the ball is this far through its flight (1 = at the plate). Kept where it was
 // before the foul bands tightened, so the time they gave up became a real late-whiff window.
-const PASS_T=1+44/(HOME.y-MOUND.y);
+const PASS_T=1+44/(HOME.y-MOUND_Y0);   // (MOUND_Y0, PITCH_Y0: the pitch's path as it was up to v457, so that these px still mean the same time; see THE FIELD'S DEPTH)
 
 // SWING GUIDE (OPTIONS): where a swing right now would send the ball. Same aim as doSwing, but worked out
 // at this very moment (between game frames too) and not rounded, so the line sweeps smoothly from one foul
@@ -1658,7 +1684,7 @@ function updGuide(){let tx,ty,foul,zi=null;
   if(showGuide&&state==='pitch'&&pitch&&!paused){
     // a tap waiting for the next game step is the swing: show its moment, not now (the line would step past it)
     const tm=swingReq?Math.min(performance.now(),swingTimeMs):performance.now();
-    const t=ballT+Math.min(1,Math.max(-1,(tm-frameMs)/TK))/pitch.fr,off=PITCH_Y+(HOME.y-PITCH_Y)*t-HOME.y,absO=Math.abs(off),adj=batRight?off:-off;
+    const t=ballT+Math.min(1,Math.max(-1,(tm-frameMs)/TK))/pitch.fr,off=PITCH_Y0+(HOME.y-PITCH_Y0)*t-HOME.y,absO=Math.abs(off),adj=batRight?off:-off;
     if(absO<=WHIFF){foul=absO>FAIR;
       if(foul){const fp=Math.min(1,(absO-FAIR)/(WHIFF-FAIR));ty=POLE_Y+4+(HOME.y-POLE_Y-46)*fp;
         tx=Math.max(0,Math.min(W,(adj<0?fLeft(ty):fRight(ty))+(2+fp*30)*(adj<0?-1:1)))}
@@ -1678,7 +1704,7 @@ function doSwing(){
   // this update has already moved the ball to where it is at frameMs; step it back to the tap
   const interpBallT=Math.max(0,ballT-Math.max(0,frameMs-swingTimeMs)/(TK*pitch.fr));
   window._swingT=interpBallT;
-  const interpBallWY=PITCH_Y+(HOME.y-PITCH_Y)*interpBallT;
+  const interpBallWY=PITCH_Y0+(HOME.y-PITCH_Y0)*interpBallT;   // where the ball was along the pitch's path, in that path's px up to v457 (see THE FIELD'S DEPTH)
   const offset=interpBallWY-HOME.y,absO=Math.abs(offset);
 
   // Swing animation
@@ -1859,7 +1885,7 @@ function resolveHit(){if(bp){bpLand();return}
         onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
       if(isGrand){sfx.gs();shakeAmt=13;grandSlamFx()}else{sfx.hr();shakeAmt=9}{const k='h'+Math.min(4,Math.max(hrRuns,hrStreak));if(walkOff(hrTgt))roarBig(0);else roar(0,ROARS[hrTgt?ROAR_UP[k]:k])}   // back-to-back homers: 2nd = 2-run roar, 3rd = 3-run, 4th+ = grand slam
-      showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);
+      mqHomer=hrRuns;showLbl('resLbl',isGrand?'GRAND SLAM!':'HOME RUN!','#ffd642',isGrand?1700:1200);mqHomer=1;
       if(hrStreak>=2)setTimeout(()=>showLbl('streakLbl',hrStreak+' HR IN A ROW!','#9ec8ff',1200),700);
       spawnP(wx,wy+6,18,['#ffd642','#ff5533','#fff','#ff8844'],2.8);
     }else{endStreak();
@@ -2070,18 +2096,24 @@ function draw(){paintPauseBtn();if(!fCv)return;   // (first instant after loadin
 
   // pitched ball
   if(state==='pitch'&&pitch){
-    // a constant 3px ball, centred on (ballWX,ballWY), from release to the plate
-    const sz=3,bsx=Math.round(ballWX-sz/2),bsy=Math.round(ballWY-sz/2);
+    /* a constant 3px ball from release to the plate, drawn where it is at this very frame (v461). The rules step at a fixed 60 Hz
+       (update), but a phone's frames come at 120 Hz on a Pixel and never exactly on the 60 Hz beat, so a ball drawn where the last
+       step left it (ballWX, ballWY) now and then stood still for a frame and then jumped two: David's "pitches are sometimes
+       stuttering". acc is the time since that step (loop), so this is the same path at the frame's own time; drawn on the fine grid
+       (half field px). Only the picture: the swing is judged from the tap's own time, as before. */
+    const sz=3,bt=ballT+Math.min(acc,TK)/(TK*pitch.fr),tC=Math.min(bt,1),rx=releaseX(),tx=plateX(),
+      bsx=Math.round((rx+(tx-rx)*tC+(pitchLefty?-1:1)*(pitch.oX(tC)-tC*pitch.oX(1))-sz/2)*RS)/RS,
+      bsy=Math.round((PITCH_Y+(HOME.y-PITCH_Y)*bt-sz/2)*RS)/RS;
     cx.fillStyle='rgba(0,0,0,.45)';cx.fillRect(bsx-1,bsy-1,sz+2,sz+2);
     cx.fillStyle=pitch.color;cx.fillRect(bsx,bsy,sz,sz);
     cx.fillStyle='rgba(255,255,255,.45)';cx.fillRect(bsx,bsy,1,1)}
 
   // hit ball in flight
   if(state==='hitfly'&&trail.length>0){
-    const last=trail[trail.length-1];
+    const ft=Math.min(1,hitFlyT+Math.min(acc,TK)/(TK*hitFlyFr)),lx=0|hitSX+(hitTX-hitSX)*ft,ly=0|hitSY+(hitTY-hitSY)*ft;   /* where it is at this frame (v461; see the pitched ball) */
     const sz=Math.max(2,4-Math.round(hitFlyT*2));
-    cx.fillStyle='#ccc';cx.fillRect((0|last.x)-1,(0|last.y)-1,sz+1,sz+1);
-    cx.fillStyle='#fff';cx.fillRect(0|last.x,0|last.y,sz,sz)}
+    cx.fillStyle='#ccc';cx.fillRect(lx-1,ly-1,sz+1,sz+1);
+    cx.fillStyle='#fff';cx.fillRect(lx,ly,sz,sz)}
 
   drwP();
 
@@ -2099,7 +2131,8 @@ const newGS=()=>({pa:0,ab:0,h:0,bb:0,tb:0,sf:0});
 let gs=newGS();
 function tallyPA(k){const TB={'1B':1,'2B':2,'3B':3,HR:4}[k];
   if(TB){gs.pa++;gs.ab++;gs.h++;gs.tb+=TB}else if(k==='BB'){gs.pa++;gs.bb++}
-  else if(k==='FOUL'||k==='OUT'||k==='K'||k==='ABX'||k==='DP'||k==='E'){gs.pa++;gs.ab++}   // reaching on an error is an at-bat, not a hitelse if(k==='SF'||k==='SFX'){gs.pa++;gs.sf++}
+  else if(k==='FOUL'||k==='OUT'||k==='K'||k==='ABX'||k==='DP'||k==='E'){gs.pa++;gs.ab++}   /* reaching on an error is an at-bat, not a hit */
+  else if(k==='SF'||k==='SFX'){gs.pa++;gs.sf++}   /* (v461: a // comment had swallowed this line since before v413, so sac flies never counted) */
   else if(k==='BNT')gs.pa++}   // GB/FB are counted once the play is known (sac fly or not); SB/CS aren't plate appearances
 const ST_F=['g','w','r','pa','ab','h','bb','tb','sf'];
 function stKey(ex,c,sm){return (ex?'bbEX':'bbST')+(c?'C':'')+(sm?'S':'')}
@@ -2168,7 +2201,7 @@ function renderBP(){const g=document.getElementById('zg');g.innerHTML='';if(!bp|
   g.appendChild(svgEl('circle',{cx:c.x,cy:c.y,r:1.1,fill:'#fff'}))}
 // ms timing error vs a perfect centre hit (+ late, − early) for a swing whose ball sat `offset` px from the plate
 function bpErr(offset){const z=bp.list[bp.i].z,tAdj=(bpCenterU(z)/W)*2*FAIR-FAIR,tOff=batRight?tAdj:-tAdj;
-  return (offset-tOff)/(HOME.y-PITCH_Y)*TK*pitch.fr}
+  return (offset-tOff)/(HOME.y-PITCH_Y0)*TK*pitch.fr}
 function bpShow(sc,e,col){showLbl('resLbl',sc>0?'+'+sc:'0',col,900);
   const a=Math.abs(e),t=a<3?'DEAD ON':(e<0?'EARLY ':'LATE ')+Math.round(a)+' ms';showLbl('innLbl',t,'#fff',900)}
 function bpRecord(r,e,sc){const c=bp.list[bp.i];bp.rec.push({t:bp.ty[c.t].n,z:c.z,h:batRight?'R':'L',e,r,s:sc});bp.score+=sc;bp.i++;if(r!=='T')bp.streak=0}
@@ -2186,7 +2219,7 @@ function bpLand(){const e=bp.pendE;let sc=0,r='o';
   batterUp=false;batBlinkT=0;state='result';resultT=55}
 function bpTake(){sfx.strike();showLbl('resLbl','TAKE','#aab',700);bpRecord('t',null,0);batterUp=false;state='result';resultT=45}
 function bpClearLbl(){}
-function drawBPBoard(){const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=WALL_T-bhgt-12;
+function drawBPBoard(){const bwid=132,bhgt=37,bx=Math.round((W-bwid)/2),by=SB_Y;
   cx.fillStyle='#0d2418';cx.fillRect(bx,by,bwid,bhgt);cx.fillStyle='#2a5a3a';cx.fillRect(bx,by,bwid,1);cx.fillRect(bx,by+bhgt-1,bwid,1);cx.fillRect(bx,by,1,bhgt);cx.fillRect(bx+bwid-1,by,1,bhgt);
   cx.font='6px "Press Start 2P",monospace';cx.textBaseline='alphabetic';cx.textAlign='center';
   cx.fillStyle='#ffd642';cx.fillText('BATTING PRACTICE',W/2,by+10);
@@ -2264,14 +2297,17 @@ function setChallenge(on){challenge=on&&chalUnlocked;try{localStorage.setItem('b
 document.getElementById('chalBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setChallenge(!challenge)});
 paintChal();
 // developer toggles (test builds only): every challenge pitch SUPER FAST, and how much faster than a heater
-if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="oldp">OLD PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span><b>CROWD</b><span data-c="slam">SLAM</span><span data-c="big">BIG</span>';   // (v446: hear the win tune of each drive)
+if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="oldp">OLD PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span><b>CROWD</b><span data-c="slam">SLAM</span><span data-c="big">BIG</span><b>FRAMES</b><span data-d="fps">METER</span><b>TARGET</b><span data-d="t1">1 RUN</span><b>MVP BOARD</b><span data-d="ledold">OLD</span><span data-d="ledoff">OFF</span>';   // (v446: hear the win tune of each drive)
   for(const id of ['titleScr','pauseScr']){const d=document.createElement('div');d.className='devP';d.innerHTML=html;document.getElementById(id).appendChild(d);
     d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const tn0=e.target.dataset.t;if(tn0){musicStop();TUNE.play(tn0);return}const cr=e.target.dataset.c;if(cr){if(cr==='big')crowdBig();else sfx.ooh(ROARS.h4);return}const k=e.target.dataset.d;if(!k)return;
-      if(k==='all')devAllSF=!devAllSF;else if(k==='odds'){newOdds=!newOdds;paintChal()}else if(k==='unl'||k==='oldp'){devOldParade=k==='oldp';devUnlockDemo();return}else SF_PLUS=+k;   /* v453: OLD PARADE plays the parade itself, with v451's crowd */
+      if(k==='all')devAllSF=!devAllSF;else if(k==='odds'){newOdds=!newOdds;paintChal()}else if(k==='unl'||k==='oldp'){devOldParade=k==='oldp';devUnlockDemo();return}else if(k==='fps'){devFps=!devFps;fpsReset(true);try{localStorage.setItem('bbDevFps',devFps?'1':'0')}catch(err){}}
+      else if(k==='t1'){dev1Run=!dev1Run;if(!bp&&state!=='title'&&state!=='gameover')target=RD(round).target;try{localStorage.setItem('bbDev1Run',dev1Run?'1':'0')}catch(err){}}   /* the game under way takes the new target at once */
+      else if(k==='ledold'||k==='ledoff'){const m=k==='ledold'?'old':'off';devLED=devLED===m?'new':m;try{localStorage.setItem('bbDevLED',devLED)}catch(err){}PARK.fresh(3);if(venue===3)fCv=PARK.field(3)}   /* v468: MVP's board as up to v461 (lettered every frame), or none at all, to compare with the new one on the phone; the field's picture is painted again without a board in it */
+      else SF_PLUS=+k;   /* v453: OLD PARADE plays the parade itself, with v451's crowd */
       try{localStorage.setItem('bbDevOdds',newOdds?'1':'0');localStorage.setItem('bbDevAllSF',devAllSF?'1':'0');localStorage.setItem('bbDevSF',''+SF_PLUS)}catch(err){}paintDev()})}
   paintDev()}
 function paintDev(){document.querySelectorAll('.devP span').forEach(el=>{const k=el.dataset.d;
-  el.classList.toggle('on',k==='all'?devAllSF:k==='odds'?newOdds:k===''+SF_PLUS)})}
+  el.classList.toggle('on',k==='all'?devAllSF:k==='odds'?newOdds:k==='fps'?devFps:k==='t1'?dev1Run:k==='ledold'?devLED==='old':k==='ledoff'?devLED==='off':k===''+SF_PLUS)})}
 // play out the end of a LEGEND win so the parade and the unlock can be seen without beating it
 function devUnlockDemo(){musicStop();hide('titleScr');setVenue(4);hide('pauseScr');paused=false;if(!challenge){chalUnlocked=false;loadModeScores();paintChal()}   // with CHALLENGE MODE on it shows that mode's parade (two choices); otherwise the first unlock
   exhibitionMode=false;round=4;nextRound=4;target=RD(4).target;runs=target;inning=MAX_INN;innOuts=3;
@@ -3792,6 +3828,12 @@ return{step,draw,win,lose,jump,place,lot,start,skip,nextTeam,team,moving,parade,
 PARK=(()=>{
 const FW=W*RS,FH=H*RS,ringYMax=POLE_Y+TRACK_W+2,R0=WALL_R+WALL_H;
 const wt=xf=>Math.round((ARC.y-Math.sqrt(R0*R0-(xf/RS-ARC.x)**2))*RS);   // fine-pixel row of the top of the wall at fine column xf
+/* v459 deepened the wall's curve: its middle came up and its ends went down as much (5 rows in v459, 3 since v460). The back yards, the lot and the picnic lawn were
+   laid out against v458's wall (WT0), so where the wall now stands higher, the things on the ground just behind it come up with it:
+   wUp(xf) <= 0 is how far, in fine px, at fine column xf. Where the wall went down they stay put and show a little more of themselves. */
+const WT0=(()=>{const S=10,R=((W/2-POLE_X)**2+S*S)/(2*S),r=R+WALL_H,cy=102+R;return xf=>(cy-Math.sqrt(r*r-(xf/RS-ARC.x)**2))*RS})();
+const wUp=xf=>Math.min(0,Math.round(wt(xf)-WT0(xf)));
+const RISE=Math.round((WT0(FW/2)-wt(FW/2))/RS);   /* how many rows the middle of the wall came up since v458 (v460: 3) */
 const TH=[
  {name:'ROOKIE',  tgt:5, hi:7, mph:58,dirt:'#c08a48',dirtDk:'#a87436',dirtLt:'#cf9c5c',wall:'#9a6a38',track:null,     inGrass:null,     line:.55,box:.12},
  {name:'VETERAN', tgt:6, hi:9, mph:71,dirt:'#d49440',dirtDk:'#ba7e30',dirtLt:'#dfa655',wall:'#1f5a3a',track:'#d49440',inGrass:'#129c1a',line:.75,box:.28},
@@ -3809,92 +3851,215 @@ const GF=[
   (x,y)=>vn(x*.13,y*.13,7)>.9?2:(Math.floor((y-WALL_B)/8)%2?1:0)];
 
 
-/* ---------- what's beyond the wall (fine pixels, 360 wide; masked to the stands area afterwards) ---------- */
+/* ---------- what's beyond the wall (fine pixels, 360 wide; masked to the stands area afterwards) ----------
+   v458: the wall stands 22 field px lower than it did and the boards stayed where they were on the screen, so each park has 44 more
+   rows of this, most of them between its board and its wall. David: "the crowd and scoreboard has become a very fun part of the game and
+   I want to emphasize that, so we can add some more size and details to the crowd and have the scoreboard be proportionally less of that
+   area". The people nearest the wall are little figures now (person, below) where they were specks, and each park has more going on.
+   The boards' legs are painted here too (they were drawn with the boards, 16 px long): whoever is in front of them stands in front. */
 const puff=(g,x,y)=>{for(const [dx,dy,r] of [[0,0,6],[9,-3,8],[20,0,7],[11,2,7]])dsc(g,'#ffffff',x+dx,y+dy,r);fr(g,'#e3f1fc',x-4,y+7,30,2)};
+/* When the crowd roars it throws its arms up (v458; my addition to "more ... details to the crowd"): LIVE[v] lists the people of park v who
+   were painted with their arms down (fine px x, y, skin, shirt, big), filled as the park is painted; cheer(L) is called by the game's own
+   crowd sounds (crowdOoh, crowdBig) with the sound's length, and fx draws the arms for as long as it lasts. No dice are thrown for it. */
+const LIVE=[[],[],[],[],[]];let CUR=null,cheerEnd=0,cheerLen=1;
+function cheer(L){cheerLen=Math.max(.6,L);cheerEnd=performance.now()/1000+cheerLen}
+const HAIRC=['#2a1c14','#4a3020','#8a5a2a','#d8b860','#16161c','#b9b9b9','#a8482a'],CAPC=['#c8322a','#23408a','#1c2a5a','#f6f1e4','#2c6b4f','#22252e'],
+  WAVEC=['#c8322a','#ffd642','#23408a','#f6f1e4'],SIGNS=['GO!','#1','WIN','HI','WOW'],EYE='#22252e';
+/* one spectator from the waist up. x: his left, y: the row under him. o.sh shirt, o.sk skin, o.cap (a colour) or o.hair; o.act: 1 both
+   arms up, 2 one arm up, 3 waving a pennant (o.c), 4 a foam finger (o.c), 5 a sign held overhead (o.txt). o.big: 7 wide and 11 tall, with
+   eyes (the rows nearest the wall); otherwise 5 wide and 8 tall */
+function person(g,x,y,o){const sh=o.sh,sk=o.sk,top=o.cap||o.hair,a=o.act|0;if(CUR&&!a)CUR.push([x,y,sk,sh,o.big?1:0]);   /* (he can throw his arms up when the crowd roars: see fx) */
+  if(o.big){fr(g,sh,x,y-5,7,5);fr(g,dk(sh,.2),x+6,y-5,1,5);fr(g,sk,x+1,y-9,5,4);fr(g,top,x+1,y-11,5,2);
+    if(o.cap)fr(g,dk(o.cap,.3),x+1,y-9,5,1);else{fr(g,top,x+1,y-9,1,1);fr(g,top,x+5,y-9,1,1)}
+    fr(g,EYE,x+2,y-7,1,1);fr(g,EYE,x+4,y-7,1,1);
+    if(a===1||a===5){fr(g,sk,x-1,y-12,1,7);fr(g,sk,x+7,y-12,1,7);fr(g,sh,x-1,y-6,1,2);fr(g,sh,x+7,y-6,1,2)}
+    else if(a>=2){fr(g,sk,x+7,y-11,1,6);fr(g,sh,x+7,y-6,1,2)}
+    if(a===3){fr(g,'#e9dfc4',x+7,y-17,1,6);fr(g,o.c,x+8,y-17,6,1);fr(g,o.c,x+8,y-16,4,1);fr(g,o.c,x+8,y-15,2,1)}
+    if(a===4){fr(g,o.c,x+6,y-15,3,4);fr(g,o.c,x+7,y-18,1,3)}
+    if(a===5){const w=txt3w(o.txt)+4,x0=x+3-(w>>1);fr(g,EYE,x0-1,y-22,w+2,10);fr(g,'#f6f1e4',x0,y-21,w,8);txt3(g,o.c===WAVEC[3]?WAVEC[2]:o.c,o.txt,x0+2,y-20,1)}}
+  else{fr(g,sh,x,y-4,5,4);fr(g,dk(sh,.2),x+4,y-4,1,4);fr(g,sk,x+1,y-7,3,3);fr(g,top,x+1,y-8,3,1);
+    if(o.cap)fr(g,dk(o.cap,.3),x+1,y-7,3,1);
+    if(a===1||a===5){fr(g,sk,x-1,y-9,1,5);fr(g,sk,x+5,y-9,1,5);fr(g,sh,x-1,y-5,1,2);fr(g,sh,x+5,y-5,1,2)}
+    else if(a>=2){fr(g,sk,x+5,y-9,1,5);fr(g,sh,x+5,y-5,1,2)}
+    if(a===3){fr(g,'#e9dfc4',x+5,y-13,1,4);fr(g,o.c,x+6,y-13,5,1);fr(g,o.c,x+6,y-12,3,1);fr(g,o.c,x+6,y-11,1,1)}
+    if(a===4){fr(g,o.c,x+4,y-12,3,3);fr(g,o.c,x+5,y-14,1,2)}
+    if(a===5){const w=txt3w(o.txt)+4,x0=x+2-(w>>1);fr(g,EYE,x0-1,y-18,w+2,9);fr(g,'#f6f1e4',x0,y-17,w,7);txt3(g,o.c===WAVEC[3]?WAVEC[2]:o.c,o.txt,x0+2,y-16,1)}}}
+// who has seat i of a row: nobody (one seat in o.gap), or a shirt from pal, a skin, a cap or hair, and now and then something to do
+function fanAt(i,row,sd,pal,o={}){if(h2(i,row,sd)<(o.gap??.07))return null;const r=h2(i,row,sd+1),q=o.busy??1;
+  return{sh:pick(pal,i,row,sd+3),sk:pick(SKN,i,row,sd+4),cap:h2(i,row,sd+2)<.45?pick(o.caps||CAPC,i,row,sd+5):null,hair:pick(HAIRC,i,row,sd+6),
+    act:r<.07*q?1:r<.11*q?2:r<.135*q?3:r<.16*q?4:r<.17*q?5:0,c:pick(o.wave||WAVEC,i,row,sd+7),txt:pick(SIGNS,i,row,sd+8)}}
+// a row of them along the wall's curve, d field px beyond its top, from arc a0 to a1 (field px along the wall, 0 in centre field), a seat every `pitch`
+function arcRow(g,d,a0,a1,pitch,row,sd,pal,o={}){const R=R0+d;for(let a=a0+(row&1?pitch/2:0),i=0;a<=a1;a+=pitch,i++){if(o.skip&&o.skip(a))continue;
+    const th=a/R0,x=Math.round((ARC.x+R*Math.sin(th))*RS),y=Math.round((ARC.y-R*Math.cos(th))*RS),f=fanAt(i+Math.round(a0)+500,row,sd,pal,o);
+    if(f){f.big=o.big;if(o.dim)for(const k of ['sh','sk','cap','hair','c'])if(f[k])f[k]=dk(f[k],o.dim);person(g,x-(o.big?3:2),y,f)}}}
+// the two legs of a board, from under it down behind the wall
+const legs=(g,xs,w,c,up=-4)=>{for(const x of xs){const h=wt(x+(w>>1))-104-up;fr(g,c,x,104,w,h);fr(g,lt(c,.22),x,104,1,h);fr(g,dk(c,.28),x+w-2,104,2,h)}};   // up: how far above the top of the wall they end
 const BACK=[
- g=>{ // ROOKIE: back yards behind a board fence
-  fr(g,'#6fb9f0',0,0,FW,30);fr(g,'#8fcdf8',0,30,FW,34);fr(g,'#b5e0fb',0,64,FW,140);chk(g,'#8fcdf8',0,28,FW,2);chk(g,'#b5e0fb',0,62,FW,2);
+ g=>{ // ROOKIE: the back yards behind a board fence, and every kid on the block
+  fr(g,'#6fb9f0',0,0,FW,40);fr(g,'#8fcdf8',0,40,FW,44);fr(g,'#b5e0fb',0,84,FW,170);chk(g,'#8fcdf8',0,38,FW,2);chk(g,'#b5e0fb',0,82,FW,2);
   puff(g,70,16);puff(g,236,12);
-  for(const [x,s2,v] of [[64,16,1],[98,15,0],[140,17,2],[186,15,1],[226,16,0],[268,15,2],[300,17,1]])tree(g,x,160,s2,v);
-  tree(g,36,162,22,2);tree(g,344,162,23,0);
-  house(g,-26,160,64,52,'#efe3c8','#9a3f2e',{chimney:1});house(g,312,160,64,46,'#a9c4d6','#5b4a44',{side:1});
-  fr(g,'#5a3d22',327,6,3,150);fr(g,'#3f2a18',329,6,1,150);fr(g,'#5a3d22',317,11,23,2);
-  for(const [x0,y0,x1,y1] of [[0,24,319,12],[0,30,337,12],[339,12,360,15],[321,12,360,19]]){let px=x0,py=y0;for(let i=1;i<=20;i++){const q=i/20,x=Math.round(lerp(x0,x1,q)),y=Math.round(lerp(y0,y1,q)+(x1-x0)*.035*4*q*(1-q));lin(g,'#2b2f3d',px,py,x,y);px=x;py=y}}
+  const KS=['#c8322a','#23408a','#f2c21a','#3a8a5a','#e86a9a','#f6f1e4','#e8a030','#2a9ac8'];
+  // the far hedge, and the houses whose yards back onto the lot
+  for(const [x,s2,v] of [[52,14,1],[122,13,0],[204,14,2],[232,13,1],[262,15,0],[300,13,2]])tree(g,x,192,s2,v);
+  house(g,-30,208,70,76,'#efe3c8','#9a3f2e',{chimney:1});house(g,312,208,70,68,'#a9c4d6','#5b4a44',{side:1});
+  fr(g,SKN[1],22,158,5,5);fr(g,'#4a3020',22,157,5,2);fr(g,EYE,23,160,1,1);fr(g,EYE,25,160,1,1);fr(g,KS[1],21,163,7,5);            // somebody at the upstairs window
+  g.save();g.translate(0,wUp(161));house(g,134,208,54,72,'#e9d9a8','#6a4a3a');fr(g,SKN[2],173,160,5,5);fr(g,'#16161c',173,159,5,2);fr(g,EYE,174,162,1,1);fr(g,EYE,176,162,1,1);fr(g,KS[4],172,165,7,5);g.restore();   /* the middle house comes up with the wall (v459) */
+  // the power line, and three birds on it
+  fr(g,'#5a3d22',327,6,3,200);fr(g,'#3f2a18',329,6,1,200);fr(g,'#5a3d22',317,11,23,2);
+  {const W1=[[0,24,319,12],[0,30,337,12],[339,12,360,15],[321,12,360,19]],wy=(k,x)=>{const [x0,y0,x1,y1]=W1[k],q=(x-x0)/(x1-x0);return Math.round(lerp(y0,y1,q)+(x1-x0)*.035*4*q*(1-q))};
+   for(const [x0,y0,x1,y1] of W1){let px=x0,py=y0;for(let i=1;i<=20;i++){const q=i/20,x=Math.round(lerp(x0,x1,q)),y=Math.round(lerp(y0,y1,q)+(x1-x0)*.035*4*q*(1-q));lin(g,'#2b2f3d',px,py,x,y);px=x;py=y}}
+   for(const x of [246,256,274]){const y=wy(0,x);fr(g,'#2b2f3d',x,y-3,3,3);fr(g,'#2b2f3d',x+1,y-5,2,2);fr(g,'#e8a030',x+3,y-4,1,1)}}
+  // the big oak with the tree house in it, a tree by the corner
+  tree(g,86,210,30,0);tree(g,286,210,24,2);tree(g,222,210,20,1);tree(g,44,210,18,2);
+  g.save();g.translate(0,wUp(86));   /* the tree house is in the oak, just behind the fence: it comes up with the wall (v459) */
+  fr(g,'#8d6030',70,157,32,3);fr(g,'#6b4526',70,160,32,1);fr(g,'#b98548',73,143,24,14);for(const x of [79,85,91])fr(g,'#a67a40',x,143,1,14);pol(g,'#7a4a3a',[[69,143],[85,133],[101,143]]);fr(g,'#5a3628',69,143,33,1);
+  fr(g,'#3a2a1c',77,147,6,6);fr(g,SKN[0],78,149,4,4);fr(g,EYE,79,150,1,1);fr(g,EYE,81,150,1,1);fr(g,'#3a2a1c',88,148,6,9);
+  fr(g,'#9aa0b0',85,124,1,10);fr(g,'#c8322a',86,124,6,2);fr(g,'#c8322a',86,126,4,1);fr(g,'#c8322a',86,127,2,1);
+  for(const x of [74,78]){fr(g,'#c9b08a',x,161,1,40)}for(let y=165;y<200;y+=5)fr(g,'#c9b08a',74,y,5,1);                         // its rope ladder
+  fr(g,KS[0],102,150,5,7);fr(g,SKN[2],102,145,5,5);fr(g,'#23408a',102,144,5,2);fr(g,'#23408a',107,145,2,1);fr(g,EYE,103,147,1,1);fr(g,EYE,105,147,1,1);fr(g,'#2b2f3d',102,157,2,6);fr(g,'#2b2f3d',105,157,2,6);   // a kid on its edge, legs over
+  g.restore();
+  // washing on a line between the house and a post
+  g.save();g.translate(0,wUp(219));   /* the line and its post stand just behind the fence: they come up with the wall (v459) */
+  fr(g,'#8d6030',250,144,2,66);{let px=188,py=148;for(let i=1;i<=16;i++){const q=i/16,x=Math.round(lerp(188,250,q)),y=Math.round(lerp(148,146,q)+5*4*q*(1-q));lin(g,'#f6f1e4',px,py,x,y);px=x;py=y}
+   for(const [q,w,h,c] of [[.14,7,9,'#c8322a'],[.3,5,10,'#23408a'],[.52,13,11,'#f6f1e4'],[.74,7,9,'#f2c21a'],[.88,3,5,'#f6f1e4']]){const x=Math.round(lerp(188,250,q)),y=Math.round(lerp(148,146,q)+5*4*q*(1-q));fr(g,c,x-(w>>1),y+1,w,h);fr(g,dk(c,.16),x-(w>>1),y+h,w,1);fr(g,'#8d6030',x,y,1,2)}}
+  g.restore();
+  legs(g,[92,262],6,'#7d5226');
+  // kids behind the fence: t 0 just his eyes over it, 1 head and shoulders
+  const peek=(x,t,sh,cap,sk)=>{const y=wt(x+3)-(t?12:4);if(t)fr(g,sh,x-2,y,11,9);fr(g,sk,x,y-7,7,7);fr(g,cap,x,y-10,7,3);fr(g,cap,x+(t?7:-2),y-8,2,1);fr(g,EYE,x+1,y-5,1,2);fr(g,EYE,x+5,y-5,1,2);if(t)fr(g,'#9a4a3a',x+3,y-2,2,1)};
+  const dog=x=>{const y=wt(x+4)-4;fr(g,'#b9824a',x,y-9,8,9);fr(g,'#8a5a2a',x-1,y-10,2,5);fr(g,'#8a5a2a',x+7,y-10,2,5);fr(g,'#f6f1e4',x+2,y-5,4,5);fr(g,EYE,x+1,y-7,1,1);fr(g,EYE,x+6,y-7,1,1);fr(g,EYE,x+3,y-5,2,1);fr(g,'#e86a7a',x+3,y-3,2,2)};
+  peek(18,0,KS[5],'#c8322a',SKN[0]);peek(110,1,KS[0],'#23408a',SKN[1]);dog(130);peek(152,0,KS[2],'#22252e',SKN[3]);peek(206,1,KS[3],'#c8322a',SKN[0]);peek(228,0,KS[6],'#23408a',SKN[2]);
+  peek(246,1,KS[4],'#f6f1e4',SKN[1]);peek(300,0,KS[1],'#2c6b4f',SKN[0]);peek(332,1,KS[2],'#22252e',SKN[2]);peek(348,0,KS[0],'#23408a',SKN[1]);peek(36,1,KS[7],'#22252e',SKN[3]);
   // the tops of the planks, each sawn a different height
   for(let xf=0;xf<FW;xf++){const i=Math.floor(xf/6);if(i===41)continue;const top=wt(xf)-3-Math.floor(h2(i,7,1)*5);
     fr(g,xf%6===5?'#7d5226':['#b98548','#ad7a40','#c49258'][i%3],xf,top,1,wt(xf)-top+4);if(xf%6!==5)fr(g,'#d7ab70',xf,top,1,1)}
-  // kids watching over the fence
-  for(const [x,c] of [[92,'#c8322a'],[216,'#23408a'],[292,'#f2c21a']]){const y=wt(x)-9;fr(g,SKN[x&3],x,y-4,5,5);fr(g,c,x,y-6,5,2);fr(g,c,x+5,y-5,2,1);fr(g,'#22252e',x+1,y-2,1,1);fr(g,'#22252e',x+3,y-2,1,1);
-    fr(g,SKN[x&3],x-3,y+1,2,2);fr(g,SKN[x&3],x+6,y+1,2,2)}},
- g=>{ // VETERAN: the school on one side, a set of bleachers on the other, the parking lot between
-  fr(g,'#79b9ea',0,0,FW,28);fr(g,'#9ccdf2',0,28,FW,34);fr(g,'#c5e2f4',0,62,FW,140);chk(g,'#9ccdf2',0,26,FW,2);chk(g,'#c5e2f4',0,60,FW,2);
-  puff(g,150,14);
-  for(const [x,s2,v] of [[58,15,1],[92,13,0],[250,14,2],[284,15,1]])tree(g,x,152,s2,v);pine(g,74,150,36);pine(g,232,150,40);pine(g,268,150,32);pine(g,300,152,38);
-  fr(g,'#8e949e',104,118,150,40);                                                      // parking lot
-  fr(g,'#141830',145,109,48,19);fr(g,'#f2c21a',146,110,46,16);fr(g,'#141830',146,119,46,1);for(let i=0;i<5;i++)fr(g,'#9fc6dc',149+i*8,112,6,5);fr(g,'#f2c21a',192,116,7,10);
-  fr(g,'#c8322a',112,118,22,9);fr(g,'#9fc6dc',116,115,12,4);fr(g,'#f6f1e4',206,118,22,9);fr(g,'#9fc6dc',210,115,12,4);
-  // school building
-  fr(g,'#b0553e',-2,58,50,110);for(let y=62;y<160;y+=4)fr(g,'#8f4230',-2,y,50,1);fr(g,'#f0e6cc',-2,54,52,5);fr(g,'#c0b8a0',-2,59,52,1);
-  for(let r=0;r<4;r++)for(const x of [5,25])win(g,x,66+r*22,11,13);fr(g,'#c9ced6',41,22,2,33);
-  // bleachers and a light pole
-  for(let k=0;k<7;k++){const y=154-k*8,x0=316+k*2;fr(g,'#8e98a3',x0,y-8,60,8);fr(g,'#c9d1d9',x0,y-8,60,2);for(let x=x0+2;x<FW;x+=5)if(h2(x,k,21)<.8)fan(g,x,y-1,pick(FANC,x,k,22),pick(SKN,x,k,23))}
-  fr(g,'#5a6470',314,96,2,60);fr(g,'#7d8794',350,10,3,90);fr(g,'#3c404b',342,3,18,10);for(let k=0;k<4;k++){fr(g,'#f3ecd0',343+k*4,4,3,3);fr(g,'#f3ecd0',343+k*4,8,3,3)}
+  // hands on the fence, paws on the fence, and the ones who climbed up to sit on it
+  for(const x of [18,152,228,300,348]){const y=wt(x+3)-9;fr(g,SKN[x&3],x-3,y,2,2);fr(g,SKN[x&3],x+8,y,2,2)}
+  fr(g,'#b9824a',127,wt(134)-9,3,2);fr(g,'#b9824a',138,wt(134)-9,3,2);
+  const sit=(x,sh,cap,sk,o={})=>{const y=wt(x+4)-6;fr(g,'#2b2f3d',x,y-3,9,4);fr(g,sh,x,y-12,9,9);fr(g,dk(sh,.2),x+8,y-12,1,9);fr(g,sk,x+1,y-19,7,7);fr(g,cap,x+1,y-22,7,3);fr(g,cap,x+8,y-20,2,1);
+    fr(g,EYE,x+2,y-17,1,2);fr(g,EYE,x+6,y-17,1,2);fr(g,'#9a4a3a',x+4,y-14,2,1);
+    if(o.wave){fr(g,sk,x+9,y-18,2,7);fr(g,sk,x+9,y-20,3,2)}
+    else if(o.glove){fr(g,sk,x-2,y-17,2,7);fr(g,'#8a5a2a',x-4,y-23,6,6);fr(g,'#6a4420',x-3,y-22,3,3)}
+    else{fr(g,sk,x-1,y-6,2,3);fr(g,sk,x+8,y-6,2,3)}};
+  sit(56,KS[1],'#c8322a',SKN[1],{wave:1});sit(176,KS[0],'#22252e',SKN[0],{glove:1});sit(274,KS[3],'#f6f1e4',SKN[2]);sit(318,KS[6],'#c8322a',SKN[0],{wave:1})},
+ g=>{ // VETERAN: the school, the lot behind the fence, the bleachers, and the parents who came
+  fr(g,'#79b9ea',0,0,FW,38);fr(g,'#9ccdf2',0,38,FW,44);fr(g,'#c5e2f4',0,82,FW,170);chk(g,'#9ccdf2',0,36,FW,2);chk(g,'#c5e2f4',0,80,FW,2);
+  puff(g,150,14);puff(g,286,52);
+  for(const [x,s2,v] of [[64,16,1],[100,14,0],[232,16,2],[262,17,1]])tree(g,x,200,s2,v);pine(g,84,198,42);pine(g,116,198,34);pine(g,244,198,46);pine(g,276,198,36);pine(g,298,200,42);
+  fr(g,'#8e949e',50,170,262,48);
+  // GO HAWKS! between two posts (since v459 half as many rows higher as the wall's middle came up, to leave the bus some sky)
+  g.save();g.translate(0,-Math.round(RISE/2));
+  {const s='GO HAWKS!',w=txt3w(s,2),x0=180-(w>>1);for(const x of [x0-8,x0+w+6]){fr(g,'#7d8794',x,112,2,70);fr(g,'#5a6470',x+1,112,1,70)}
+   fr(g,'#f6f1e4',x0-6,114,w+12,17);fr(g,'#23408a',x0-6,114,w+12,2);fr(g,'#23408a',x0-6,129,w+12,2);txt3(g,'#23408a',s,x0,117,2);fr(g,'#f2c21a',x0-6,131,w+12,1)}
+  g.restore();
+  // the bus, a couple of cars, a pickup with two kids in the back   (each comes up with the wall where v459 raised it: wUp)
+  {const x0=146,y0=147+wUp(181);fr(g,'#141830',x0-1,y0-1,62,28);fr(g,'#f2c21a',x0,y0,60,26);fr(g,'#ffe066',x0,y0,60,2);for(let i=0;i<6;i++){fr(g,'#9fc6dc',x0+4+i*9,y0+5,7,7);fr(g,'#c9e2f0',x0+4+i*9,y0+5,7,1)}
+   fr(g,'#141830',x0,y0+15,60,1);fr(g,'#141830',x0,y0+19,60,1);fr(g,'#141830',x0+60,y0+9,11,18);fr(g,'#f2c21a',x0+60,y0+10,10,16);fr(g,'#9fc6dc',x0+61,y0+11,5,6)}
+  g.save();g.translate(0,wUp(109));fr(g,'#c8322a',94,160,30,14);fr(g,'#c8322a',100,152,18,9);fr(g,'#e0584a',100,152,18,1);fr(g,'#9fc6dc',102,154,6,5);fr(g,'#9fc6dc',110,154,6,5);g.restore();
+  g.save();g.translate(0,wUp(243));fr(g,'#f6f1e4',228,160,30,14);fr(g,'#f6f1e4',234,152,18,9);fr(g,'#9fc6dc',236,154,6,5);fr(g,'#9fc6dc',244,154,6,5);fr(g,'#c9c2b0',228,166,30,1);g.restore();
+  g.save();g.translate(0,wUp(288));fr(g,'#2a5a9a',268,150,16,24);fr(g,'#9fc6dc',270,153,11,7);fr(g,'#2a5a9a',284,162,24,12);fr(g,'#3a6eb4',268,150,16,1);fr(g,'#1f4474',284,162,24,1);g.restore();
+  person(g,287,162+wUp(288),{sh:'#f2c21a',sk:SKN[1],cap:'#23408a',act:1});person(g,297,162+wUp(288),{sh:'#f6f1e4',sk:SKN[3],hair:HAIRC[0],act:0});
+  // the school, its cupola and its flag (the flag itself is drawn by fx)
+  fr(g,'#b0553e',-2,100,52,118);for(let y=104;y<216;y+=4)fr(g,'#8f4230',-2,y,52,1);fr(g,'#f0e6cc',-2,96,54,5);fr(g,'#c0b8a0',-2,101,54,1);
+  for(let r=0;r<4;r++)for(const x of [5,25])win(g,x,108+r*22,11,13);
+  fr(g,'#f0e6cc',14,80,18,16);fr(g,'#c0b8a0',14,94,18,2);for(let y=83;y<93;y+=3)fr(g,'#8f8a7a',17,y,12,1);pol(g,'#5a6470',[[11,80],[23,68],[35,80]]);fr(g,'#c9ced6',22,42,2,27);
+  // the bleachers and the light pole behind them
+  fr(g,'#7d8794',350,10,3,150);fr(g,'#3c404b',342,3,18,10);for(let k=0;k<4;k++){fr(g,'#f3ecd0',343+k*4,4,3,3);fr(g,'#f3ecd0',343+k*4,8,3,3)}
+  for(let k=5;k>=0;k--){const y=194-k*9,x0=304+k*3;fr(g,'#8e98a3',x0,y-9,60,9);fr(g,'#c9d1d9',x0,y-9,60,2);fr(g,'#6f7a86',x0,y-7,60,1)}
+  lin(g,'#5a6470',303,194,319,140);lin(g,'#5a6470',304,194,320,140);
+  for(let k=5;k>=0;k--){const y=194-k*9,x0=304+k*3;for(let x=x0+4,i=0;x<FW;x+=7,i++){const f=fanAt(i,k,21,FANC);if(f)person(g,x,y-7,f)}}
+  legs(g,[92,262],6,'#7d8794');
+  // along the fence: parents on their feet, a few in lawn chairs, kids
+  {let i=0;for(const x of [54,64,78,108,118,132,150,160,174,186,204,214,226,244,280,290,300]){const f=fanAt(i++,3,25,FANC,{gap:0,busy:1.6}),ch=h2(x,2,26);
+    if(ch<.22){f.big=0;person(g,x+1,wt(x+3)-2,f)}else{f.big=1;person(g,x,wt(x+3)-(ch<.5?2:4),f)}}}
   // chain-link behind the padding, yellow cap on top
   for(let xf=0;xf<FW;xf++){const y=wt(xf);fr(g,'#f2d21f',xf,y-3,1,5);if(xf%28===3)fr(g,'#7d8794',xf,y-7,2,5)}},
  g=>{ // ALL-STAR: a minor-league park at golden hour: brick, green seats under green roofs, a picnic lawn in centre field, light towers
-  [['#4f6fc4',14],['#7f86cc',12],['#b890c0',10],['#e79a8c',10],['#f6b070',12],['#ffd28a',ringYMax*RS]].reduce((y,[c,h])=>{fr(g,c,0,y,FW,h);if(y)chk(g,c,0,y-2,FW,2);return y+h},0);
+  [['#4f6fc4',18],['#7f86cc',16],['#b890c0',14],['#e79a8c',14],['#f6b070',16],['#ffd28a',ringYMax*RS]].reduce((y,[c,h])=>{fr(g,c,0,y,FW,h);if(y)chk(g,c,0,y-2,FW,2);return y+h},0);
   const BRK='#b5573a',BRd='#8f4230',CRM='#f0e2c0',GRN='#2c6b4f',CW=['#c8322a','#23408a','#f6f1e4','#e8a030','#3a8a5a','#f2c21a','#2a9ac8','#e86a9a','#f6f1e4','#ffffff'];
+  const aisle=(a,w)=>Math.abs(((a+400)%32)-16)<w;
   for(let py=0;py<ringYMax*RS;py++)for(let px=0;px<FW;px++){const x=(px+.5)/RS,y=(py+.5)/RS,dx=x-ARC.x,dy=y-ARC.y,dd=Math.hypot(dx,dy)-R0;if(dd<0)continue;
-    const arc=Math.atan2(dx,-dy)*R0,a=arc+400,lawn=Math.abs(arc)<52;let c;
+    const arc=Math.atan2(dx,-dy)*R0,a=arc+400,lawn=Math.abs(arc)<56;let c;
     if(dd<1)c=CRM;                                                                                            // coping along the top of the wall
     else if(dd<4.5){const dF=(dd-1)*RS,row=Math.floor(dF/3.5);c=dF%3.5<1||Math.floor(a*RS+row*4)%8===0?BRd:BRK}   // a course of brick behind it
     else if(dd<5.5)c=CRM;
-    else if(lawn){if(dd>27)continue;if(dd>24)c=dd>25.5?CRM:BRK;                                               // the lawn: blankets, a few umbrellas, a low wall at the back
-      else{const d0=dd-5.5,row=Math.floor(d0/3),w=(d0%3)*RS,sa=a/3.5+(row&1)*.5,cell=Math.floor(sa),u=(sa-cell)*7,r=h2(cell,row,81);
-        c=row&1?'#3aa63a':'#34a036';
-        if(r<.36){if(w<1.2)c=pick(['#e9dfc4','#c8322a','#2a9ac8','#f2c21a'],cell,row,83);else if(u>1.5&&u<4.6){if(w<3.6)c=pick(CW,cell,row,82);else if(w<5.4)c=pick(SKN,cell,row,84)}}
-        else if(r>.96&&w>1&&w<4.6&&Math.abs(u-3.5)<(4.6-w)*1.1)c=(Math.floor(u)&1)?'#f6f1e4':'#c8322a'}}
-    else{if(dd>31)continue;if(dd>29.5)c=CRM;                                                                  // seats down both lines
-      else{const d0=dd-5.5,row=Math.floor(d0/2.5),w=(d0%2.5)*RS,sa=a/2.3+(row&1)*.5,seat=Math.floor(sa),u=sa-seat;
-        if(Math.abs((a%32)-16)<1.3)c=row&1?'#c9c2b0':'#b4ac98';                                               // steps
+    else if(lawn){if(dd>44)continue;if(dd>40.5)c=dd>42.5?CRM:BRK;                                             // the lawn, mown in bands, a low wall at the back
+      else c=Math.floor((dd-5.5)/5)&1?'#3aa63a':'#34a036'}
+    else{if(dd>49.5)continue;if(dd>48)c=CRM;
+      else if(dd<22.5){const d0=dd-5.5,row=Math.floor(d0/4.25),w=d0%4.25;                                      // the four rows nearest the wall (their people are drawn below)
+        c=aisle(arc,1.5)?(row&1?'#c9c2b0':'#b4ac98'):w<.8?dk(GRN,.24):w>3.5?lt(GRN,.14):GRN}
+      else if(dd<25)c=dd<23?'#a39d8c':dd>24.4?'#8f8a7a':'#c9c2b0';                                            // a walkway, and the rail behind it
+      else{const d0=dd-25,row=Math.floor(d0/2.5),w=(d0%2.5)*RS,sa=a/2.3+(row&1)*.5,seat=Math.floor(sa),u=sa-seat;   // the seats behind, as far as the roof
+        if(aisle(arc,1.3))c=row&1?'#c9c2b0':'#b4ac98';
         else if(u<.72&&h2(seat,row,85)<.9)c=w<2.4?pick(CW,seat,row,86):w<4?pick(SKN,seat,row,87):GRN;
         else c=u<.72&&w<3.2?'#3a8a68':GRN;
-        if(dd>19)c=dk(c,.26)}}                                                                                 // the back rows sit in the roof's shade
+        if(dd>38)c=dk(c,.26)}}                                                                                 // the back rows sit in the roof's shade
     g.fillStyle=c;g.fillRect(px,py,1,1)}
-  for(const s of [0,1]){const X=x=>s?FW-1-x:x,rt=xf=>wt(X(xf))-88;
+  legs(g,[88,264],8,GRN,11);
+  // the picnic lawn: blankets with people on them, umbrellas, a hot-dog man, the mascot, kids at the rail with their gloves
+  /* where a thing d rows out on the lawn stands. v459 made the lawn shallower in the middle (RISE rows), so the lawn closes up: a thing h px tall
+     that reached up to the bottom of the board's frame still does, one at the wall is still there, and those between keep their places in
+     proportion. The kids at the rail (no h) just stay at the rail. */
+  const FB=(SB_Y+39)*RS,ly=(x,d,h)=>{const w0=Math.round(WT0(x)),w1=wt(x),y0=w0-Math.round(d*RS);if(h===undefined)return w1-Math.round(d*RS);
+    const a=FB+h;return Math.round(a+(y0-a)*(w1-a)/(w0-a))};
+  for(const [x,d,c1,n] of [[110,29,'#c8322a',3],[150,25,'#2a6ac8',2],[204,30,'#f2c21a',3],[238,24,'#c8322a',2],[124,16,'#f6f1e4',2],[184,18,'#3a8a5a',3],[226,14,'#e86a9a',2]]){
+    const y=ly(x,d,8),w=n*7+3;fr(g,c1,x,y,w,5);chk(g,c1==='#f6f1e4'?'#2a9ac8':'#f6f1e4',x,y,w,5);fr(g,dk(c1,.3),x,y+5,w,1);
+    for(let k=0;k<n;k++){const f=fanAt(x+k,Math.round(d),91,CW,{gap:0});if(f.act===5)f.act=1;person(g,x+1+k*7,y+2,f)}}
+  for(const [x,d,c] of [[142,19,'#c8322a'],[214,21,'#23408a'],[100,13,'#f2c21a']]){const y=ly(x,d,19);fr(g,'#6b4526',x,y-13,1,13);
+    for(let k=-7;k<=7;k++){const hh=Math.max(1,Math.round(6*Math.sqrt(1-(k/7.6)**2)));fr(g,Math.floor((k+9)/3)&1?'#f6f1e4':c,x+k,y-13-hh,1,hh)}fr(g,dk(c,.35),x-7,y-13,15,1);
+    const f=fanAt(x,7,93,CW,{gap:0});f.act=0;person(g,x+3,y+1,f)}
+  {const x=162,y=ly(162,10,15);kid(g,x,y,'#f6f1e4','#c8322a');fr(g,'#8a5a2a',x-5,y-9,11,1);fr(g,'#e8a030',x-5,y-8,11,3);fr(g,'#c8322a',x-4,y-7,2,1);fr(g,'#c8322a',x,y-7,2,1);fr(g,'#c8322a',x+4,y-7,2,1)}
+  {const x=258,y=ly(258,13,28);   /* the mascot: a big yellow bird in the home shirt, one wing in the air */
+   fr(g,'#c8322a',x-3,y-27,3,4);fr(g,'#c8322a',x,y-28,3,5);fr(g,'#f2c21a',x-5,y-23,11,11);fr(g,'#ffe066',x-4,y-22,4,2);fr(g,'#ffffff',x-4,y-20,4,4);fr(g,'#ffffff',x+1,y-20,4,4);fr(g,EYE,x-2,y-19,1,2);fr(g,EYE,x+2,y-19,1,2);
+   fr(g,'#e8762a',x-2,y-16,5,3);fr(g,'#c8322a',x-6,y-12,13,8);fr(g,'#f6f1e4',x-1,y-11,3,4);fr(g,'#f2c21a',x-9,y-19,3,8);fr(g,'#f2c21a',x+7,y-12,3,6);fr(g,'#f2c21a',x-4,y-4,3,2);fr(g,'#f2c21a',x+2,y-4,3,2);fr(g,'#e8762a',x-5,y-2,4,2);fr(g,'#e8762a',x+2,y-2,4,2)}
+  for(const [x,sh,cp,o] of [[118,'#c8322a','#1c2a5a',{glove:1}],[140,'#f6f1e4','#c8322a',{up:1}],[176,'#23408a','#23408a',{glove:1,left:1}],[198,'#f2c21a','#22252e',{glove:1}],[222,'#3a8a5a','#f6f1e4',{up:1}],[244,'#e86a9a','#23408a',{glove:1,left:1}]])kid(g,x,ly(x,5.5)+1,sh,cp,o);
+  // the people in the four rows nearest the wall, and a few on the walkway
+  arcRow(g,22.9,-92,-58,11,0,70,CW,{gap:.45,busy:0});arcRow(g,22.9,60,92,11,1,71,CW,{gap:.45,busy:0});
+  for(let r=3;r>=0;r--)for(const [a0,a1] of [[-92,-58],[59,92]])arcRow(g,5.5+4.25*r+.5,a0,a1,r?3.6:5,r,72+r,CW,{big:!r,skip:a=>aisle(a,r?2.4:3.2)});
+  for(const s of [0,1]){const X=x=>s?FW-1-x:x,rt=xf=>wt(X(xf))-126;
     // light tower behind the roof
     for(let y=22;y<rt(20)+2;y++){fr(g,'#7d8794',X(20),y,1,1);fr(g,'#7d8794',X(21),y,1,1);if(y%6<2)fr(g,'#5a6470',X(20+(y%12<6?0:1)),y,1,1)}
     fr(g,'#3c404b',Math.min(X(2),X(39)),4,38,17);for(let r=0;r<3;r++)for(let k=0;k<6;k++)fr(g,'#fffbe6',Math.min(X(4+k*6),X(8+k*6)),6+r*5,5,3);glow(g,X(20),12,28,'#fff3c0',.8);
     // the roof, its cream fascia, and the posts that hold it up
     for(let xf=0;xf<76;xf++){const y=rt(xf);fr(g,GRN,X(xf),y,1,8);fr(g,lt(GRN,.28),X(xf),y,1,1);if(xf%12===6)fr(g,dk(GRN,.25),X(xf),y+1,1,7);fr(g,CRM,X(xf),y+8,1,2);fr(g,dk(CRM,.25),X(xf),y+10,1,1);
-      if(xf%24===4||xf%24===5)fr(g,CRM,X(xf),y+11,1,16)}
+      if(xf%24===4||xf%24===5)fr(g,CRM,X(xf),y+11,1,17)}
     for(const fx of [12,56]){fr(g,'#c9ced6',X(fx),rt(fx)-10,1,10)}}},
  g=>{ // MVP: two decks under the lights
-  fr(g,'#060a1e',0,0,FW,ringYMax*RS);for(let i=0;i<46;i++)fr(g,'#ffffff',Math.floor(h2(i,1,61)*FW),Math.floor(h2(i,2,61)*40),1,1);
+  fr(g,'#060a1e',0,0,FW,ringYMax*RS);for(let i=0;i<60;i++)fr(g,'#ffffff',Math.floor(h2(i,1,61)*FW),Math.floor(h2(i,2,61)*64),1,1);
   const CR=['#e9edf5','#e9edf5','#c8322a','#23408a','#3d8bff','#ffd642','#f6c9a0','#8a94b0','#e9edf5','#c8322a','#9fb4dc'],LED=['#ffd642','#ff5a4a','#7fd0ff','#ffffff'];
+  const aisle=(a,w)=>Math.abs(((a+400)%34)-17)<w;
+  const F0=27.5-RISE,F1=31.5-RISE;   /* the facade band, rows above the wall (v458: 27.5-31.5) */
   for(let py=0;py<ringYMax*RS;py++)for(let px=0;px<FW;px++){const x=(px+.5)/RS,y=(py+.5)/RS,dx=x-ARC.x,dy=y-ARC.y,dd=Math.hypot(dx,dy)-R0;if(dd<0)continue;
-    const arc=Math.atan2(dx,-dy)*R0+400;let c;
+    const a0=Math.atan2(dx,-dy)*R0,arc=a0+400;let c;
     if(dd<1.3)c='#ffd642';
-    else if(dd<21||(dd>=25&&dd<47)){const up=dd>=25,d0=up?dd-25:dd-1.3,pitch=up?2.2:2.5,row=Math.floor(d0/pitch),sa=arc/2+(row&1)*.5,seat=Math.floor(sa);
-      if(Math.abs((arc%34)-17)<1.2)c=up?'#0a1028':'#0c1230';                                          // aisles
-      else if(!up&&row<1)c='#1a2550';                                                                  // front rail
+    else if(dd<18.3){const d0=dd-1.3,row=Math.floor(d0/4.25),w=d0%4.25;                                 // the four rows nearest the wall (their people are drawn below)
+      c=aisle(a0,1.4)?(row&1?'#1a2550':'#161f48'):w<.8?'#0a1028':w>3.5?'#1d2a5c':'#141e48'}
+    else if(dd<20)c=dd<18.9?'#0a1028':dd>19.5?'#3c4a80':'#232e5c';                                      // a walkway and its rail
+    else if(dd<F0||(dd>=F1&&dd<62)){const up=dd>=F1,d0=up?dd-F1:dd-20,pitch=up?2.2:2.5,row=Math.floor(d0/pitch),sa=arc/2+(row&1)*.5,seat=Math.floor(sa);
+      if(aisle(a0,1.2))c=up?'#0a1028':'#0c1230';                                                        // aisles
       else c=(d0%pitch)<pitch*.64&&(sa-seat)<.7&&h2(seat,row,up?63:62)<.93?dk(pick(CR,seat,row,up?65:64),up?.22:0):(up?'#0c1432':'#111b40')}
-    else if(dd<25)c=dd<21.8||dd>24.2?'#efe6cd':(Math.floor(arc/3)%4===0?'#141e3c':pick(LED,Math.floor(arc/12),0,66));      // facade with a ribbon board
-    else if(dd<49.5)c='#2a3050';
+    else if(dd<F1)c=dd<F0+.8||dd>F1-.8?'#efe6cd':(Math.floor(arc/3)%4===0?'#141e3c':pick(LED,Math.floor(arc/12),0,66));      // facade with a ribbon board (F0-F1: since v459 as many rows nearer the wall as its middle came up, so it still shows under the scoreboard)
+    else if(dd<64.5)c='#2a3050';
     else continue;
     g.fillStyle=c;g.fillRect(px,py,1,1)}
-  for(const x of [26,334]){fr(g,'#2a3048',x-21,3,43,19);for(let r=0;r<3;r++)for(let k=0;k<6;k++)fr(g,'#ffffff',x-19+k*7,5+r*5,5,4);fr(g,'#2a3048',x-2,22,4,16);glow(g,x,12,34,'#eef4ff',1)}},
- g=>{ // LEGEND: corn to the horizon, the farm, the sun going down
-  const HZ4=80;[['#33266a',16],['#5f3482',14],['#9a447e',12],['#d65f6c',12],['#f58a52',12],['#ffc070',14]].reduce((y,[c,h])=>{fr(g,c,0,y,FW,h);if(y)chk(g,c,0,y-2,FW,2);return y+h},0);
+  legs(g,[84,264],12,'#2a3048',3);
+  for(let r=3;r>=0;r--)arcRow(g,1.3+4.25*r+.6,-93,93,r?3.6:5,r,60+r,CR,{big:!r,skip:a=>aisle(a,r?2.2:3),caps:['#c8322a','#23408a','#e9edf5','#1c2a5a','#ffd642'],wave:['#ffd642','#e9edf5','#c8322a','#3d8bff'],dim:r?.1+r*.05:0});
+  for(const x of [26,334]){fr(g,'#2a3048',x-21,3,43,19);for(let r=0;r<3;r++)for(let k=0;k<6;k++)fr(g,'#ffffff',x-19+k*7,5+r*5,5,4);fr(g,'#2a3048',x-2,22,4,wt(x)-129-20);glow(g,x,12,34,'#eef4ff',1)}},
+ g=>{ // LEGEND: corn to the horizon, the farm, the sun going down, and the old-timers come out of the corn to watch
+  const HZ4=100;[['#33266a',20],['#5f3482',16],['#9a447e',14],['#d65f6c',14],['#f58a52',16],['#ffc070',20]].reduce((y,[c,h])=>{fr(g,c,0,y,FW,h);if(y)chk(g,c,0,y-2,FW,2);return y+h},0);
   for(const [r,a] of [[40,.14],[30,.22]]){g.globalAlpha=a;dsc(g,'#ffd070',24,HZ4,r)}g.globalAlpha=1;dsc(g,'#ffcf6a',24,HZ4,21);dsc(g,'#ffe9a0',22,HZ4-3,14);
   // the corn, in rows that run to a point on the horizon
   for(let py=HZ4;py<ringYMax*RS;py++)for(let px=0;px<FW;px++){const dy=py-HZ4+4,uu=(px-180)/dy*1.5+200,row=Math.floor(uu),fq=uu-row,far=Math.max(0,1-dy/40),r=h2(px,py,9),edge=Math.abs(fq-.5)*2;
     g.fillStyle=edge>.62?'#1f5a1c':r<.05+.16*far?'#e2cf62':edge<.3?(r>.8?'#63b344':'#4c9a30'):(row&1?'#3f8a28':'#37802a');g.fillRect(px,py,1,1)}
-  // barn and silo in front of the sun, the farmhouse on the other side
-  fr(g,'#8a231f',2,64,26,18);pol(g,'#3c404b',[[0,64],[5,56],[12,52],[18,52],[25,56],[30,64]]);fr(g,'#f6f1e4',11,70,8,12);fr(g,'#8a231f',12,71,6,11);fr(g,'#c9ced6',32,54,8,28);fr(g,'#8e949e',38,54,2,28);dsc(g,'#8e949e',36,54,4);
-  fr(g,'#f7f3ea',322,58,24,24);pol(g,'#3a3f4c',[[319,58],[334,46],[349,58]]);fr(g,'#f7f3ea',342,66,16,16);pol(g,'#3a3f4c',[[340,66],[344,60],[360,60],[360,66]]);
-  for(const [x,y] of [[326,62],[336,62],[326,72],[348,70]])fr(g,'#ffd98a',x,y,4,5);fr(g,'#a3282a',335,72,4,10);
-  fr(g,'#6b4526',308,8,3,150);fr(g,'#3c404b',301,2,17,8);for(let k=0;k<3;k++)fr(g,'#fffbe6',302+k*5,3,4,6);glow(g,309,6,24,'#ffe9b0',1);
+  // barn and silo in front of the sun, the farmhouse and its windmill on the other side
+  {const Y=HZ4-80;fr(g,'#8a231f',2,64+Y,26,18);pol(g,'#3c404b',[[0,64+Y],[5,56+Y],[12,52+Y],[18,52+Y],[25,56+Y],[30,64+Y]]);fr(g,'#f6f1e4',11,70+Y,8,12);fr(g,'#8a231f',12,71+Y,6,11);fr(g,'#c9ced6',32,54+Y,8,28);fr(g,'#8e949e',38,54+Y,2,28);dsc(g,'#8e949e',36,54+Y,4);
+   fr(g,'#f7f3ea',322,58+Y,24,24);pol(g,'#3a3f4c',[[319,58+Y],[334,46+Y],[349,58+Y]]);fr(g,'#f7f3ea',342,66+Y,16,16);pol(g,'#3a3f4c',[[340,66+Y],[344,60+Y],[360,60+Y],[360,66+Y]]);
+   for(const [x,y] of [[326,62],[336,62],[326,72],[348,70]])fr(g,'#ffd98a',x,y+Y,4,5);fr(g,'#a3282a',335,72+Y,4,10);
+   lin(g,'#5a4a4a',286,82+Y,289,54+Y);lin(g,'#5a4a4a',292,82+Y,289,54+Y);fr(g,'#5a4a4a',287,70+Y,5,1);for(let k=0;k<8;k++){const a=k*Math.PI/4+.2;lin(g,'#4a3f4a',289,52+Y,Math.round(289+Math.cos(a)*6),Math.round(52+Y+Math.sin(a)*6))}dsc(g,'#3a3f4c',289,52+Y,1);fr(g,'#4a3f4a',290,51+Y,7,2)}
+  fr(g,'#6b4526',308,8,3,196);fr(g,'#3c404b',301,2,17,8);for(let k=0;k<3;k++)fr(g,'#fffbe6',302+k*5,3,4,6);glow(g,309,6,24,'#ffe9b0',1);
+  legs(g,[92,262],6,'#6b4526');
+  // the old-timers, head and shoulders out of the corn (the front row, drawn next, hides the rest of them): grey flannels and dark caps, as at the roadside farm
+  [[30,0,{}],[76,2,{glove:1}],[126,1,{}],[168,3,{left:1,glove:1}],[210,0,{}],[244,2,{left:1}],[290,1,{glove:1}],[334,3,{left:1}]].forEach(([x,sk,o])=>{
+    const c=mk(16,20,gg=>kid(gg,7,20,'#cfcabb','#3a3f4c',{skin:SKN[sk],pants:'#cfcabb',...o}));g.globalAlpha=.66;g.drawImage(c,0,0,16,20,x-14,wt(x)-8-40,32,40);g.globalAlpha=1});
   // the front row stands taller than the top of the wall
   for(let xf=0,i=0;xf<FW;xf+=4,i++){const base=wt(xf)+4,hh=19+Math.floor(h2(i,4,9)*9),top=base-hh;fr(g,i%2?'#3a8a2c':'#2f7a26',xf,top+2,2,hh);fr(g,'#56a83c',xf+2,top+3,1,hh);
     for(let y=top+5,k=i;y<base-2;y+=5,k++){const d2=k&1?2:-2;fr(g,'#4c9e36',xf+d2,y,2,1);fr(g,'#6dbb4a',xf+(k&1?4:-3),y+1,1,1)}
@@ -3955,7 +4120,7 @@ function fieldFor(v){if(FIELDS.has(v)){const c0=FIELDS.get(v);FIELDS.delete(v);F
       rowFill(OD_Y-2-ry,OD_Y-2+ry+1,(y,yc)=>{const k=(yc-ccy)/(ry+.5);if(Math.abs(k)>1)return;const ext=q(rx*Math.sqrt(1-k*k)+.5);fc.fillRect(ccx-ext,y,2*ext,s)})}}}   // (no batter's boxes or on-deck circles at the sandlot, v444)
   fc.setTransform(1,0,0,1,0,0);
   if(v===4){fc.globalCompositeOperation='multiply';fc.fillStyle='#ffe9cc';fc.fillRect(0,0,FW,FH);fc.globalCompositeOperation='source-over'}   // evening light
-  fc.drawImage(mk(FW,ringYMax*RS,g=>{BACK[v](g);g.globalCompositeOperation='destination-in';g.drawImage(MASK,0,0)}),0,0);
+  fc.drawImage(mk(FW,ringYMax*RS,g=>{CUR=LIVE[v];CUR.length=0;BACK[v](g);CUR=null;g.globalCompositeOperation='destination-in';g.drawImage(MASK,0,0)}),0,0);
   FIELDS.set(v,c);if(FIELDS.size>2)FIELDS.delete(FIELDS.keys().next().value);return c}
 // The sandlot is a literal sandlot (David, v430: "no official infield grass besides maybe some patches. The outfield should be mostly
 // grass though"): inside the base paths the dirt keeps only clumps of the lot's own grass, where a slow noise says so, clear of the mound.
@@ -3983,10 +4148,9 @@ function wear(fc,T){const G=hex2(T.inGrass),Wn=hex2(GP[1][2]),img=fc.getImageDat
 
 
 /* ---------- scoreboards (field pixels, like the game's). T = {name,sup,tgt,tgtOn,hi,hiLive}; D = {inn,cur,runs,outs,radar,flip,was,wasRuns,msg} (msg: MVP's ribbon) ---------- */
-const BXY=()=>({bx:Math.round((W-132)/2),by:WALL_T-37-12,bw:132,bh:37});
+const BXY=()=>({bx:Math.round((W-132)/2),by:SB_Y,bw:132,bh:37});   // (by was WALL_T-37-12 until the wall moved down, v458: the boards stay where they were on the screen)
 // ALL-STAR: the game's own board, hung in a green steel frame with the park's name over it
 function frameAllStar(cx){const {bx,by,bw,bh}=BXY(),G1='#2c6b4f',C='#f0e2c0',s='ALL-STAR PARK',w=txt3w(s),x0=Math.round(90-w/2);
-  for(const px of [bx+20,bx+bw-24]){fr(cx,G1,px,by+bh,4,16);fr(cx,dk(G1,.3),px+3,by+bh,1,16)}
   fr(cx,G1,bx-2,by-2,bw+4,bh+4);fr(cx,lt(G1,.3),bx-2,by-2,bw+4,.5);fr(cx,dk(G1,.35),bx-2,by+bh+1.5,bw+4,.5);
   fr(cx,G1,x0-5,by-11,w+10,9.5);fr(cx,C,x0-4,by-10.5,w+8,.5);fr(cx,C,x0-4,by-3,w+8,.5);fr(cx,C,x0-4,by-10.5,.5,8);fr(cx,C,x0+w+3.5,by-10.5,.5,8);txt3(cx,C,s,x0,by-9,1)}
 // hand-operated boards: ROOKIE plywood (0), VETERAN school flip cards (1), LEGEND old ballpark (4)
@@ -3994,8 +4158,6 @@ const MAN={0:{face:'#b98a4e',ink:'#f4efe2',name:'#f4efe2',card:'#f6f1e4',num:'#1
            1:{face:'#14306a',ink:'#e9edf5',name:'#ffd642',card:'#0c0f18',num:'#f6f1e4',slot:'#0c1f4a',post:'#7d8794',tg:'#5ee05e',hi:'#ffd642'},
            4:{face:'#1e4a34',ink:'#e9dfc4',name:'#e9dfc4',card:'#0e2a1c',num:'#ffffff',slot:'#0e2a1c',post:'#6b4526',tg:'#7dff8a',hi:'#ffd642'}};
 function boardManual(cx,v,T,D){const {bx,by,bw,bh}=BXY(),S=MAN[v],X=x=>bx+x,Y=y=>by+y;
-  // legs down to the top of the wall
-  for(const px of [bx+22,bx+bw-25]){fr(cx,S.post,px,by+bh,3,16);fr(cx,dk(S.post,.25),px+2,by+bh,1,16)}
   if(v===0){ // three planks, none quite square, a few nails
     [[-1,0,12.5],[1,12.5,12.5],[0,25,12]].forEach(([dx,y,h],i)=>{fr(cx,i===1?'#b28247':S.face,bx+dx,by+y,bw-(i===1?1:0),h);fr(cx,'#d0a468',bx+dx,by+y,bw,.5);fr(cx,'#8d6030',bx+dx,by+y+h-.5,bw,.5);
       for(let k=0;k<7;k++)fr(cx,'#a67a40',bx+6+Math.floor(h2(k,i,71)*(bw-22)),by+y+2+Math.floor(h2(k,i,72)*(h-4)),4+Math.floor(h2(k,i,73)*9),.5);
@@ -4037,9 +4199,63 @@ function boardManual(cx,v,T,D){const {bx,by,bw,bh}=BXY(),S=MAN[v],X=x=>bx+x,Y=y=
   fr(cx,S.slot,X(78),Y(13.5),46,7.5);
   if(D.radar){const s=D.radar+' MPH';txt3(cx,v===1?'#ffa940':'#ffffff',s,X(101)-txt3w(s)/2,Y(15))}}
 // MVP: a video board. LED letters with a glow, a ribbon running across the top
-let LEDPAT=null;
-function boardLED(cx,T,D,t){const {bx,by,bw,bh}=BXY(),top=by-10,GOLD='#ffd642';
-  for(const px of [bx+18,bx+bw-24]){fr(cx,'#2a3048',px,by+bh,6,16);fr(cx,'#3c4466',px,by+bh,1.5,16)}
+/* v468: the board is part of the field's own picture. David, on his Pixel 9a, meter showing no late frame: "the pitches in MVP are
+   generally jumpy, there is no question in my mind ... It simply doesn't look that way in the other parks". The one thing this park
+   did every frame that no other does was letter this board with the canvas's glow (shadowBlur): about fifteen blurred draws a frame.
+   v462-v465 moved the lettering to canvases of their own, copied in every frame, and each was worse on his phone. So no copies either:
+     - the board (frame, speakers, face, name, target, high score, innings, runs, out lamps, the LED grid) is painted, glow and all, INTO
+       the field's picture (FIELDS.get(3)) when one of those changes, which is between pitches; the game already copies that picture to
+       the screen once a frame in every park. (On the frame of a change it is painted onto the screen too: the field was copied before.)
+     - only the ribbon's words and the speed are drawn each frame, as plain letters with a cheap halo (ledGlow: the same word twice
+       faint, half a px up-left and down-right, then once solid; no blur), a slice of the ticker at a time.
+   A frame here is now the same kind of work as in the parks that look smooth. Any other canvas (tests) gets the whole board the old
+   way; DEV · MVP BOARD · OLD draws v461's board in the game (PARK.ledMode 'old'), OFF none at all, to compare on the phone. */
+let LEDPAT=null,LEDOK=false;const LEDT={s:'',i:-1,sub:'',r:0,rs:''};
+const ledOk=()=>LEDOK||(LEDOK=!document.fonts||document.fonts.check('6px "Press Start 2P"'));   /* a board lettered before the font is in is lettered again once it is */
+function ledFont(g){g.font='6px "Press Start 2P",monospace';g.textBaseline='alphabetic'}
+function ledGrid(g,x,y,w,h){if(!LEDPAT)LEDPAT=g.createPattern(mk(2,2,q=>{q.fillStyle='rgba(0,0,0,.2)';q.fillRect(1,0,1,2);q.fillRect(0,1,1,1)}),'repeat');   /* the LED grid: a dark line between every lamp */
+  g.save();g.setTransform(1,0,0,1,0,0);g.fillStyle=LEDPAT;g.fillRect(Math.round(x*RS),Math.round(y*RS),Math.round(w*RS),Math.round(h*RS));g.restore()}
+function ledGlow(g,s,x,y,c,al){g.textAlign=al;g.fillStyle=c;g.globalAlpha=.42;g.fillText(s,x-.5,y-.5);g.fillText(s,x+.5,y+.5);g.globalAlpha=1;g.fillText(s,x,y)}
+/* everything on the board but the ribbon's words and the speed; g is in field px */
+function ledBody(g,T,D){const {bx,by,bw,bh}=BXY(),top=by-10;
+  fr(g,'#3c4466',bx-3,top-3,bw+6,bh+16);fr(g,'#1c2238',bx-2,top-2,bw+4,bh+14);fr(g,'#5a6690',bx-3,top-3,bw+6,.5);fr(g,'#05070f',bx,top,bw,bh+10);
+  for(const sx of [bx-9,bx+bw+3]){fr(g,'#1c2238',sx,top+2,6,bh+4);for(let k=0;k<5;k++){dsc(g,'#05070f',sx+3,top+7+k*8,2);dsc(g,'#3c4466',sx+3,top+7+k*8,.5)}}
+  g.save();g.beginPath();g.rect(bx,top,bw,bh+10);g.clip();
+  fr(g,'#0c1230',bx,top,bw,9);fr(g,'#3c4466',bx,top+9,bw,.5);                                   // the ribbon's ground (its words: boardLED)
+  ledFont(g);g.shadowBlur=3;
+  const led=(s,x,y,c,al='left')=>{g.textAlign=al;g.shadowColor=c;g.fillStyle=c;g.fillText(s,x,y)};
+  const r1=by+10,r2=by+22,r3=by+32,L=bx+13;
+  led(T.name,bx+8,r1,'#ffe066');if(T.sup){g.shadowBlur=0;drawTrophy(g,TROPHY12,bx+8+T.name.length*6+1,r1-6,.5);g.shadowBlur=3}
+  led('TGT',bx+44,r1,'#a9cbff');led(''+T.tgt,bx+65,r1,T.tgtOn?'#5eff7a':'#ffffff');led('HI',bx+92,r1,'#a9cbff');led(''+T.hi,bx+107,r1,T.hiLive?'#ffe066':'#d6e2ff');
+  ['1','2','3','R'].forEach((h,i)=>{const cxm=L+i*14+6.5,cur=i===D.cur-1;g.shadowBlur=0;fr(g,cur?'#1d2f66':'#0e1530',L+i*14,r3-9,13,10);g.shadowBlur=3;
+    led(h,cxm,r2-1,cur?'#ffe066':i===3?'#ffffff':'#7f9ae0','center');const val=i<3?D.inn[i]:D.runs;led(i<3&&(i>D.cur-1||(cur&&val===0))?'-':''+val,cxm,r3,cur?'#ffe066':i===3?'#ffffff':'#d6e2ff','center')});
+  const areaC=(L+56+bx+bw-3)/2+2;
+  for(let i=0;i<3;i++){const lx=areaC-14+i*14,ly=r3-4,on=i<D.outs;g.shadowColor='#ff3020';g.shadowBlur=on?8:0;g.fillStyle=on?'#ff3a2a':'#431519';g.beginPath();g.arc(lx,ly,3.8,0,6.3);g.fill()}
+  g.shadowBlur=0;g.restore();
+  const xc=Math.round(areaC),y0=by+13,y1=by+23;   /* the grid everywhere but over the speed's place (48 x 10 about xc): boardLED lays it there each frame, over the speed */
+  ledGrid(g,bx,top,bw,y0-top);ledGrid(g,bx,y1,bw,top+bh+10-y1);ledGrid(g,bx,y0,xc-24-bx,y1-y0);ledGrid(g,xc+24,y0,bx+bw-xc-24,y1-y0)}
+function boardLED(cx,T,D,t){const F=FIELDS.get(3);if(cx.canvas!==cv||!F){boardLEDOld(cx,T,D,t);return}
+  const {bx,by,bw}=BXY(),top=by-10,GOLD='#ffd642',ok=ledOk(),K=F._led||(F._led={});
+  if(K.ok!==ok||K.n!==T.name||K.s!==T.sup||K.t!==T.tgt||K.to!==T.tgtOn||K.h!==T.hi||K.hl!==T.hiLive||K.c!==D.cur||K.i0!==D.inn[0]||K.i1!==D.inn[1]||K.i2!==D.inn[2]||K.r!==D.runs||K.o!==D.outs){
+    K.ok=ok;K.n=T.name;K.s=T.sup;K.t=T.tgt;K.to=T.tgtOn;K.h=T.hi;K.hl=T.hiLive;K.c=D.cur;K.i0=D.inn[0];K.i1=D.inn[1];K.i2=D.inn[2];K.r=D.runs;K.o=D.outs;
+    const fg=F.getContext('2d');fg.save();fg.setTransform(RS,0,0,RS,0,0);ledBody(fg,T,D);fg.restore();ledBody(cx,T,D)}
+  // ribbon. D.msg = {s, fx, c, c2, pop, t0} comes from the game: fx 'scroll' = the looping ticker; 'flash' = centred, swapping between
+  // c and c2 about four times a second; 'hold' = centred and steady; pop = reverse video (dark letters on c) blinking for its first .66 s.
+  // t0 = when it went up, in seconds on the same clock as t. No msg = the mock's loop.
+  {const m=D.msg||{s:'MVP  *  MAKE SOME NOISE  *  ',fx:'scroll'},c=m.c||GOLD,a=t-(m.t0||0);
+    cx.save();cx.beginPath();cx.rect(bx,top,bw,9);cx.clip();fr(cx,'#0c1230',bx,top,bw,9);ledFont(cx);
+    if(m.fx==='scroll'){const n=m.s.length,off=(a*26)%(n*6),i0=Math.floor(off/6);                       // from its first letter at t0; only the letters in view are drawn
+      if(LEDT.s!==m.s||LEDT.i!==i0){LEDT.s=m.s;LEDT.i=i0;let sub='';for(let k=0;k<24;k++)sub+=m.s[(i0+k)%n];LEDT.sub=sub}
+      ledGlow(cx,LEDT.sub,bx-(off-i0*6),top+7.5,c,'left')}
+    else if(m.pop&&a<.66&&Math.floor(a/.11)%2===0){fr(cx,c,bx,top,bw,9);cx.textAlign='center';cx.fillStyle='#0c1230';cx.fillText(m.s,bx+bw/2,top+7.5)}
+    else ledGlow(cx,m.s,bx+bw/2,top+7.5,m.fx==='flash'&&m.c2&&Math.floor(a/.24)%2?m.c2:c,'center');
+    cx.restore();ledGrid(cx,bx,top,bw,9)}
+  {const xc=Math.round((bx+13+56+bx+bw-3)/2+2),y=by+21;
+    if(D.radar){if(LEDT.r!==D.radar){LEDT.r=D.radar;LEDT.rs=D.radar+' MPH'}ledFont(cx);ledGlow(cx,LEDT.rs,xc,y,'#ffa940','center')}
+    ledGrid(cx,xc-24,by+13,48,10)}}
+/* v461's board, lettered afresh every frame (glow and all) */
+let LEDPAT0=null;
+function boardLEDOld(cx,T,D,t){const {bx,by,bw,bh}=BXY(),top=by-10,GOLD='#ffd642';
   fr(cx,'#3c4466',bx-3,top-3,bw+6,bh+16);fr(cx,'#1c2238',bx-2,top-2,bw+4,bh+14);fr(cx,'#5a6690',bx-3,top-3,bw+6,.5);fr(cx,'#05070f',bx,top,bw,bh+10);
   for(const sx of [bx-9,bx+bw+3]){fr(cx,'#1c2238',sx,top+2,6,bh+4);for(let k=0;k<5;k++){dsc(cx,'#05070f',sx+3,top+7+k*8,2);dsc(cx,'#3c4466',sx+3,top+7+k*8,.5)}}
   cx.save();cx.beginPath();cx.rect(bx,top,bw,bh+10);cx.clip();
@@ -4063,22 +4279,26 @@ function boardLED(cx,T,D,t){const {bx,by,bw,bh}=BXY(),top=by-10,GOLD='#ffd642';
   cx.shadowBlur=3;if(D.radar)led(D.radar+' MPH',Math.round(areaC),r2-1,'#ffa940','center');
   cx.shadowBlur=0;cx.restore();
   // the LED grid: a dark line between every lamp
-  if(!LEDPAT)LEDPAT=cx.createPattern(mk(2,2,g=>{g.fillStyle='rgba(0,0,0,.2)';g.fillRect(1,0,1,2);g.fillRect(0,1,1,1)}),'repeat');
-  cx.save();cx.setTransform(1,0,0,1,0,0);cx.fillStyle=LEDPAT;cx.fillRect(bx*RS,top*RS,bw*RS,(bh+10)*RS);cx.restore()}
+  if(!LEDPAT0)LEDPAT0=cx.createPattern(mk(2,2,g=>{g.fillStyle='rgba(0,0,0,.2)';g.fillRect(1,0,1,2);g.fillRect(0,1,1,1)}),'repeat');
+  cx.save();cx.setTransform(1,0,0,1,0,0);cx.fillStyle=LEDPAT0;cx.fillRect(bx*RS,top*RS,bw*RS,(bh+10)*RS);cx.restore()}
 
 
 // camera flashes for the big-league crowd: seats that aren't hidden by the board
-const SEATS=[];{const rnd=rng(5);while(SEATS.length<70){const x=rnd()*W,y=rnd()*75,dd=Math.hypot(x-ARC.x,y-ARC.y)-R0;if(dd>3&&dd<46&&!(dd>20&&dd<26)&&!(x>20&&x<160&&y>4&&y<54))SEATS.push([Math.round(x*2)/2,Math.round(y*2)/2])}}
+const SEATS=[];{const rnd=rng(5);while(SEATS.length<70){const x=rnd()*W,y=rnd()*97,dd=Math.hypot(x-ARC.x,y-ARC.y)-R0;if(dd>3&&dd<61&&!(dd>26.5-RISE&&dd<32.5-RISE)&&!(x>20&&x<160&&y>4&&y<56))SEATS.push([Math.round(x*2)/2,Math.round(y*2)/2])}}
 
 // what moves in each park (field pixels, drawn straight after the field): rags and flags, camera flashes, fireflies
 function fx(cx,v,t){
+  if(t<cheerEnd){const left=cheerEnd-t,k=Math.min(1,left/.8,(cheerLen-left)/.2+.25);   /* how much of the crowd is on its feet: up quickly, down more slowly */
+    LIVE[v].forEach(([x,y,sk,sh,big],i)=>{if(h2(i,v,97)>k*.8||Math.sin(t*10+h2(i,v,98)*6.28)<-.25)return;
+      if(big){fr(cx,sk,(x-1)/2,(y-12)/2,.5,3.5);fr(cx,sk,(x+7)/2,(y-12)/2,.5,3.5);fr(cx,sh,(x-1)/2,(y-6)/2,.5,1);fr(cx,sh,(x+7)/2,(y-6)/2,.5,1)}
+      else{fr(cx,sk,(x-1)/2,(y-9)/2,.5,2.5);fr(cx,sk,(x+5)/2,(y-9)/2,.5,2.5);fr(cx,sh,(x-1)/2,(y-5)/2,.5,1);fr(cx,sh,(x+5)/2,(y-5)/2,.5,1)}})}
   if(v===0)for(const px of [POLE_X,W-POLE_X])flag(cx,px+(px<90?1:-6),POLE_Y-40,t+px,['#c8322a','#c8322a'],5,3);   // the rag on each two-by-four foul pole
-  if(v===1)flag(cx,22,11,t,['#c8322a','#f6f1e4'],6,4);
-  if(v===2)[[6.5,0],[28.5,1],[W-6,2],[W-28,3]].forEach(([x,k])=>flag(cx,x,(wt(Math.round(x*RS))-88)/RS-5,t+k,[['#c8322a','#c8322a'],['#ffd642','#ffd642'],['#23408a','#23408a'],['#c8322a','#c8322a']][k],5,3,true));
+  if(v===1)flag(cx,12,21,t,['#c8322a','#f6f1e4'],6,4);
+  if(v===2)[[6.5,0],[28.5,1],[W-6,2],[W-28,3]].forEach(([x,k])=>flag(cx,x,(wt(Math.round(x*RS))-126)/RS-5,t+k,[['#c8322a','#c8322a'],['#ffd642','#ffd642'],['#23408a','#23408a'],['#c8322a','#c8322a']][k],5,3,true));
   if(v===3)SEATS.forEach(([x,y],i)=>{const k=Math.floor(t*9+i*.37);if(h2(k,i,91)<.03){fr(cx,'#ffffff',x,y,1,1);cx.globalAlpha=.5;fr(cx,'#ffffff',x-1,y,3,1);fr(cx,'#ffffff',x,y-1,1,3);cx.globalAlpha=1}});
-  if(v===4)for(let i=0;i<16;i++){const ph=t*.5+i*1.9,x=((i*47+Math.sin(ph)*9)%176+176)%176+2,y=58+(i*29%64)+Math.cos(ph*1.3)*4,on=Math.sin(t*2.2+i*2.4);
+  if(v===4)for(let i=0;i<16;i++){const ph=t*.5+i*1.9,x=((i*47+Math.sin(ph)*9)%176+176)%176+2,y=60+(i*29%80)+Math.cos(ph*1.3)*4,on=Math.sin(t*2.2+i*2.4);
     if(on>.2&&!(x>22&&x<158&&y<54)){cx.globalAlpha=Math.min(1,(on-.2)*2);fr(cx,'#f6ff9a',Math.round(x*2)/2,Math.round(y*2)/2,1,1);cx.globalAlpha*=.3;fr(cx,'#f6ff9a',Math.round(x*2)/2-.5,Math.round(y*2)/2-.5,2,2);cx.globalAlpha=1}}}
-return{field:fieldFor,frame:frameAllStar,board(cx,v,T,D,t){if(v===3)boardLED(cx,T,D,t);else boardManual(cx,v,T,D)},fx,TH}})();
+return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
 return ROAD})();
 /*ROAD:END*/
 /*TUNE:BEGIN*/
@@ -4214,6 +4434,7 @@ function parkBoard(){const now=performance.now(),iv=innScores[inning-1]||0;
   if(inning!==sbF.cur){sbF.cur=inning;sbF.inn=iv;sbF.runs=runs;sbF.t0=-1e9}                                   // a new inning or a new game: nothing to flip
   else if(iv!==sbF.inn||runs!==sbF.runs){sbF.was=sbF.inn;sbF.wasRuns=sbF.runs;sbF.inn=iv;sbF.runs=runs;sbF.t0=now}
   const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),hiLive=!exhibitionMode&&runs>hiScores[round];
+  if(DEV&&venue===3){if(devLED==='off')return;PARK.ledMode=devLED}
   PARK.board(cx,venue,{name:sup?rnm.slice(0,-1):rnm,sup,tgt:target,hi:hiLive?runs:hiScores[round],hiLive,
       tgtOn:!(runs<target||(tgtFlash>0&&Math.floor((5*TGT_PH-tgtFlash)/TGT_PH)%2===1))},
     {inn:innScores,cur:Math.min(inning,MAX_INN),done:inning>MAX_INN,runs,outs:innOuts,radar,flip:Math.min(1,(now-sbF.t0)/370),was:sbF.was,wasRuns:sbF.wasRuns,msg:venue===3?marqNow(now):null},now/1000)}
@@ -4228,6 +4449,7 @@ function parkBoard(){const now=performance.now(),iv=innScores[inning-1]||0;
    Tones: G big news (gold, flashing, opens in reverse video) · g good (gold, flashing) · t the target (green, flashing, reverse opening) ·
           n plain (blue, steady) · b bad for us (soft red, steady). All text is 22 characters or fewer: that is the ribbon's width. */
 const MQ={cur:null,q:[],hi:false,sit:'',sit0:0,tk:'',tk0:0,on:false};
+let mqHomer=1;   /* the runs on the homer whose call is going up this instant (set around its showLbl): the board tells a 2- or 3-run homer by its runs (v459) */
 const MQ_TONE={G:{c:'#ffd642',c2:'#ffffff',fx:'flash',pop:1},g:{c:'#ffd642',c2:'#ffffff',fx:'flash'},t:{c:'#5eff7a',c2:'#ffffff',fx:'flash',pop:1},n:{c:'#a9cbff',fx:'hold'},b:{c:'#ff8a70',fx:'hold'}};
 const mqNeed=()=>Math.max(0,target-runs-pendingRuns),mqOuts=()=>innOuts>=3?'SIDE RETIRED':innOuts===2?'TWO OUTS':'ONE OUT';   // plain counts: "ONE AWAY" read as nonsense to David after the game's first out
 const MQ_SAY={
@@ -4257,6 +4479,7 @@ function marqSay(s,ms,pri,tone,flag){const now=performance.now(),c=MQ.cur&&now<M
   MQ.q.push(m);if(MQ.q.length>2)MQ.q.splice(MQ.q.reduce((k,x,i,a)=>x.pri<a[k].pri?i:k,0),1);   // room for two in the queue: the least of three goes
   c.until=Math.min(c.until,Math.max(now,c.t0+(pri>c.pri||soft?1100:1700)))}
 function marqHear(id,txt){if(bp||state==='gameover')return;let m=MQ_SAY[txt],x;
+  if(txt==='HOME RUN!'&&(mqHomer===2||mqHomer===3))m=[mqHomer+' RUN HOMER!!!',3400,6,'G'];   /* David (v459): "when you hit a 2 run or 3 run homer, it should say 2 Run Homer!! Or 3 Run Homer!!!"; v461: "let's add a third exclamation point for 2 RUN HOMER!!!" */
   if(!m&&(x=/^(\d+) RUNS!$/.exec(txt)))m=[x[1]+' RUNS SCORE!!',2200,4,'g'];
   if(!m&&(x=/^(\d+) HR IN A ROW!$/.exec(txt))){const t=+x[1]===2?'BACK TO BACK!!':+x[1]===3?'BACK TO BACK TO BACK!':x[1]+' IN A ROW!!!!',c=MQ.cur,now=performance.now();
     if(c&&c.s==='HOME RUN!!!'&&now<c.until){c.s=t;c.until=Math.max(c.until,now+1500);return}   // the same homer, better told: its line changes where it stands
@@ -4277,9 +4500,11 @@ function marqNow(now){if(MQ.cur&&now>=MQ.cur.until){const m=MQ.q.shift();MQ.cur=
     else if(risp)s=risp>1?"BRING 'EM HOME!":'BRING HIM HOME!'}
   if(s){if(s!==MQ.sit){MQ.sit=s;MQ.sit0=now}MQ.on=false;return{s,t0:MQ.sit0/1000,...MQ_TONE[tone]}}
   MQ.sit='';
-  const need=mqNeed(),snack='HOT DOGS  PEANUTS  COLD DRINKS  *  ',
-    tk=need?need+(need>1?' RUNS':' RUN')+" TO GO  *  LET'S GO "+ab+'!  *  WELCOME TO THE SHOW  *  '+snack
-           :'TARGET REACHED  *  RUN IT UP '+ab+'!  *  '+(best>0?(runs>best?'NEW HIGH SCORE: '+runs:'HIGH SCORE TO BEAT: '+best)+'  *  ':'')+snack;
+  const need=mqNeed(),snack='HOT DOGS  PEANUTS  COLD DRINKS  *  ';
+  if(MQ.kn!==need||MQ.ka!==ab||MQ.kb!==best||MQ.kr!==runs){MQ.kn=need;MQ.ka=ab;MQ.kb=best;MQ.kr=runs;   /* (v468: the ticker's words are put together when they change, not every frame) */
+    MQ.ks=need?need+(need>1?' RUNS':' RUN')+" TO GO  *  LET'S GO "+ab+'!  *  WELCOME TO THE SHOW  *  '+snack
+           :'TARGET REACHED  *  RUN IT UP '+ab+'!  *  '+(best>0?(runs>best?'NEW HIGH SCORE: '+runs:'HIGH SCORE TO BEAT: '+best)+'  *  ':'')+snack}
+  const tk=MQ.ks;
   if(!MQ.on||tk!==MQ.tk){MQ.on=true;MQ.tk=tk;MQ.tk0=now}
   return{s:tk,fx:'scroll',c:'#ffd642',t0:MQ.tk0/1000}}
 setTimeout(()=>{if(venue<0)setVenue(0)},0);   // the first park is dressed just after the title is up (the road covers the field until a game starts)
@@ -4287,7 +4512,7 @@ setTimeout(()=>{if(venue<0)setVenue(0)},0);   // the first park is dressed just 
 const roadCv=document.getElementById('roadCv'),rcx=roadCv.getContext('2d');
 let roadOn=false,roadOffAt=0,roadLast=0,roadSince=0,trip=null;
 const FIN_GUARD=600,DRIVE_GUARD=450,PICK_GUARD=400,PARADE_LOOK=1100;   // taps in the first moments of each step are ignored (ms); the finish waits for a tap (it moved on by itself until v420)
-function roadShow(on){roadCv.classList.toggle('show',on);if(on){if(!roadOn||roadOffAt)roadSince=performance.now();roadOn=true;roadOffAt=0;roadLast=0}else if(roadOn&&!roadOffAt)roadOffAt=performance.now()+420}   // keeps drawing while it fades out
+function roadShow(on){roadCv.classList.toggle('show',on);if(on){if(!roadOn||roadOffAt){roadSince=performance.now();FPS.rn=FPS.rlate=0}roadOn=true;roadOffAt=0;roadLast=0}else if(roadOn&&!roadOffAt)roadOffAt=performance.now()+420}   // keeps drawing while it fades out
 const roadCovers=()=>roadOn&&!roadOffAt&&performance.now()-roadSince>450;   // faded all the way in: the field underneath need not be drawn
 // the bus wears your team: the cap colour below the stripe, the club's other colour as the stripe
 function busPaint(){const t=TM[myTeam],u=t.u[myPick]||t.u[0],c0=u[2],c1=(t.c||[]).find(c=>c.toLowerCase()!==c0.toLowerCase())||'#f6f1e4';ROAD.team({c0,c1,ab:t.ab||t.id,champ:challenge})}   // champ: challenge mode rides the champions' bus (gold, a trophy on the roof), with bunting along the road
@@ -4296,6 +4521,7 @@ function titleRoad(){busPaint();ROAD.lot();roadShow(true)}   // behind the title
 //     tap that starts the game (state is still 'title' until then). The bus honks twice and whistles the first seven notes of the title song.
 function tripOpen(){trip={ph:'road',open:true,won:true,at:performance.now(),mv:true};musicStop();ROAD.start();TUNE.play('go');tripPaint();show('tripScr')}
 function roadFrame(ts){if(!roadOn)return;if(roadOffAt&&performance.now()>roadOffAt){roadOn=false;return}
+  if(roadOffAt&&!ROAD.moving())return;   /* v467: parked and fading out over a game that has begun: its last picture is left to fade. Drawing the scene under the fade as well as the field cost the game's first 0.4 s its frames on David's phone (the night scene at MVP: all 13 of them late) */
   const dt=roadLast?Math.min(.05,(ts-roadLast)/1000):0;roadLast=ts;ROAD.step(dt);ROAD.draw(rcx,{hud:false});
   if(trip&&trip.ph==='road'&&ROAD.moving()!==trip.mv){trip.mv=ROAD.moving();tripPaint()}
   if(trip&&trip.par){const s=ROAD.pstage,now=performance.now();   // the parade: 0 driving in · 1 the roof has come off · 2 the team is on its feet
@@ -4314,7 +4540,7 @@ function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:fal
   if(r.champ){busPaint();ROAD.paradePrep()}   // ...and the parade's street, in the team's colours
   ['resLbl','muLbl','innLbl','scorLbl','streakLbl'].forEach(hide);
   if(r.won){const C=[['#ffd642','#fff','#ffb347'],['#ff5a4a','#fff','#ffd642'],['#7fd0ff','#fff','#9ec8ff'],['#5ee05e','#fff','#ffd642']],me=trip;
-    for(let k=0;k<(r.champ?9:5);k++)setTimeout(()=>{if(trip===me&&me.ph==='fin')spawnP(30+Math.random()*120,92+Math.random()*60,48,C[k%4],3.1,true)},150+k*(r.champ?230:330))}
+    for(let k=0;k<(r.champ?9:5);k++)setTimeout(()=>{if(trip===me&&me.ph==='fin')spawnP(30+Math.random()*120,FY(92)+Math.random()*54,48,C[k%4],3.1,true)},150+k*(r.champ?230:330))}
   const el=id=>document.getElementById(id),T=el('fnT');T.innerHTML=el('goT').innerHTML;T.style.color=el('goT').style.color;
   el('fnR').textContent=el('goR').textContent;el('fnG').textContent=el('goTgt').textContent;el('fnHi').style.display=r.isHi?'':'none';
   el('fnH').textContent=el('goH').textContent;el('fnB').textContent=el('goB').textContent;el('fnK').textContent=el('goStrk').textContent;   // HITS · HR, BB · LOB, HR STREAK
@@ -4335,7 +4561,7 @@ function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('
     if(trip.par===3){const n=ROUNDS.length-1;el('tpCh').style.display='';el('tpC0').style.display=challenge?'none':'';   // challenge mode is offered after a classic win
       el('tpC1').innerHTML='PLAY '+nmHTML(RD(n).name)+' AGAIN';el('tpC2').innerHTML='BACK TO '+nmHTML(RD(0).name)}}
   else if(trip.mv){A.textContent=trip.open?'FIRST STOP':trip.won?'NEXT STOP':'BACK TO';if(!trip.won){A.style.color='#ffb9a8';N.style.color='#fff'}N.innerHTML=nm;B.textContent='';go.style.display='none'}
-  else{A.textContent=!trip.won&&round===0?'TRY AGAIN':'LEVEL '+(nextRound+1)+' OF '+ROUNDS.length;N.innerHTML=nm;B.textContent=RD(nextRound).target+' RUNS TO WIN'}
+  else{A.textContent=!trip.won&&round===0?'TRY AGAIN':'LEVEL '+(nextRound+1)+' OF '+ROUNDS.length;N.innerHTML=nm;B.textContent=RD(nextRound).target+(RD(nextRound).target===1?' RUN':' RUNS')+' TO WIN'}
   fitLine(N)}
 // 3 · a tap leaves the finish for the road, or starts the next game (during the drive too: nobody has to watch it)
 function tripTap(){const dt=performance.now()-trip.at;if(trip.ph==='fin'){if(dt>FIN_GUARD)tripDrive()}
@@ -4358,10 +4584,37 @@ tap('tpMenu',()=>openMenu('tripScr'));[0,1,2].forEach(k=>tap('tpC'+k,()=>tripPic
 roadCv.classList.add('now');titleRoad();roadSince=-1e9;requestAnimationFrame(()=>requestAnimationFrame(()=>roadCv.classList.remove('now')));   // first load: no fade, nothing to see underneath
 
 /* ===== loop ===== */
+/* DEV: a frame meter (v462, reworked v467; David: "Can you test that somehow?", on his Pixel 9a). Test builds only (FRAMES · METER on the
+   DEV panel); it stays on until switched off. A frame is late when the gap before it is over 1.5 times the screen's usual one (a
+   refresh was missed). Counted apart, because they are different things:
+     - the game (the field showing), afresh with every game: late of all its frames; the same while a pitch is in the air, with the
+       longest gap then; for the late ones, how many followed a frame of ours that took most of a refresh ("ours": our own code was
+       slow; the rest are the phone's doing), and what the game was doing (state);
+     - the road scene (the drive, parked, and its fade-out under the game's first 0.4 s), afresh with every drive. v466 counted these in
+       with the game: his "late 13/1465, pitches 0/234" at MVP was the night scene still drawing under the fade (13 frames of 33 ms =
+       0.42 s), not the game.
+   Line 1: the screen's rate, draw()'s average time, and the longest any game frame's whole work (update + draw) has taken. */
+function fpsReset(all){Object.assign(FPS,{n:0,late:0,pn:0,plate:0,worst:0,ours:0,wmax:0,by:{}});if(all)Object.assign(FPS,{g:[],d:[],med:0,rn:0,rlate:0,pw:0,last:0,shown:0});
+  if(FPS.el)FPS.el.style.display=devFps?'':'none'}
+function fpsTick(ts,ms,work){const gap=FPS.last?ts-FPS.last:0,pw=FPS.pw;FPS.last=ts;FPS.pw=work;if(!gap||gap>500||paused)return;
+  FPS.g.push(gap);if(FPS.g.length>240)FPS.g.shift();if(ms>=0){FPS.d.push(ms);if(FPS.d.length>240)FPS.d.shift()}
+  if(FPS.med){const late=gap>FPS.med*1.5;
+    if(roadOn){FPS.rn++;if(late)FPS.rlate++}
+    else{FPS.n++;if(work>FPS.wmax)FPS.wmax=work;
+      if(late){FPS.late++;if(pw>FPS.med*.6)FPS.ours++;FPS.by[state]=(FPS.by[state]||0)+1}
+      if(state==='pitch'){FPS.pn++;if(late)FPS.plate++;if(gap>FPS.worst)FPS.worst=gap}}}
+  const now=performance.now();if(now-FPS.shown<500)return;FPS.shown=now;
+  const s=FPS.g.slice().sort((a,b)=>a-b);FPS.med=s[Math.floor(s.length*.2)];   /* the screen's own gap: the low end of the last 240 (a slow road scene fills the middle with doubles) */
+  const dm=FPS.d.length?FPS.d.reduce((a,b)=>a+b,0)/FPS.d.length:0,SN={ready:'rdy',windup:'wnd',pitch:'pit',hitfly:'fly',result:'res',innbreak:'brk',gameover:'end'},
+    when=Object.entries(FPS.by).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>(SN[k]||k)+' '+v).join(' · ');
+  if(!FPS.el){FPS.el=document.createElement('div');FPS.el.id='fpsLbl';document.getElementById('stage').appendChild(FPS.el)}
+  FPS.el.textContent=Math.round(1000/FPS.med)+' Hz · draw '+dm.toFixed(1)+' · max '+FPS.wmax.toFixed(0)+'\n'+RD(round).name.replace('\u1D9C','')+' game: late '+FPS.late+'/'+FPS.n
+    +'\npitches: '+FPS.plate+'/'+FPS.pn+' · worst '+FPS.worst.toFixed(0)+(FPS.late?'\nlate@ '+when+' · ours '+FPS.ours:'')+'\nroad: late '+FPS.rlate+'/'+FPS.rn}
 let last=0,acc=0;const TK=1000/60;
-function loop(ts){if(!last)last=ts;
+function loop(ts){if(!last)last=ts;const w0=devFps?performance.now():0;let dms=-1;
   if(!paused){acc+=ts-last;last=ts;while(acc>=TK){acc-=TK;frameMs=ts-acc;update()}}else{last=ts}
-  if(roadCovers())paintPauseBtn();else draw();roadFrame(ts);requestAnimationFrame(loop)}
+  if(roadCovers())paintPauseBtn();else if(devFps){const t0=performance.now();draw();dms=performance.now()-t0}else draw();
+  roadFrame(ts);if(devFps)fpsTick(ts,dms,performance.now()-w0);requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
 </script>
