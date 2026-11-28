@@ -178,6 +178,10 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rend
 /* challenge mode: its own toggle, lit in super-fast blue when on */
 .tBtn.chal{color:#7c8094}
 .tBtn.chal.on{border-color:#3d8bff;color:#cfe2ff;background:rgba(61,139,255,.16);box-shadow:0 0 12px rgba(61,139,255,.35)}
+/* CHILL MODE (v487): its own switch, lit green when on; .pz = the ✌️ after a name, in the phone's own emoji (the pixel font has none) */
+.tBtn.chill{color:#7c8094}
+.tBtn.chill.on{border-color:#5fd08a;color:#dcffe8;background:rgba(95,208,138,.16);box-shadow:0 0 12px rgba(95,208,138,.35)}
+.pz{font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif;font-size:.95em;margin-left:.3em;line-height:1;letter-spacing:0;text-shadow:none}
 svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;vertical-align:.125em;   /* Press Start 2P capitals sit one font-pixel (1/8 em) above the baseline */ fill:#ffd642;shape-rendering:crispEdges}
 #goScr .chalTxt,#wipeScr .chalTxt{text-align:center;color:#5aa2ff;text-shadow:0 0 12px rgba(61,139,255,.55);line-height:1.5}
 /* dev panel (test builds only) */
@@ -185,6 +189,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
   font-size:clamp(6px,1.85cqw,9px);color:#9fe;background:rgba(0,40,30,.85);border:1px dashed #3a8;border-radius:3px;padding:5px;pointer-events:auto;z-index:9}
 .devP b{color:#6c9;font-weight:normal}
 #pauseScr .devP{top:57%}   /* clear of PAUSED / TAP TO RESUME */
+#titleScr .devP{top:47.5%}   /* clear of the mode switches (v487: CHILL MODE under CHAMPIONSHIP MODE) */
 .devP span{border:1px solid #3a8;border-radius:2px;padding:3px 5px;cursor:pointer;color:#8ba}
 .devP span.on{background:#3a8;color:#021}
 #fpsLbl{position:absolute;left:1.5%;top:76%;z-index:7;pointer-events:none;font:9px/1.3 monospace;white-space:pre;text-align:left;color:#9f9;background:rgba(0,0,0,.72);padding:2px 5px;border-radius:2px}   /* DEV frame meter (v462; v467: on the left, clear of SKIP) */
@@ -240,6 +245,10 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
 #tpCh .tBtn{background:rgba(10,12,26,.88);color:#e4e6ee;border-color:#8a8fa6}
 #tpCh .tBtn.chal.on{background:rgba(14,30,70,.92);color:#cfe2ff;border-color:#3d8bff}
 #tpMenu{position:absolute;right:2%;bottom:2%}
+#encW{position:absolute;left:0;right:0;top:6%;height:62%;overflow:hidden;display:none;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 14%,#000 84%,transparent);mask-image:linear-gradient(transparent,#000 14%,#000 84%,transparent)}
+#encR{position:absolute;left:0;right:0;top:0;text-align:center;font-size:clamp(8px,3.1cqw,17px);line-height:1.9;color:#fff;will-change:transform;text-shadow:.14em .14em 0 #0a0c1a,.07em 0 0 #0a0c1a,-.07em 0 0 #0a0c1a,0 .07em 0 #0a0c1a,0 -.07em 0 #0a0c1a}
+#encR .eT{font-size:2.1em;color:#ffd642;line-height:1.3}#encR .eH{color:#ffd642;margin-top:2.4em}#encR .eD{color:#b9c6ea}#encR .eP{margin-top:2.4em}
+#tripScr .tpA,#tripScr .tpN{transition:opacity .5s}#tripScr.enc .tpA,#tripScr.enc .tpN{opacity:0}#tripScr .tpB.encB{color:#ffd642;line-height:1.5}
 /* the ? beside FULL / SIMPLE on the menu, and what it pops up (HOW TO PLAY's own words) */
 #modeHelp{flex:none;margin-left:1.7cqw;padding-left:12px;padding-right:12px;color:var(--gold)}
 #modeTxt p{margin:0 0 1.1em}#modeTxt p:last-child{margin-bottom:0}#modeTxt b{font-weight:normal;color:var(--gold)}
@@ -308,6 +317,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
   <div class="sS" id="tSub" style="color:var(--gold)">Score 5+ runs in 3 innings</div>
   <div class="sS blink">TAP ANYWHERE TO START</div>
   <div id="chalBtn" class="tBtn chal" style="display:none">CHAMPIONSHIP MODE</div>
+  <div id="chillBtn" class="tBtn chill">CHILL MODE<span class="pz">✌️</span></div>
   <!-- MENU sits in the bottom corner, on the grass below the road, so the bus and the rest of the screen are free to tap and play; hidden until the first game (hasPlayed) -->
   <div class="tBtns" id="tMenu" style="position:absolute;right:2%;bottom:2%;min-width:0"><div id="menuBtn" class="tBtn">MENU</div></div>
 </div>
@@ -344,6 +354,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
 <div class="scr" id="exhScr">
   <div class="sS" style="color:var(--gold);margin-bottom:12px">PRACTICE</div>
   <div id="exhChal" class="tBtn chal" style="display:none;margin-bottom:3cqw">CHAMPIONSHIP MODE</div>
+  <div id="exhChill" class="tBtn chill" style="margin-bottom:3cqw">CHILL MODE<span class="pz">✌️</span></div>
   <div class="exhH">EXHIBITION</div>
   <div id="exhList" style="display:flex;flex-direction:column;gap:8px;pointer-events:auto"></div>
   <div class="exhH" style="margin-top:5cqw">BATTING PRACTICE</div>
@@ -370,6 +381,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
   <div class="sS" style="color:var(--gold)">HIGH SCORES</div>
   <div class="tBtns">
     <div id="hiChal" class="tBtn chal">CHAMPIONSHIP MODE</div>
+    <div id="hiChill" class="tBtn chill">CHILL MODE<span class="pz">✌️</span></div>
     <div id="hiMode" style="display:flex"><span data-m="full" class="tBtn seg">FULL</span><span data-m="simple" class="tBtn seg">SIMPLE</span></div></div>
   <div id="hiList"></div>
   <div class="tBtns"><div id="hiWipe" class="tBtn danger">RESET ALL</div><div id="hiBack" class="tBtn">BACK</div></div>
@@ -430,6 +442,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
     <div class="gR"><div class="gK">MPH</div><div class="gV">The radar gun. Heaters are fastest, then fastballs, curves and knuckleballs; the changeup is slowest.</div></div>
     <div class="gR"><div class="gK">HR STREAK</div><div class="gV">Hit a homer and the next wall always has an HR box. Back-to-back homers turn some out zones into hits.</div></div>
     <div class="gR"><div class="gK">LEVELS</div><div class="gV">ROOKIE 5 runs, VETERAN 6, ALL-STAR 8, MVP 10, LEGEND 12. Each level adds out boxes to the wall and mixes in faster pitches.</div></div>
+    <div class="gR"><div class="gK">CHILL MODE<span class="pz">✌️</span></div><div class="gV">An easier game: the same five levels, needing 5, 6, 7, 8 and 10 runs. Three strikes and you're out: misses, takes and fouls all count (the K box is still an out). Nobody is thrown out on the bases, there are no double plays, and no heaters. The bus becomes a van.</div></div>
   </div>
   <div class="tBtns" style="margin-top:12px"><div id="glossBack" class="tBtn">BACK</div></div>
 </div>
@@ -462,6 +475,7 @@ svg.trph{height:.875em;shape-rendering:crispEdges;width:auto;margin-left:.3em;ve
   <div class="tpB" id="tpB"></div>
   <div class="sS blink" id="tpGo">TAP TO PLAY</div>
   <div class="tBtns" id="tpCh" style="display:none"><div id="tpC0" class="tBtn chal on">TRY CHAMPIONSHIP MODE</div><div id="tpC1" class="tBtn"></div><div id="tpC2" class="tBtn"></div></div>
+  <div id="encW"><div id="encR"></div></div>
   <div id="tpMenu" class="tBtn">MENU</div>
 </div>
 </div></div>
@@ -681,7 +695,11 @@ const sfx={
   over(){tnRun([392,349,330,262],.13,.25,'square',.08)},
   win(){tnRun([523,659,784,1047,1319],.09,.18,'square',.11)},
   coin(){tn(988,.07,'square',.13);setTimeout(()=>tn(1319,.18,'square',.13),70)},
-  thud(){noiseHit(0,.06,.4,'lowpass',700);vc(70,0,.08,'triangle',.2)},   // the bus's own roof back on (v454): bling's thud alone
+  thud(){noiseHit(0,.06,.4,'lowpass',700);vc(70,0,.08,'triangle',.2)},
+  fwk(big){noiseHit(0,big?.3:.2,big?.13:.09,'bandpass',700+Math.random()*900);vc(82,0,.14,'sine',big?.12:.08);if(big)for(let i=0;i<5;i++)noiseHit(180+i*70+Math.random()*40,.04,.035,'highpass',5200)},   /* a firework, far off: a soft pop, and a crackle after the big ones (v491) */
+  howl(){try{aud();const T=ac.currentTime+.02,g=ac.createGain(),lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1500;g.gain.setValueAtTime(.0001,T);g.gain.exponentialRampToValueAtTime(.1,T+.12);g.gain.setValueAtTime(.1,T+.95);g.gain.exponentialRampToValueAtTime(.001,T+1.45);
+    for(const [ty,m,v] of [['triangle',1,1],['sine',2,.3]]){const o=ac.createOscillator(),og=ac.createGain();o.type=ty;og.gain.value=v;o.frequency.setValueAtTime(330*m,T);o.frequency.exponentialRampToValueAtTime(545*m,T+.3);o.frequency.setValueAtTime(545*m,T+.8);o.frequency.exponentialRampToValueAtTime(440*m,T+1.4);
+      const l=ac.createOscillator(),lg=ac.createGain();l.frequency.value=5.5;lg.gain.value=7*m;l.connect(lg).connect(o.frequency);l.start(T+.3);l.stop(T+1.5);o.connect(og).connect(lp);o.start(T);o.stop(T+1.5)}lp.connect(g).connect(out)}catch(e){}},   /* the dog, once: a rising aroo that settles (v491) */   // the bus's own roof back on (v454): bling's thud alone
   bling(){noiseHit(0,.06,.4,'lowpass',700);vc(70,0,.08,'triangle',.2);vc(988,90,.07,'square',.12);vc(1319,160,.07,'square',.12);vc(1568,230,.24,'square',.12)},   // the gold roof lands on the bus (v442): a thud, then three rising notes, all on the sound clock
   target(){tn(784,.08,'square',.12);setTimeout(()=>tn(784,.08,'square',.12),100);setTimeout(()=>tn(1047,.34,'square',.13),200)},
   // error: a slide-whistle 'whoops' (dip then swoop up) followed by a ta-da
@@ -742,13 +760,25 @@ let round=0,nextRound=0,exhibitionMode=false;
 // superscript c, with the same targets, one more out on the wall (6 max) and LEGEND's HR rule from the start.
 // It keeps its own HI scores and unlocks, separately for FULL and SIMPLE.
 const DEV=false;   // test builds: challenge unlocked + developer toggles
-const BUILD='v486';   // = the live Claude artifact version and the git tag; bump on every publish
+const BUILD='v491';   // = the live Claude artifact version and the git tag; bump on every publish
 let challenge=false,chalUnlocked=false,chalJustUnlocked=false;
-const NEW_T=[5,6,8,10,12];   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
+/* CHILL MODE (v487). David: "Let's add a "Chill Mode" with the following adjustments: 1. Three strikes/fouls and you're out. These will be
+   yellow lamps sitting right above the out lamps (radar gun is gone in this mode) 2. No outs on extra bases or stolen base, and no double
+   plays 3. No heaters. Heaters are redistributed to all the other types proportionally 4. The modes should have a peace sign ✌️ emoji
+   after their names. The bus could be modeled after a hippy vw van with flowers and peace signs". The same five levels; targets
+   5-6-7-8-10 (CHILL_T, v490; LEGEND keeps its third-inning extra out; v489 had 5-6-7-8-9; the K box stays an out, v488).
+   Open from the start (its switch on the title, practice and high scores screens); it and CHAMPIONSHIP MODE are never on together. It keeps
+   its own high scores, unlocked levels and stats (keys end in Z). Beating LEGEND in it brings the parade (in the van) but no unlock.
+   The rules live where the classic ones are, each behind `chill`: chillStrike (strikes), resolveOutPlay/chillGB (no double plays, no
+   runner thrown out going for a base he wasn't forced to), the throws and the steal (never out), basePitch (no heaters). */
+/* v491: see THE ENCORE, beside tripPaint. dogOn: the rooftop dog rides the bus (bbDog), devDemo: the parade was asked for from the DEV panel */
+let dogOn=false,devDemo=false;try{dogOn=localStorage.getItem('bbDog')==='1'}catch(e){}
+let chill=false;const PEACE='\u270C\uFE0F',CHILL_COLOR='#6fdc8c',MODE=()=>challenge?'C':chill?'Z':'';
+const NEW_T=[5,6,8,10,12],CHILL_T=[5,6,7,8,10];   // CHILL_T (v490, David: "Let's keep the extra out and make the legend target 10 in chill mode"; v489 was 5-6-7-8-9)   // run targets with the MLB-shaped walls (the old 5-8-10-12-15 assumed an HR box on every wall)
 /* DEV (v464): TARGET · 1 RUN makes every level's target one run (David: "That way I can get to MVP more easily and test things"); score it,
    then SKIP ends the game as a win. Test builds only; it stays on until switched off. */
 function RD(i){const r=RD0(i);return DEV&&dev1Run?{...r,target:1}:r}
-function RD0(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(!challenge)return r;
+function RD0(i){let r=ROUNDS[i];if(newOdds)r={...r,target:NEW_T[i],conditionalHR:false};if(chill)return{...r,name:r.name+PEACE,target:CHILL_T[i]};if(!challenge)return r;
   // CHALLENGE = the same levels and targets with every pitch one notch faster
   // out boxes per inning: ROOKIEᶜ 3/3/3, VETERANᶜ 3/3/4, ALL-STARᶜ 3/4/4, MVPᶜ 4/4/4, LEGENDᶜ 4/4/5
   if(newOdds)return{...r,name:r.name+'\u1D9C',...[{baseOuts:3},{inn3Outs:4},{inn2Outs:4,inn3Outs:4},{},{inn3Outs:5}][i]};
@@ -767,14 +797,21 @@ const TCOL={H:'#fff096',G:'#ffd642',D:'#c48c14'};
 let TROPHY=TROPHY12;
 const trophyRects=()=>TROPHY.flatMap((row,y)=>[...row].map((c,x)=>TCOL[c]?`<rect x="${x}" y="${y}" width="1" height="1" fill="${TCOL[c]}"/>`:'')).join('');
 // draw a trophy grid with cells of k field px, top-left (x,y)
+/* CHILL MODE's mark after a level's name on the scoreboards, where CHAMPIONSHIP MODE has its trophy: a little ✌ (the emoji itself is a
+   smudge at 6 px), drawn from the emoji's own proportions: 10×14 cells of half a field pixel (5×7 px, a pixel taller than the capitals,
+   bottoms level); two long fingers in a V over a fist with two folded fingers across it (four short rounds looked like a bunny).
+   O outline, Y yellow, H highlight, S shade. */
+const PEACE14=['.OO.......','OYYO...OO.','OHYO..OYYO','OHYO..OHYO','.OHYOOHYO.','.OYYOOYYO.','.OYYOYYO..','OOYYYYYOO.','OYSSSSYYYO','OYYYYYSYYO','OYSSSSYYYO','OYYYYYYYSO','.OYYYYYSO.','..OOOOOO..'],
+  PCOL={O:'#8c540a',Y:'#ffcf3a',H:'#fff0a0',S:'#dea020'};
+function drawPeace(g,x,y,k){for(let yy=0;yy<14;yy++)for(let xx=0;xx<10;xx++){const c=PCOL[PEACE14[yy][xx]];if(c){g.fillStyle=c;g.fillRect(x+xx*k,y+yy*k,k,k)}}}   // (x,y) = its top left; 7 px tall
 function drawTrophy(g,T,x,y,k){for(let yy=0;yy<T.length;yy++)for(let xx=0;xx<T[yy].length;xx++){const c=TCOL[T[yy][xx]];if(c){g.fillStyle=c;g.fillRect(x+xx*k,y+yy*k,k,k)}}}
 const trophySVG=()=>`<svg class="trph" viewBox="0 0 ${TROPHY[0].length} ${TROPHY.length}" aria-label="championship">${trophyRects()}</svg>`;
-const nmHTML=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\u1D9C/g,()=>trophySVG());
+const nmHTML=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\u1D9C/g,()=>trophySVG()).replace(/\u270C\uFE0F?/g,'<span class="pz">\u270C\uFE0F</span>');
 // SIMPLE mode: the wall is only 1B 2B 3B HR and plain OUT (no walks, steals, bunts, errors or
 // situational outs; outs never move runners). FULL is the default. Each mode keeps its own HI scores
 // and unlocked levels (simple mode's keys end in S).
 let simpleMode=false;try{simpleMode=localStorage.getItem('bbMode')==='simple'}catch(e){}
-const modeKey=k=>k+(challenge?'C':'')+(simpleMode?'S':'');
+const modeKey=k=>k+MODE()+(simpleMode?'S':'');   // (v487: chill mode's end in Z)
 let maxUnlocked=0;try{maxUnlocked=parseInt(localStorage.getItem(modeKey('dsUnlk')))||0}catch(e){}
 
 /* ===== zones ===== */
@@ -909,7 +946,7 @@ const FB_T={
 const baseKey=()=>(bases[0]?'1':'-')+(bases[1]?'2':'-')+(bases[2]?'3':'-');
 // zone shade for the current situation: can a run score (other than on a DP)? is a DP possible?
 function outShade(z){if(innOuts>=2||z==='K')return 'zOUT';
-  const dp=z==='GB'&&!!bases[0],run=!!bases[2]&&(z!=='FB'||!cautious()||isKeyRun(1));   // a held sac fly can't score
+  const dp=!chill&&z==='GB'&&!!bases[0],run=!!bases[2]&&(z!=='FB'||!cautious()||isKeyRun(1));   // a held sac fly can't score
   return dp&&run?'zOBOTH':dp?'zODP':run?'zORUN':'zOUT'}
 const OUT_LBL={GO:['GROUNDOUT!','#ff4444'],FO:['FLYOUT!','#ff4444'],DP:['DOUBLE PLAY!','#ff2222'],
   FC:["FIELDER'S CHOICE",'#ffaa44'],SF:['SAC FLY!','#ffaa44'],K:['STRIKEOUT!','#ff4444']};
@@ -990,9 +1027,14 @@ function fcStep(){const P=fcPlay;P.f++;
     runLbl(P.sc,P.sc===1?'RUN SCORED!':P.sc+' RUNS!')}
   checkInning()}   // LOB already worked out by an inning-ending play (its runners are gone from the bases)
 let sfOutP=.06;   // this fly ball's thrown-out chance for a tagging runner (set per play)
+/* CHILL MODE (v487) grounders: a double play becomes the fielder's choice (the batter always beats the relay; the play still reveals at
+   1st, now always safe), and a try that throws out a runner who wasn't forced (the runner from 3rd held to it or out at home) is dropped,
+   the other outcomes keeping their odds between them. A runner is forced when every base behind him is taken (the batter runs). */
+function chillGB(T){const forced=i=>bases.slice(0,i).every(Boolean);
+  return T.filter(o=>!o[2].some(m=>m[0]!=='B'&&m[2]&&!forced(m[0]))).map(o=>o[1]==='DP'?[o[0],'FC',o[2].map(m=>m[0]==='B'?['B',1,0]:m)]:o)}
 function resolveOutPlay(type,wx,wy){
   const o0=innOuts;let res=type==='GB'?'GO':type==='FB'?'FO':'K',moves=type==='GB'?[['B',1,1]]:[];
-  if(type!=='K'&&o0<2){let T=(type==='GB'?GB_T:FB_T)[baseKey()];
+  if(type!=='K'&&o0<2){let T=(type==='GB'?GB_T:FB_T)[baseKey()];if(chill&&type==='GB')T=chillGB(T);   // CHILL MODE: no double plays, nobody thrown out going for a base
     // runner on 3rd, fly ball: he goes 70% of the time when the catch is the 1st out, 80% when it's the 2nd
     // (tables are written for 75/25; MLB sends ~78% overall and more readily with 1 out)
     const win3=bases[2]&&isWinRun(1);   // the runner on 3rd is the winning run (he scores first)
@@ -1048,14 +1090,14 @@ function resolveOutPlay(type,wx,wy){
     if(type==='FB'&&!simpleMode&&(t===4||(t===3&&!moves.some(m=>m[0]===2))||(t===2&&moves.length===1))){
       const an={sx:a.x,sy:a.y,ex:b.x,ey:b.y,t:0,delay:14,dur:t===4?30:28,sk,hold:true,noRun:true};runnerAnims.push(an);
       if(t===2){nb[1]=sk;basePending[1]=true;   // tagging from 1st to 2nd
-        throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG2_OUT,loud:1,
+        throws.push({f:0,T:14+28,anim:an,out:!chill&&Math.random()<TAG2_OUT,loud:1,
           onSafe:()=>{basePending[1]=false;showLbl('innLbl','SAFE AT 2ND!','#e8f6ff',900)},
           onOut:()=>{bases[1]=false;basePending[1]=false;showLbl('innLbl','OUT AT 2ND!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}});continue}
-      if(t===4){plateTag=true;roar(OOH_SF);throws.push({f:0,T:14+30,anim:an,out:Math.random()<sfOutP,
+      if(t===4){plateTag=true;roar(OOH_SF);throws.push({f:0,T:14+30,anim:an,out:!chill&&Math.random()<sfOutP,
         onSafe:()=>{showLbl('resLbl','SAC FLY!','#ffaa44',900);addRunsNow(1)},
         onOut:()=>{showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       else{nb[2]=sk;basePending[2]=true;
-        throws.push({f:0,T:14+28,anim:an,out:Math.random()<TAG3_OUT,loud:1,
+        throws.push({f:0,T:14+28,anim:an,out:!chill&&Math.random()<TAG3_OUT,loud:1,
           onSafe:()=>{basePending[2]=false;showLbl('innLbl','SAFE AT 3RD!','#e8f6ff',900)},
           onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000);showLbl('resLbl','DOUBLE PLAY!','#ff2222',1000)}})}
       continue}
@@ -1263,6 +1305,7 @@ try{chalUnlocked=localStorage.getItem('bbChalUnlk')==='1';
   if(chalUnlocked)localStorage.setItem('bbChalUnlk','1')}catch(e){}
 if(DEV)chalUnlocked=true;
 try{challenge=chalUnlocked&&localStorage.getItem('bbChal')==='1'}catch(e){}
+try{chill=!challenge&&localStorage.getItem('bbChill')==='1'}catch(e){}   // v487
 if(DEV)try{const od=localStorage.getItem('bbDevOdds');if(od!==null)newOdds=od==='1';devAllSF=localStorage.getItem('bbDevAllSF')==='1';devFps=localStorage.getItem('bbDevFps')==='1';dev1Run=localStorage.getItem('bbDev1Run')==='1';{const m=localStorage.getItem('bbDevLED');if(m==='old'||m==='off')devLED=m}const v=+localStorage.getItem('bbDevSF');if(v>=2&&v<=5)SF_PLUS=v}catch(e){}
 loadModeScores();
 
@@ -1542,13 +1585,14 @@ function drawScoreboard(){if(venue===2||bp)PARK.frame(cx);if(bp){drawBPBoard();r
   // header row: ROUND · TGT n · HI n, justified. A label and its number sit 3px apart; the
   // three items share the leftover width — equal gaps between them, edges get 70% of a gap.
   const ch=6,gapIn=3,hiLive=!exhibitionMode&&runs>hiScores[round];
-  const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),nm=sup?rnm.slice(0,-1):rnm,tgN=''+target,hiN=''+(hiLive?runs:hiScores[round]);
-  const w1=nm.length*ch+(sup?TROPHY[0].length/2+1:0),w2=3*ch+gapIn+tgN.length*ch,w3=2*ch+gapIn+hiN.length*ch;
+  const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),pz=rnm.endsWith(PEACE),nm=sup?rnm.slice(0,-1):pz?rnm.slice(0,-PEACE.length):rnm,tgN=''+target,hiN=''+(hiLive?runs:hiScores[round]);
+  const w1=nm.length*ch+(sup?TROPHY[0].length/2+1:pz?6:0),w2=3*ch+gapIn+tgN.length*ch,w3=2*ch+gapIn+hiN.length*ch;
   const g=(bwid-w1-w2-w3)/3.4,e=g*.7;let x=bx+e;
   cx.textAlign='left';
   cx.fillStyle='#ffd642';cx.fillText(nm,Math.round(x),r1);
   if(sup){const cb=capBox(),hh=cb.bot-cb.top,T=hh>=5.75?TROPHY12:hh>=5.25?TROPHY11:TROPHY10;   // as tall as the capitals
     drawTrophy(cx,T,Math.round(x)+nm.length*ch+1,r1+cb.bot-T.length/2,.5)}                     // bottom on their bottom edge
+  if(pz){const cb=capBox();drawPeace(cx,Math.round(x)+nm.length*ch+1,r1+cb.bot-7,.5)}           // CHILL MODE: the little ✌, its bottom on the capitals'
   x+=w1+g;
   cx.fillStyle='#aaa';cx.fillText('TGT',Math.round(x),r1);
   cx.fillStyle=runs<target?TGT_OFF:(tgtFlash>0&&Math.floor((5*TGT_PH-tgtFlash)/TGT_PH)%2===1)?TGT_OFF:TGT_GRN;
@@ -1569,8 +1613,13 @@ function drawScoreboard(){if(venue===2||bp)PARK.frame(cx);if(bp){drawBPBoard();r
   for(let i=0;i<3;i++){const lx=areaC-lampW/2+lampR+i*(lampR*2+lampGap),ly=cellTop+5;
     cx.fillStyle=i<innOuts?'#ee2222':'#331111';cx.beginPath();cx.arc(lx,ly,lampR,0,Math.PI*2);cx.fill();
     if(i<innOuts){cx.fillStyle='rgba(255,50,50,.3)';cx.beginPath();cx.arc(lx,ly,lampR+2,0,Math.PI*2);cx.fill()}}
-  // radar gun, above the out lamps: amber LED digits from the moment the pitch leaves his hand
-  if(radar){cx.textAlign='center';cx.fillStyle='#ffa940';cx.fillText(radar+' MPH',Math.round(areaC),r2-1);cx.textAlign='left'}
+  // radar gun, above the out lamps: amber LED digits from the moment the pitch leaves his hand. CHILL MODE (v487): no speed gun; three
+  // yellow strike lamps right above the out lamps instead, S and O beside the two rows
+  if(chill){for(let i=0;i<3;i++){const lx=areaC-lampW/2+lampR+i*(lampR*2+lampGap),ly=cellTop-4.5,on=i<strikes;
+      cx.fillStyle=on?'#ffd21f':'#33290a';cx.beginPath();cx.arc(lx,ly,3.2,0,Math.PI*2);cx.fill();
+      if(on){cx.fillStyle='rgba(255,214,40,.3)';cx.beginPath();cx.arc(lx,ly,5,0,Math.PI*2);cx.fill()}}
+    cx.fillStyle='#8a8f80';cx.textAlign='center';cx.fillText('S',Math.round(areaC-lampW/2-6),cellTop-1.5);cx.fillText('O',Math.round(areaC-lampW/2-6),cellTop+8);cx.textAlign='left'}
+  else if(radar){cx.textAlign='center';cx.fillStyle='#ffa940';cx.fillText(radar+' MPH',Math.round(areaC),r2-1);cx.textAlign='left'}
 }
 
 /* ===== particles ===== */
@@ -1591,7 +1640,7 @@ function pickPitch(){
   return challenge?levelUp(basePitch()):basePitch()}
 function basePitch(){
   const rule=ROUNDS[round].pitchRule;
-  if(rule==='legend'){const r=Math.random(),hp=ROUNDS[round].heater||.28; // heater share; the rest split evenly
+  if(rule==='legend'){const r=Math.random(),hp=chill?0:ROUNDS[round].heater||.28; // heater share; the rest split evenly (CHILL MODE: no heaters, the four others evenly)
     if(r<hp)return{...PITCHES[3]};
     return{...PITCHES[[0,1,2,4][Math.min(Math.floor((r-hp)/((1-hp)/4)),3)]]}}
   let idx;
@@ -1601,10 +1650,11 @@ function basePitch(){
     idx=inning<=1?[0,1,2]:inning<=2?[0,1,2,4]:[0,1,2,3,4];
   }else if(rule==='allFrom1'){idx=[0,1,2,3,4];
   }else{idx=PITCHES.map((_,i)=>i).filter(i=>PITCHES[i].inn<=inning)}
+  if(chill)idx=idx.filter(i=>PITCHES[i].n!=='HEATER');   // CHILL MODE: no heaters; the others share their place evenly, as they did the rest
   return{...PITCHES[idx[Math.floor(Math.random()*idx.length)]]}}
 // drop whatever play is still in motion (steal, double play, throws, runners) so nothing finishes behind the menu
 function cancelPlay(){bpClearLbl();steal=null;fcPlay=null;throws=[];exits=[];runnerAnims=[];pendingRuns=0;clearBases();particles=[];trail=[]}
-function startGame(){bp=null;paused=false;devOldParade=false;if(devFps)fpsReset();hide('pauseScr');gs=newGS();musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
+function startGame(){bp=null;paused=false;devOldParade=false;devDemo=false;if(devFps)fpsReset();hide('pauseScr');gs=newGS();musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);pitcherSk=pickSkin();pitchLefty=Math.random()<.3;
   round=nextRound;target=RD(round).target;setVenue(round);sbF.cur=0;marqReset();TUNE.play('field');   // the park for this level, and two organ chords (ta-da) play us onto the field
   inning=1;innOuts=0;runs=0;totalHits=0;totalHR=0;totalBB=0;pitchCt=0;innBatters=0;pendingRuns=0;tgtFlash=0;steal=null;fcPlay=null;throws=[];exits=[];hrOK=false;hitStreak=0;hrStreak=0;maxHRStreak=0;
   innScores=[0,0,0];innHits=[0,0,0];innLOB=[0,0,0];onDeck=null;radar=0;
@@ -1641,11 +1691,11 @@ const OPEN_LATE=970;
 const INN_RESULT_MS=500,INN_NEXT_AT=700,INN_LABEL_MS=1200,INN_WINDUP_GAP=125;
 const msF=ms=>Math.round(ms/16.67);
 /* =========================================== */
-let isNewInning=false,isNewRound=false,sameBatter=false,paused=false,openInnAt=0;
+let isNewInning=false,isNewRound=false,sameBatter=false,paused=false,openInnAt=0,strikes=0,strikeNew=false;   // strikes, strikeNew: CHILL MODE's count (chillStrike)
 
 function nextPitch(){
   if(bp&&bp.i>=bp.n){bpEnd();return}
-  pitch=pickPitch();innBatters++;
+  pitch=pickPitch();innBatters++;strikes=0;
   knk=Math.random()*100;
   // the on-deck batter steps in and a new one kneels down (shown beside the plate, so no LEFTY! callout)
   if(!onDeck)onDeck=mkBatter(innBatters);
@@ -1721,10 +1771,11 @@ function doSwing(){
   setTimeout(()=>{batFr=5},85);setTimeout(()=>{batFr=6},130);
   if(bp&&bpSwing(offset,absO))return;   // batting practice: every swing is measured; a miss is just a miss
 
-  if(absO>WHIFF){tallyPA('K');
+  if(absO>WHIFF){if(chill&&strikes<2){setTimeout(()=>{batFr=0},300);sfx.strike();chillStrike(false);return}   // CHILL MODE: strike one or two
+    tallyPA('K');
     setTimeout(()=>{batFr=0},300);
     if(innOuts===2){lobNow=bases.filter(Boolean).length;twoOutRun()}   // strike three with 2 outs: they were running
-    innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
+    innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl',chill?'STRIKE THREE!':'STRIKE!','#ff4444',900);if(chill)strikes=3;
     state='result';checkInning();return}
 
   sfx.crack();
@@ -1755,12 +1806,21 @@ function doSwing(){
 }
 
 function ballPassed(){if(bp){bpTake();return}
+  if(chill&&strikes<2){sfx.strike();chillStrike(false);return}   // CHILL MODE: a take is strike one or two
   tallyPA('K');
   if(innOuts===2){lobNow=bases.filter(Boolean).length;twoOutRun()}   // strike three with 2 outs: they were running
-  innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl','STRIKE!','#ff4444',900);
+  innOuts++;hitStreak=0;hrOK=false;batterUp=false;batBlinkT=BLINK_FR;endStreak();sfx.strike();showLbl('resLbl',chill?'STRIKE THREE!':'STRIKE!','#ff4444',900);if(chill)strikes=3;
   state='result';checkInning()}
+/* CHILL MODE (v487, David: "Three strikes/fouls and you're out"): a miss, a take or a foul is a strike (any mix; the wall's K box is
+   still an out, v487b). The first two keep him up: the same batter, a new pitch and the wall dealt again (as after a steal); the third is the out
+   every one of them is in the classic game, with its own call (STRIKE THREE!, FOULED OUT!). Streaks go on through a strike.
+   The count shows on the scoreboard's yellow lamps; strike three lights the third until the next batter. */
+function chillStrike(foul){strikes++;showLbl('resLbl',foul?'FOUL BALL!':strikes===1?'STRIKE ONE!':'STRIKE TWO!',foul?'#ffaa44':'#ffd21f',900);
+  sameBatter=true;strikeNew=true;state='result';resultT=30}
 
 function resolveHit(){if(bp){bpLand();return}
+  if(chill&&hitRes==='FOUL'&&strikes<2){sfx.foul();spawnP(hitTX,hitTY,5,['#aaa','#666'],1.5);chillStrike(true);return}   // CHILL MODE: a foul is strike one or two (v487b: the K box is still an out, David: "K box is still an out :)")
+  if(chill&&hitRes!=='SB'&&hitRes!=='CS')strikes=hitRes==='FOUL'||hitRes==='K'?3:0;   // the count clears with the at-bat (strike three: all three lamps until the next batter)
   tallyPA(hitRes);
   if(hitRes!=='SB')hrOK=['1B','2B','3B','HR','BB'].includes(hitRes);   // a steal keeps whatever the batter had
   if(hitRes!=='SB'&&hitRes!=='CS')batterUp=false;   // he runs (hit, walk, error, DP) or he's out; steals keep him up
@@ -1769,7 +1829,7 @@ function resolveHit(){if(bp){bpLand();return}
   const wx=hitTX,wy=hitTY;
   if(hitRes==='FOUL'){
     sfx.foul();innOuts++;hitStreak=0;endStreak();
-    showLbl('resLbl','FOUL!','#ffaa44',900);
+    showLbl('resLbl',chill?'FOULED OUT!':'FOUL!',chill?'#ff4444':'#ffaa44',900);
     spawnP(wx,wy,5,['#aaa','#666'],1.5);
   }else if(hitRes==='GB'||hitRes==='FB'||hitRes==='K'){
     resolveOutPlay(hitRes,wx,wy);
@@ -1802,7 +1862,7 @@ function resolveHit(){if(bp){bpLand();return}
     if(bases[1]){lead={sx:B2.x,sy:B2.y,ex:B3.x,ey:B3.y,t:0,dur:STEAL_FR,sk:bases[1],hold:true};runnerAnims.push(lead);bases[2]=bases[1];bases[1]=false;basePending[2]=true;lead.dest=2}
     if(bases[0]){const a={sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:STEAL_FR,sk:bases[0],dest:1,hold:true};runnerAnims.push(a);bases[1]=bases[0];bases[0]=false;basePending[1]=true;if(!lead)lead=a}
     sfx.steps();
-    steal={T:STEAL_FR,ok:Math.random()<STEAL_OK,dbl,lead,wx,wy};
+    steal={T:STEAL_FR,ok:chill||Math.random()<STEAL_OK,dbl,lead,wx,wy};   // CHILL MODE: always in safe
     sameBatter=true;state='result';resultT=999;return;
   }else if(hitRes==='CS'){
     // Caught stealing — lead runner out, trailing advances if double steal
@@ -1870,7 +1930,7 @@ function resolveHit(){if(bp){bpLand();return}
     sendIdx=simpleMode?-1:hitRes==='1B'&&bases[1]&&xb[1]?1:hitRes==='2B'&&bases[0]&&xb[0]?0:-1;sendAnim=null;x3Anim=null;
     const oo=Math.min(innOuts,2),secondOpen=!(bases[0]&&!xb[0]);
     const batOnThrow=sendIdx===1&&secondOpen&&(!cautious()||isKeyRun(bases.filter(Boolean).length+1))&&Math.random()<BAT_ON_THROW[oo];   // short in the 3rd: only if the batter is the target run
-    const plateOut=sendIdx>=0&&Math.random()<xbOut;
+    const plateOut=sendIdx>=0&&!chill&&Math.random()<xbOut;   // (chill: always safe at home)
     spawnRunners(hitRes);
     let scored=processHit(hitRes);
     if(sendIdx>=0){scored--;pendingRuns--;
@@ -1880,7 +1940,7 @@ function resolveHit(){if(bp){bpLand();return}
         // he breaks for 2nd as the play at the plate happens (halfway at the call); his own footsteps start at the call
         at.push([T-15,()=>{if(bases[0]===batterSk&&!bases[1]){bases[0]=false;bases[1]=batterSk;basePending[1]=true;
           const ba={sx:B1.x,sy:B1.y,ex:B2.x,ey:B2.y,t:0,dur:30,sk:batterSk,hold:true};runnerAnims.push(ba);
-          throws.push({f:0,T:30,anim:ba,stepsAt:15,stepsFn:()=>sfx.steps2(),out:Math.random()<BAT_THROW_OUT[oo],
+          throws.push({f:0,T:30,anim:ba,stepsAt:15,stepsFn:()=>sfx.steps2(),out:!chill&&Math.random()<BAT_THROW_OUT[oo],
             onSafe:()=>{basePending[1]=false},   // no call: you can see him make it
             onOut:()=>{bases[1]=false;basePending[1]=false;runCall(['THROWN OUT AT 2ND!'])}})}}])}
       if(scored<=0)roar(OOH_SEND);   // if runs are already coming in on the play, their cheer covers it
@@ -1889,7 +1949,7 @@ function resolveHit(){if(bp){bpLand();return}
         onOut:()=>showLbl('innLbl','OUT AT THE PLATE!','#ff4444',1000)});sendIdx=-1}
     if(x3Anim){const A=x3Anim;x3Anim=null;if(runMsgs.includes('1ST TO 3RD!'))runMsgs.splice(runMsgs.indexOf('1ST TO 3RD!'),1);
       runMsgs.push('GOING FOR 3RD!');
-      throws.push({f:0,T:A.dur,anim:A,out:Math.random()<FIRST3RD_OUT[oo],loud:1,
+      throws.push({f:0,T:A.dur,anim:A,out:!chill&&Math.random()<FIRST3RD_OUT[oo],loud:1,
         onSafe:()=>{basePending[2]=false;showLbl('innLbl','1ST TO 3RD!','#e8f6ff',900)},
         onOut:()=>{bases[2]=false;basePending[2]=false;showLbl('innLbl','OUT AT 3RD!','#ff4444',1000)}})}
     if(hitRes==='HR'){totalHR++;hrStreak++;if(hrStreak>maxHRStreak)maxHRStreak=hrStreak;
@@ -1918,7 +1978,7 @@ function checkInning(){
     state='innbreak';innBreakT=inning>=MAX_INN?42:msF(INN_NEXT_AT)}
   else{resultT=hitRes==='HR'?55:30}
 }
-function doInnBreak(){
+function doInnBreak(){strikes=0;
   innLOB[Math.min(inning,MAX_INN)-1]=lobNow!=null?lobNow:bases.filter(b=>b).length;lobNow=null;
   const endOuts=innOuts;
   clearBases();runnerAnims=[];innOuts=0;innBatters=0;hrOK=false;inning++;
@@ -1931,11 +1991,11 @@ function doInnBreak(){
     const won=runs>=target;
     recordGame(round,won);
     // beating LEGEND (either style, not in exhibition) unlocks CHALLENGE MODE for good
-    const unlockNow=won&&round>=ROUNDS.length-1&&!challenge&&!chalUnlocked&&!exhibitionMode;
+    const unlockNow=won&&round>=ROUNDS.length-1&&!challenge&&!chill&&!chalUnlocked&&!exhibitionMode;   // (v487: not from CHILL MODE)
     if(unlockNow){chalUnlocked=true;chalJustUnlocked=true;try{localStorage.setItem('bbChalUnlk','1')}catch(e){}}
     if(unlockNow||won&&round>=ROUNDS.length-1)sfx.gs();else if(won)sfx.win();else sfx.over();   // the fanfare for every LEGEND win, either mode (v444; until then only the one that unlocked CHAMPIONSHIP MODE)
     const gt=document.getElementById('goT'),goN=document.getElementById('goN');goN.classList.remove('chalTxt');
-    if(won&&round>=ROUNDS.length-1&&!exhibitionMode){gt.innerHTML=challenge?nmHTML(RD(round).name)+'!':'🏆 LEGEND!';gt.style.color=challenge?SF_COLOR:'#ffd642';
+    if(won&&round>=ROUNDS.length-1&&!exhibitionMode){gt.innerHTML=challenge||chill?nmHTML(RD(round).name)+'!':'🏆 LEGEND!';gt.style.color=challenge?SF_COLOR:chill?CHILL_COLOR:'#ffd642';
     }else{gt.textContent=won?'YOU WIN!':'GAME OVER';gt.style.color=won?'#ffd642':'#ff4433'}
     document.getElementById('goR').textContent='RUNS: '+runs;
     document.getElementById('goTgt').textContent=(won?'TARGET: ':'NEEDED: ')+target;
@@ -1954,7 +2014,7 @@ function doInnBreak(){
         if(nextRound>maxUnlocked){maxUnlocked=nextRound;try{localStorage.setItem(modeKey('dsUnlk'),maxUnlocked)}catch(e){}}
         goN.innerHTML='NEXT: '+nmHTML(RD(nextRound).name)+' · '+RD(nextRound).target+' RUNS';
         gp.textContent='TAP TO CONTINUE';
-      }else if(won){nextRound=round;goN.textContent=challenge?'YOU BEAT CHAMPIONSHIP MODE!':'YOU BEAT THE GAME!';gp.textContent='TAP TO PLAY AGAIN';
+      }else if(won){nextRound=round;goN.textContent=challenge?'YOU BEAT CHAMPIONSHIP MODE!':chill?'YOU BEAT CHILL MODE!':'YOU BEAT THE GAME!';gp.textContent='TAP TO PLAY AGAIN';
       }else{nextRound=Math.max(0,round-1);   // a loss drops you one level (Rookie stays Rookie)
         goN.innerHTML=(round>0?'BACK TO ':'TRY AGAIN · ')+nmHTML(RD(nextRound).name);gp.textContent='TAP TO CONTINUE'}}
     document.getElementById('goHi').textContent=isHi?'HIGH SCORE!!':'';
@@ -1976,14 +2036,14 @@ function hide(id){document.getElementById(id).classList.remove('show')}
 const _t={};
 function hideLblAfter(id,ms){clearTimeout(_t[id]);_t[id]=setTimeout(()=>document.getElementById(id).classList.remove('show'),ms)}
 function showLbl(id,txt,col,dur,glow){if(venue===3)marqHear(id,txt);   // the big park's ribbon board hears every call
-  const e=document.getElementById(id);e.textContent=txt;if(txt.includes('\u1D9C'))e.innerHTML=nmHTML(txt);e.style.color=col;e.style.textShadow=glow||'';
+  const e=document.getElementById(id);e.textContent=txt;if(txt.includes('\u1D9C')||txt.includes('\u270C'))e.innerHTML=nmHTML(txt);e.style.color=col;e.style.textShadow=glow||'';
   e.style.fontSize='';
   if(id==='streakLbl'||id==='innLbl'){e.style.whiteSpace='nowrap';let fs=parseFloat(getComputedStyle(e).fontSize);   // upper slot: one line, shrunk only if it must
     while(e.scrollWidth>e.clientWidth&&fs>8){fs-=.5;e.style.fontSize=fs+'px'}}
   else if(txt.length>13&&txt.includes(' ')){   // long two-word labels (CAUGHT STEALING!, FIELDER'S CHOICE) wrap to two full-size lines
     const sp=[...txt.matchAll(/ /g)].map(m=>m.index).sort((a,b)=>Math.abs(a-txt.length/2)-Math.abs(b-txt.length/2))[0];
     e.textContent=txt.slice(0,sp)+'\n'+txt.slice(sp+1)}
-  else if(txt.replace('\u1D9C','').length>12)e.style.fontSize=(parseFloat(getComputedStyle(e).fontSize)*12/txt.length).toFixed(1)+'px';
+  else if(txt.replace('\u1D9C','').replace(PEACE,'').length>12)e.style.fontSize=(parseFloat(getComputedStyle(e).fontSize)*12/txt.length).toFixed(1)+'px';
   e.classList.add('show');clearTimeout(_t[id]);_t[id]=setTimeout(()=>e.classList.remove('show'),dur)}
 
 // run label for a play: TARGET!! for the whole play if this play's runs take the total to the target
@@ -2024,7 +2084,7 @@ function update(){
     if(hitFlyT>=1.15){const f=leadFrac(),n=runnerAnims.length,ob=[...bases];resolveHit();leadShift(f,n,ob)}}
   if(state==='result'){resultT--;
     if(resultT<=0&&innOuts<3&&runnerAnims.length===0&&!throws.length){
-      if(sameBatter){sameBatter=false;newZones();readyT=48;state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}
+      if(sameBatter){sameBatter=false;if(strikeNew){strikeNew=false;pitch=pickPitch();knk=Math.random()*100}newZones();readyT=48;state='ready';batFr=0;pFr=0;swingReq=false;trail=[]}   // (a chill strike: a new pitch)
       else{batFr=0;newZones();nextPitch()}}}
   if(state==='innbreak'){innBreakT--;if(innBreakT<=0)doInnBreak()}
   runnerAnims=runnerAnims.filter(r=>{if(r.delay>0){r.delay--;return true}r.t+=1/r.dur;
@@ -2144,9 +2204,9 @@ function tallyPA(k){const TB={'1B':1,'2B':2,'3B':3,HR:4}[k];
   else if(k==='SF'||k==='SFX'){gs.pa++;gs.sf++}   /* (v461: a // comment had swallowed this line since before v413, so sac flies never counted) */
   else if(k==='BNT')gs.pa++}   // GB/FB are counted once the play is known (sac fly or not); SB/CS aren't plate appearances
 const ST_F=['g','w','r','pa','ab','h','bb','tb','sf'];
-function stKey(ex,c,sm){return (ex?'bbEX':'bbST')+(c?'C':'')+(sm?'S':'')}
+function stKey(ex,c,sm){return (ex?'bbEX':'bbST')+(c===true?'C':c||'')+(sm?'S':'')}   // c: false/true (championship) or a MODE() letter ('C', 'Z' chill, '')
 function getST(ex,c,sm){try{return JSON.parse(localStorage.getItem(stKey(ex,c,sm))||'null')}catch(e){return null}}
-function recordGame(r,won){try{const k=stKey(exhibitionMode,challenge,simpleMode),a=getST(exhibitionMode,challenge,simpleMode)||ROUNDS.map(()=>ST_F.map(()=>0));
+function recordGame(r,won){try{const k=stKey(exhibitionMode,MODE(),simpleMode),a=getST(exhibitionMode,MODE(),simpleMode)||ROUNDS.map(()=>ST_F.map(()=>0));
   const add=[1,won?1:0,runs,gs.pa,gs.ab,gs.h,gs.bb,gs.tb,gs.sf];a[r]=a[r].map((v,i)=>v+add[i]);localStorage.setItem(k,JSON.stringify(a))}catch(e){}}
 let stSimple=false;
 function renderStats(){
@@ -2156,21 +2216,23 @@ function renderStats(){
       :`<tr class="${cls}"><td style="color:${col}">${nm}</td><td>–</td><td></td><td></td><td></td><td></td><td></td></tr>`};
   const head='<tr><th></th><th>W-L</th><th>WIN</th><th>R/G</th><th>AVG</th><th>OBP</th><th>SLG</th></tr>',sum=a=>a.reduce((t,x)=>t.map((v,i)=>v+x[i]),ST_F.map(()=>0));
   let h='';
-  for(const c of chalUnlocked?[false,true]:[false]){const a=getST(false,c,stSimple)||ROUNDS.map(()=>ST_F.map(()=>0)),col=c?SF_COLOR:'#fff';
-    h+=`<div class="stH">${c?'CHAMPIONSHIP':'CLASSIC'}</div><table class="stT">${head}${ROUNDS.map((_,i)=>line(RD(i).name.replace('ᶜ',''),a[i],col)).join('')}${line('ALL',sum(a),'#ffd642','tot')}</table>`}
+  // the modes: CLASSIC, CHAMPIONSHIP once unlocked, CHILL (v487) once it has been switched on or played
+  const MS=[['','CLASSIC','#fff']].concat(chalUnlocked?[['C','CHAMPIONSHIP',SF_COLOR]]:[]).concat(chill||getST(false,'Z',stSimple)||getST(true,'Z',stSimple)?[['Z',nmHTML('CHILL'+PEACE),CHILL_COLOR]]:[]);
+  for(const [c,hd,col] of MS){const a=getST(false,c,stSimple)||ROUNDS.map(()=>ST_F.map(()=>0));
+    h+=`<div class="stH">${hd}</div><table class="stT">${head}${ROUNDS.map((r,i)=>line(r.name,a[i],col)).join('')}${line('ALL',sum(a),'#ffd642','tot')}</table>`}
   // practice, by type
   h+=`<div class="stH">PRACTICE</div><table class="stT">${head}`;
-  for(const c of chalUnlocked?[false,true]:[false])h+=line(c?'EXH CHAMP':'EXHIBITION',sum(getST(true,c,stSimple)||ROUNDS.map(()=>ST_F.map(()=>0))),c?SF_COLOR:'#fff');
+  for(const [c] of MS)h+=line(c==='C'?'EXH CHAMP':c==='Z'?'EXH CHILL':'EXHIBITION',sum(getST(true,c,stSimple)||ROUNDS.map(()=>ST_F.map(()=>0))),c==='C'?SF_COLOR:c==='Z'?CHILL_COLOR:'#fff');
   h+='</table>';
   let bpH=[];try{bpH=JSON.parse(localStorage.getItem('bbBP')||'[]')}catch(e){}
-  const bpRow=c=>{const R=bpH.filter(x=>{const k=x.code.split(' ')[1];return c?k==='CHAMP'||k==='CHAL':k==='CLASSIC'});   /* CHAL: rounds saved before v434, when the mode was called CHALLENGE */if(!R.length)return '';
+  const bpRow=c=>{const R=bpH.filter(x=>{const k=x.code.split(' ')[1];return c==='Z'?k==='CHILL':c?k==='CHAMP'||k==='CHAL':k==='CLASSIC'});   /* CHAL: rounds saved before v434, when the mode was called CHALLENGE */if(!R.length)return '';
     const sw=R.slice(-5).flatMap(x=>x.code.split(' ').slice(3)).map(q=>q.match(/^([A-Z])(\d)([RL])([+-]\d+)?([a-zA-Z])$/)).filter(m=>m&&m[4]);
     const best=Math.max(...R.map(x=>{const n=+x.code.split(' ')[2],pts=x.pts;return pts!=null?Math.round(pts/n):-1}));
-    return `<tr><td style="color:${c?SF_COLOR:'#fff'}">BP ${c?'CHAMP':'CLASSIC'}</td><td>${R.length}</td><td>${sw.length?Math.round(sw.reduce((a,m)=>a+Math.abs(+m[4]),0)/sw.length):'–'}</td><td>${sw.length?Math.round(100*sw.filter(m=>m[5]==='T').length/sw.length)+'%':'–'}</td><td>${best>=0?best:'–'}</td></tr>`};
-  const bpRows=bpRow(false)+(chalUnlocked?bpRow(true):'');
+    return `<tr><td style="color:${c==='Z'?CHILL_COLOR:c?SF_COLOR:'#fff'}">BP ${c==='Z'?'CHILL':c?'CHAMP':'CLASSIC'}</td><td>${R.length}</td><td>${sw.length?Math.round(sw.reduce((a,m)=>a+Math.abs(+m[4]),0)/sw.length):'–'}</td><td>${sw.length?Math.round(100*sw.filter(m=>m[5]==='T').length/sw.length)+'%':'–'}</td><td>${best>=0?best:'–'}</td></tr>`};
+  const bpRows=bpRow(false)+(chalUnlocked?bpRow(true):'')+bpRow('Z');
   if(bpRows)h+=`<table class="stT" style="margin-top:2.5cqw"><tr><th></th><th>ROUNDS</th><th>MISS</th><th>ON TGT</th><th>BEST</th></tr>${bpRows}</table><div class="stN">BATTING PRACTICE · MISS (MS) AND ON TARGET: LAST 5 ROUNDS<br>BEST: YOUR TOP ROUND'S POINTS PER PITCH</div>`;
   document.getElementById('stBody').innerHTML=h}
-function wipeStats(){try{for(const ex of [0,1])for(const c of ['','C'])for(const m of ['','S'])localStorage.removeItem((ex?'bbEX':'bbST')+c+m);
+function wipeStats(){try{for(const ex of [0,1])for(const c of ['','C','Z'])for(const m of ['','S'])localStorage.removeItem((ex?'bbEX':'bbST')+c+m);
   ['bbBP','bbWL','bbWLC','bbWLS','bbWLCS','bbWLsince'].forEach(k=>localStorage.removeItem(k))}catch(e){}}
 
 /* ===== batting practice =====
@@ -2181,9 +2243,9 @@ function wipeStats(){try{for(const ex of [0,1])for(const c of ['','C'])for(const
 let bp=null;
 const BP_L={CHANGEUP:'C',KNUCKLEBALL:'K',CURVEBALL:'U',FASTBALL:'F',HEATER:'H','SUPER FAST':'S'};
 const bpShuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-function bpTypes(){const base=[1,4,2,0,3].map(i=>({...PITCHES[i]}));return challenge?base.map(levelUp):base}   // slowest → fastest
+function bpTypes(){const base=[1,4,2,0,3].map(i=>({...PITCHES[i]}));return challenge?base.map(levelUp):chill?base.filter(p=>p.n!=='HEATER'):base}   // slowest → fastest (CHILL MODE: no heater)
 function startBP(n){aud();paused=false;hide('pauseScr');musicStop();cancelPlay();markPlayed();tripEnd();roadShow(false);setVenue(2);
-  const ty=bpTypes(),T=bpShuf([].concat(...Array(n/5).fill(0).map(()=>ty.map((_,i)=>i))));
+  const ty=bpTypes(),T=bpShuf([].concat(...Array(Math.ceil(n/ty.length)).fill(0).map(()=>ty.map((_,i)=>i)))).slice(0,n);   // (four types in CHILL MODE: as even as n allows)
   let Z=[];while(Z.length<n)Z=Z.concat(bpShuf([0,1,2,3,4,5,6]));Z=bpShuf(Z.slice(0,n));   // every spot as evenly as n allows
   bp={n,i:0,ty,list:T.map((t,k)=>({t,z:Z[k]})),score:0,rec:[],streak:0,best:0};
   round=0;target=0;inning=1;innOuts=0;runs=0;pitchCt=0;innBatters=0;onDeck=null;radar=0;hide('goScr');hide('bpScr');
@@ -2244,7 +2306,7 @@ function bpStats(rec){const S=a=>a.reduce((x,y)=>x+y,0),out={};
   const side=r=>{const z=r.h==='R'?r.z:6-r.z;return z<=1?'PULL':z>=5?'OPPO':'MIDDLE'};
   out.sides=['PULL','MIDDLE','OPPO'].map(k=>[k,grp(sw.filter(r=>side(r)===k))]);
   out.all=grp(sw);out.takes=rec.length-sw.length;return out}
-function bpCode(){return 'BP2 '+(challenge?'CHAMP':'CLASSIC')+' '+bp.n+' '+bp.rec.map(r=>BP_L[r.t]+r.z+r.h+(r.e==null?'':(r.e<0?'-':'+')+Math.round(Math.abs(r.e)))+r.r).join(' ')}
+function bpCode(){return 'BP2 '+(challenge?'CHAMP':chill?'CHILL':'CLASSIC')+' '+bp.n+' '+bp.rec.map(r=>BP_L[r.t]+r.z+r.h+(r.e==null?'':(r.e<0?'-':'+')+Math.round(Math.abs(r.e)))+r.r).join(' ')}
 function bpEnd(){const st=bpStats(bp.rec),code=bpCode();state='gameover';batterUp=false;
   try{const h=JSON.parse(localStorage.getItem('bbBP')||'[]');h.push({d:Date.now(),code,pts:bp.score});localStorage.setItem('bbBP',JSON.stringify(h.slice(-60)))}catch(e){}
   const ms=x=>x==null?'–':Math.round(Math.abs(x))===0?'0':(x<0?'−':'+')+Math.round(Math.abs(x)),pc=x=>Math.round(x*100)+'%';
@@ -2258,7 +2320,7 @@ function bpEnd(){const st=bpStats(bp.rec),code=bpCode();state='gameover';batterU
 
 /* ===== exhibition ===== */
 function showExh(){showBPSet();   // CHALLENGE MODE (once unlocked) switches the levels and the BP pitch set
-  const cb=document.getElementById('exhChal');cb.style.display=chalUnlocked?'':'none';cb.classList.toggle('on',challenge);
+  const cb=document.getElementById('exhChal');cb.style.display=chalUnlocked?'':'none';cb.classList.toggle('on',challenge);document.getElementById('exhChill').classList.toggle('on',chill);
   const list=document.getElementById('exhList');list.innerHTML='';
   ROUNDS.forEach((_,i)=>{const d=document.createElement('div'),r=RD(i);
     const ok=i<=maxUnlocked;
@@ -2269,10 +2331,11 @@ function showExh(){showBPSet();   // CHALLENGE MODE (once unlocked) switches the
       hide('exhScr');exhibitionMode=true;round=i;nextRound=i;startGame()});
     list.appendChild(d)})}
 onTap('exhChal',()=>{setChallenge(!challenge);showExh()});
+onTap('exhChill',()=>{setChill(!chill);showExh()});
 document.getElementById('exhBtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();hide('menuScr');showExh();show('exhScr')});
 function onTap(id,fn){document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn()})}
-function showBPSet(){document.getElementById('bpSet').textContent=challenge?'KNUCKLEBALL TO SUPER FAST':'CHANGEUP TO HEATER';
+function showBPSet(){document.getElementById('bpSet').textContent=challenge?'KNUCKLEBALL TO SUPER FAST':chill?'CHANGEUP TO FASTBALL':'CHANGEUP TO HEATER';
   const r=document.getElementById('bpN');r.innerHTML='';
   [10,25,50,75,100].forEach(n=>{const d=document.createElement('div');d.textContent=n;
     d.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();hide('exhScr');startBP(n)});r.appendChild(d)})}
@@ -2299,11 +2362,14 @@ let hasPlayed=false;
 try{hasPlayed=localStorage.getItem('bbPlayed')==='1'||localStorage.getItem('bbChalUnlk')==='1'||
   Object.keys(localStorage).some(k=>/^ds(Hi2|Unlk)/.test(k))}catch(e){}
 function markPlayed(){if(hasPlayed)return;hasPlayed=true;try{localStorage.setItem('bbPlayed','1')}catch(e){}}
-function paintChal(){document.getElementById('tMenu').style.display=hasPlayed?'':'none';setTimeout(()=>fitLine(document.getElementById('tSub')));const b=document.getElementById('chalBtn');b.style.display=chalUnlocked?'':'none';b.classList.toggle('on',challenge);
+function paintChal(){document.getElementById('tMenu').style.display=hasPlayed?'':'none';setTimeout(()=>fitLine(document.getElementById('tSub')));const b=document.getElementById('chalBtn');b.style.display=chalUnlocked?'':'none';b.classList.toggle('on',challenge);document.getElementById('chillBtn').classList.toggle('on',chill);
   if(state==='title'){round=0;nextRound=0;target=RD(0).target}
   document.getElementById('tSub').textContent='Score '+RD(0).target+'+ runs in 3 innings'}
-function setChallenge(on){challenge=on&&chalUnlocked;try{localStorage.setItem('bbChal',challenge?'1':'0')}catch(e){}loadModeScores();paintChal();busPaint()}   // (the bus on the road changes with it)
+function setChallenge(on){challenge=on&&chalUnlocked;if(challenge)chill=false;try{localStorage.setItem('bbChal',challenge?'1':'0');localStorage.setItem('bbChill',chill?'1':'0')}catch(e){}loadModeScores();paintChal();busPaint()}
+// CHILL MODE (v487): on, it turns CHAMPIONSHIP MODE off (and the other way round); the bus becomes the van
+function setChill(on){chill=!!on;if(chill)challenge=false;try{localStorage.setItem('bbChill',chill?'1':'0');localStorage.setItem('bbChal',challenge?'1':'0')}catch(e){}loadModeScores();paintChal();busPaint()}   // (the bus on the road changes with it)
 document.getElementById('chalBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setChallenge(!challenge)});
+document.getElementById('chillBtn').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setChill(!chill)});
 paintChal();
 // developer toggles (test builds only): every challenge pitch SUPER FAST, and how much faster than a heater
 if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (FR)</b><span data-d="2">+2</span><span data-d="3">+3</span><span data-d="4">+4</span><span data-d="5">+5</span><span data-d="unl">SHOW PARADE</span><span data-d="oldp">OLD PARADE</span><span data-d="odds">NEW ODDS</span><b>WIN TUNE</b><span data-t="win">VET</span><span data-t="win2">ALL</span><span data-t="win3">MVP</span><span data-t="win4">LEG</span><b>CROWD</b><span data-c="slam">SLAM</span><span data-c="big">BIG</span><b>FRAMES</b><span data-d="fps">METER</span><b>TARGET</b><span data-d="t1">1 RUN</span><b>MVP BOARD</b><span data-d="ledold">OLD</span><span data-d="ledoff">OFF</span>';   // (v446: hear the win tune of each drive)
@@ -2318,22 +2384,23 @@ if(DEV){const html='<b>DEV</b><span data-d="all">ALL SUPER FAST</span><b>SPEED (
 function paintDev(){document.querySelectorAll('.devP span').forEach(el=>{const k=el.dataset.d;
   el.classList.toggle('on',k==='all'?devAllSF:k==='odds'?newOdds:k==='fps'?devFps:k==='t1'?dev1Run:k==='ledold'?devLED==='old':k==='ledoff'?devLED==='off':k===''+SF_PLUS)})}
 // play out the end of a LEGEND win so the parade and the unlock can be seen without beating it
-function devUnlockDemo(){musicStop();hide('titleScr');setVenue(4);hide('pauseScr');paused=false;if(!challenge){chalUnlocked=false;loadModeScores();paintChal()}   // with CHALLENGE MODE on it shows that mode's parade (two choices); otherwise the first unlock
+function devUnlockDemo(){devDemo=true;musicStop();hide('titleScr');setVenue(4);hide('pauseScr');paused=false;if(!challenge&&!chill){chalUnlocked=false;loadModeScores();paintChal()}   // with CHALLENGE MODE on it shows that mode's parade (two choices); otherwise the first unlock
   exhibitionMode=false;round=4;nextRound=4;target=RD(4).target;runs=target;inning=MAX_INN;innOuts=3;
   hiScores[4]=Infinity;doInnBreak();loadModeScores()}
 // HIGH SCORES: browse any style (FULL/SIMPLE) and, once unlocked, CHALLENGE — without changing the
 // mode the next game uses. Each level's best can be cleared (tap twice); RESET ALL wipes every score,
 // every unlocked level and CHALLENGE MODE itself, behind a warning screen.
-const hiView={simple:false,chal:false};
-const viewKey=k=>k+(hiView.chal?'C':'')+(hiView.simple?'S':'');
+const hiView={simple:false,chal:false,chill:false};
+const viewKey=k=>k+(hiView.chal?'C':hiView.chill?'Z':'')+(hiView.simple?'S':'');
 function readArr(k){try{const h=JSON.parse(localStorage.getItem(k));if(Array.isArray(h))return h}catch(e){}return[]}
 function renderHi(){
   const cb=document.getElementById('hiChal');cb.style.display=chalUnlocked?'':'none';if(!chalUnlocked)hiView.chal=false;cb.classList.toggle('on',hiView.chal);
+  document.getElementById('hiChill').classList.toggle('on',hiView.chill);
   document.querySelectorAll('#hiMode span').forEach(el=>el.classList.toggle('on',(el.dataset.m==='simple')===hiView.simple));
   const h=readArr(viewKey('dsHi2'));let unl=0;try{unl=parseInt(localStorage.getItem(viewKey('dsUnlk')))||0}catch(e){}
   const list=document.getElementById('hiList');list.innerHTML='';
   ROUNDS.forEach((r,i)=>{const v=h[i]||0,ok=i<=unl,row=document.createElement('div');row.className='hiRow'+(ok?'':' lock');
-    row.innerHTML=`<span class="hN">${nmHTML(r.name+(hiView.chal?'\u1D9C':''))}</span><span class="hS">${v>0?v:'—'}</span><span class="hiR${v>0?'':' off'}">RESET</span>`;
+    row.innerHTML=`<span class="hN">${nmHTML(r.name+(hiView.chal?'\u1D9C':hiView.chill?PEACE:''))}</span><span class="hS">${v>0?v:'—'}</span><span class="hiR${v>0?'':' off'}">RESET</span>`;
     const rb=row.querySelector('.hiR');let armT=0;
     rb.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();if(!(v>0))return;
       if(!rb.classList.contains('sure')){rb.classList.add('sure');rb.textContent='SURE?';clearTimeout(armT);
@@ -2341,16 +2408,17 @@ function renderHi(){
       const k=viewKey('dsHi2'),a=readArr(k);while(a.length<5)a.push(0);a[i]=0;
       try{localStorage.setItem(k,JSON.stringify(a))}catch(err){}loadModeScores();renderHi()});
     list.appendChild(row)})}
-function openHi(){hiView.simple=simpleMode;hiView.chal=challenge;hide('menuScr');renderHi();document.getElementById('hiWipe').style.display=menuFrom==='titleScr'?'':'none';show('hiScr')}   // RESET ALL starts everything over, so it is offered from the title only
+function openHi(){hiView.simple=simpleMode;hiView.chal=challenge;hiView.chill=chill;hide('menuScr');renderHi();document.getElementById('hiWipe').style.display=menuFrom==='titleScr'?'':'none';show('hiScr')}   // RESET ALL starts everything over, so it is offered from the title only
 function wipeAll(){
-  try{for(const c of ['','C'])for(const m of ['','S']){localStorage.removeItem('dsHi2'+c+m);localStorage.removeItem('dsUnlk'+c+m)}
-    localStorage.removeItem('bbChalUnlk');localStorage.setItem('bbChal','0')}catch(e){}
-  chalUnlocked=false;challenge=false;chalJustUnlocked=false;round=0;   // (test builds get it back on reload)
+  try{for(const c of ['','C','Z'])for(const m of ['','S']){localStorage.removeItem('dsHi2'+c+m);localStorage.removeItem('dsUnlk'+c+m)}
+    localStorage.removeItem('bbChalUnlk');localStorage.setItem('bbChal','0');localStorage.removeItem('bbDog')}catch(e){}
+  dogOn=false;chalUnlocked=false;challenge=false;chalJustUnlocked=false;round=0;   // (test builds get it back on reload)
   nextRound=0;loadModeScores();paintChal();busPaint()}
 const tap=(id,fn)=>document.getElementById(id).addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn(e)});
 tap('hiBtn',openHi);
 tap('hiBack',()=>{hide('hiScr');show('menuScr')});
-tap('hiChal',()=>{hiView.chal=!hiView.chal;renderHi()});
+tap('hiChal',()=>{hiView.chal=!hiView.chal;if(hiView.chal)hiView.chill=false;renderHi()});
+tap('hiChill',()=>{hiView.chill=!hiView.chill;if(hiView.chill)hiView.chal=false;renderHi()});
 tap('hiMode',e=>{const m=e.target.closest('span');if(!m)return;hiView.simple=m.dataset.m==='simple';renderHi()});
 tap('hiWipe',()=>{document.getElementById('wipeChal').style.display=chalUnlocked?'':'none';hide('hiScr');show('wipeScr')});
 tap('wipeNo',()=>{hide('wipeScr');show('hiScr')});
@@ -2906,7 +2974,8 @@ function chainlink(g,x,y,w,h,post='#8f98a3'){g.fillStyle='rgba(214,222,230,.55)'
 /* ===== the team bus (facing right; dir=-1 paints it facing left with the lettering still readable) ===== */
 const BUSW=146,BUSH=74,BUSG=['#ffd642','#c9971c','#fff3b0','#f7cb3e','#d9a426'];   // BUSG: the champions' gold, its shade and its shine; the gold of their bus's body and its shade
 const busStud=(c1,c0)=>{const c=hex2(c1);return .3*c[0]+.59*c[1]+.11*c[2]>190?c0:'#ffffff'};   // studs that show on the stripe: white, or the team's main colour on a pale stripe
-function drawBus(g,dir,team,o={}){const m=(x,w)=>dir>0?x:BUSW-x-w,r=(c,x,y,w,h)=>fr(g,c,m(x,w),y,w,h),
+function drawBus(g,dir,team,o={}){if(team.chill)return drawVan(g,dir,team,o);   // CHILL MODE rides the van (v487)
+  const m=(x,w)=>dir>0?x:BUSW-x-w,r=(c,x,y,w,h)=>fr(g,c,m(x,w),y,w,h),
     P=(c,pts)=>pol(g,c,pts.map(([x,y])=>[dir>0?x:BUSW-x,y])),OUT='#141830',cream='#f6f1e4',c0=team.c0,c1=team.c1,GL='#7ec3ea',ch=team.champ,
     body=ch?BUSG[3]:cream,stud=busStud(c1,c0),
     stripe=(x,w)=>{r(c1,x,36,w,4);if(ch){r(lt(c1,.25),x,36,w,1);for(let k=x+3;k<x+w-2;k+=6)r(stud,k,37,2,2)}};   // the champions' stripe is set with studs
@@ -2946,7 +3015,57 @@ function drawBus(g,dir,team,o={}){const m=(x,w)=>dir>0?x:BUSW-x-w,r=(c,x,y,w,h)=
   for(const bx0 of [LC-(tw>>1)-17,LC+(tw>>1)+17]){const bx=m(bx0,0),ball=(c,ox,oy)=>[5,7,9,9,9,9,9,7,5].forEach((w,i)=>fr(g,c,bx-(w>>1)+ox,42+i+oy,w,1));
   ball(dk(c0,.45),1,1);ball('#ffffff',0,0);fr(g,'#e4e7ee',bx-2,50,5,1);fr(g,'#e4e7ee',bx+3,48,1,2);
   for(const s of [-1,1]){fr(g,'#e23a2a',bx+s*3,43,1,2);fr(g,'#e23a2a',bx+s*2,45,1,3);fr(g,'#e23a2a',bx+s*3,48,1,2)}}}
-function wheel(g,x,y,a,gold){dsc(g,'#15171f',x,y,9);dsc(g,'#3a3d49',x,y,6);dsc(g,gold?BUSG[0]:'#c9ced6',x,y,4);dsc(g,gold?BUSG[1]:'#6b7078',x,y,1);if(gold)fr(g,BUSG[2],x-2,y-3,2,1);
+/* ===== CHILL MODE's van (v487). David: "The bus could be modeled after a hippy vw van with flowers and peace signs (not the hand kind in
+   this case but the circle thing)". A 60s camper van in the team's colour under a white top: rounded nose and tail, the row of little
+   skylights along the roof, five side windows with the team in them, the cab, louvred vents at the back, a surfboard on the rack; peace
+   symbols either side of the team's letters (where the bus has baseballs) and flowers all over. No maker's badge (theirs). Same box as
+   the bus (BUSW x BUSH), the wheels where the bus has them (28 and 116, drawn by the scene), its lights where the bus has its (the scene's
+   glows) and VAN_WIN for its lit windows at night. dir=-1 faces left with the lettering still readable. */
+const VAN_WIN=[[15,14,18,13],[36,14,18,13],[57,14,18,13],[78,14,18,13],[100,12,19,15]],VANF=['#ff8a2a','#ff5fa2','#b07cff','#ffd23f','#5ec8ff','#9be564'];
+function peaceSign(g,c,cx,cy,R){g.fillStyle=c;for(let a=0;a<64;a++){const t=a/64*Math.PI*2;g.fillRect(Math.round(cx+Math.cos(t)*R-.5),Math.round(cy+Math.sin(t)*R-.5),1,1)}   // the ring
+  fr(g,c,cx,cy-R+1,1,2*R-1);for(let k=1;k<R-1;k++){fr(g,c,cx-k,cy+k,1,1);fr(g,c,cx+k,cy+k,1,1)}}                                          // the stem and the two feet
+// a flower-power flower, 7 px: six petals round a middle (x,y = its middle); small: a 3 px one
+const FLW=['.PP.PP.','PPPPPPP','PPCCCPP','.PCCCP.','PPCCCPP','PPPPPPP','.PP.PP.'];
+function flower(g,x,y,pet,mid,small){if(small){fr(g,pet,x-1,y,3,1);fr(g,pet,x,y-1,1,3);fr(g,mid,x,y,1,1);return}
+  for(let j=0;j<7;j++)for(let i=0;i<7;i++){const ch=FLW[j][i];if(ch!=='.')fr(g,ch==='P'?pet:mid,x-3+i,y-3+j,1,1)}fr(g,lt(mid,.4),x-1,y-1,1,1)}
+function drawVan(g,dir,team,o={}){const m=(x,w)=>dir>0?x:BUSW-x-w,r=(c,x,y,w,h)=>fr(g,c,m(x,w),y,w,h),mx=x=>dir>0?x:BUSW-1-x,
+    P=(c,pts)=>pol(g,c,pts.map(([x,y])=>[dir>0?x:BUSW-x,y])),OUT='#141830',W='#f7f3e8',Wd='#ddd6c4',GL='#7ec3ea',
+    lum=c=>{const q=hex2(c);return .3*q[0]+.59*q[1]+.11*q[2]},light=lum(team.c0)>150,c0=light?team.c1:team.c0,c1=light?dk(team.c1,.35):team.c1;   // a cream uniform: the van takes the team's other colour
+  // the roof rack and a surfboard on it
+  r('#3a3f52',22,5,90,1);for(const x of [26,62,104])r('#3a3f52',x,5,2,2);
+  P(OUT,[[23,3],[29,0],[104,0],[113,2],[104,5],[29,5]]);P('#ff8a2a',[[25,3],[30,1],[103,1],[110,2.5],[103,4],[30,4]]);r('#ffffff',30,2,72,1);
+  // body: white top, the team's colour below a belt that dips at the nose
+  P(OUT,[[4,54],[4,16],[5,12],[7,9],[10,7],[14,6],[118,6],[124,7],[129,9],[133,12],[136,16],[138,22],[139,30],[140,40],[140,54]]);
+  P(W,[[5,53],[5,16],[6,12],[8,10],[11,8],[14,7],[118,7],[124,8],[128,10],[132,13],[135,17],[137,23],[138,30],[139,40],[139,53]]);
+  r('#ffffff',14,7,104,1);r(Wd,5,28,124,2);
+  P(c0,[[5,32],[127,32],[133,34],[138,38],[139,42],[139,53],[5,53]]);
+  P(c1,[[5,31],[127,31],[134,33],[139,38],[139,40],[133,36],[127,33],[5,33]]);                                 // the belt in the team's second colour
+  r(lt(c0,.2),5,34,122,1);r(dk(c0,.3),5,51,134,2);
+  // the little skylights along the roof
+  for(let i=0;i<9;i++){r(OUT,18+i*10,8,6,3);r('#b9e3f8',19+i*10,9,4,1)}
+  // louvred vents at the back
+  for(let k=0;k<4;k++){r(dk(W,.35),7,15+k*3,6,1);r('#ffffff',7,16+k*3,6,1)}
+  // side windows with the team in them, then the cab
+  VAN_WIN.forEach(([wx,wy,ww,wh],i)=>{r(OUT,wx-1,wy-1,ww+2,wh+2);r(GL,wx,wy,ww,wh);r('#b9e3f8',wx,wy,ww,2);r('#4f95c4',wx,wy+wh-2,ww,2);
+    r(OUT,wx-1,wy-1,1,1);r(OUT,wx+ww,wy-1,1,1);r(OUT,wx-1,wy+wh,1,1);r(OUT,wx+ww,wy+wh,1,1);                       // rounded corners
+    if(i<4&&!o.empty){const hx=wx+6+(i&1)*2,hy=wy+5+(i&1);r(SKN[(i*3+1)&3],hx,hy,5,6);r(team.c0===c0?c0:team.c1,hx-1,hy-2,7,3);r(team.c0===c0?c0:team.c1,hx+6,hy,2,1);r(dk(c0,.25),hx-1,hy+5,7,3)}});
+  P(OUT,[[121,9],[127,9],[132,13],[135,19],[136,27],[121,27]]);P(GL,[[122,10],[127,10],[131,14],[134,19],[135,26],[122,26]]);P('#b9e3f8',[[122,10],[127,10],[129,12],[122,12]]);
+  r(SKN[1],124,16,4,5);r(c0,123,14,6,3);r(c0,129,16,2,1);{const sh=dk(c0,.25);r(sh,122,21,8,5);r('#f6f1e4',125,21,2,1)}   // the driver
+  r(OUT,137,18,3,1);r(OUT,139,18,2,6);                                                                         // mirror
+  // lights and bumpers (where the bus has them, for the scene's glows)
+  r(OUT,136,39,5,7);r('#fff3b0',137,40,4,5);r('#c9ced6',135,48,8,3);r('#8e949e',135,50,8,1);
+  r('#e23a2a',5,38,2,6);r('#c9ced6',1,48,6,3);r('#8e949e',1,50,6,1);r('#6b7078',1,52,5,2);
+  // wheel arches
+  g.save();g.beginPath();g.rect(0,0,BUSW,54);g.clip();dsc(g,OUT,m(28,0),55,12);dsc(g,OUT,m(116,0),55,12);g.restore();
+  // flowers along the side and round the back and the nose, little ones under the windows; the team's letters between two peace symbols
+  const ab=team.ab,tw=txt3w(ab,2),LC=72,tx=m(LC-(tw>>1),tw),far=c=>Math.abs(lum(c)-lum(c0))>60;
+  const pick=k=>{for(let j=0;j<6;j++){const c=VANF[(k+j)%6];if(far(c))return c}return '#ffffff'};
+  for(const [x,y,sm,k] of [[10,45,0,0],[21,37,0,1],[37,37,1,3],[54,37,0,4],[70,37,1,0],[86,37,0,2],[102,37,1,5],[116,37,0,3],[131,46,0,1],[33,29,1,1],[54,29,1,2],[75,29,1,4],[96,29,1,0],[127,30,1,5]]){
+    if(y<31)flower(g,mx(x),y,VANF[k],'#ffd23f',1);else flower(g,mx(x),y,pick(k),k%2?'#ffffff':'#ffd23f',sm)}
+  txt3(g,dk(c0,.45),ab,tx+1,42,2);txt3(g,'#ffffff',ab,tx,41,2);
+  for(const px of [LC-(tw>>1)-14,LC+(tw>>1)+13]){peaceSign(g,dk(c0,.45),mx(px)+1,47,5);peaceSign(g,'#ffffff',mx(px),46,5)}}
+function wheel(g,x,y,a,gold,ww){dsc(g,'#15171f',x,y,9);if(ww){dsc(g,'#ece8dc',x,y,7.4);dsc(g,'#15171f',x,y,6.2)}dsc(g,'#3a3d49',x,y,6);   // ww: whitewalls (the chill van)
+  dsc(g,gold?BUSG[0]:'#c9ced6',x,y,4);dsc(g,gold?BUSG[1]:'#6b7078',x,y,1);if(gold)fr(g,BUSG[2],x-2,y-3,2,1);
   const s=(Math.floor(a)&1)?[[3,0],[-3,0],[0,3],[0,-3]]:[[2,2],[-2,2],[2,-2],[-2,-2]];for(const [dx,dy] of s)fr(g,gold?BUSG[1]:'#6b7078',x+dx,y+dy,1,1)}
 // the trophy that rides on the champions' roof rack: 15 px across its handles and 13 tall (x = its middle, ty = its top row)
 // The game's own little trophy (its TROPHY10: 14×10 cells; H highlight, G gold, D shadow), the size it has on the scoreboards, for the
@@ -3462,7 +3581,10 @@ function pFront(T,f){const W=300,H=84,K=24;return mk(W,H,g=>{fr(g,'#c2bba8',0,K,
 
 /* ===== the champions' bus: the roof is off and the team is standing up in it ===== */
 // the bus from the belt line down, facing right; the scene draws the players behind it
-function drawBusOpen(g,team){const r=(c,x,y,w,h)=>fr(g,c,x,y,w,h),OUT='#141830',cream='#f6f1e4',c0=team.c0,c1=team.c1,GL='#7ec3ea',ch=team.champ;
+// CHILL MODE's van with its top off (v487): the van, the roof and the window band cut away above the belt (they are the scene's flying top
+// piece), the cab with its windshield and driver kept, a dark rim along the cut
+function drawVanOpen(g,team){drawVan(g,1,team,{empty:1});g.clearRect(0,0,121,29);fr(g,'#141830',4,28,117,1);fr(g,'#f7f3e8',5,29,116,2)}
+function drawBusOpen(g,team){if(team.chill)return drawVanOpen(g,team);const r=(c,x,y,w,h)=>fr(g,c,x,y,w,h),OUT='#141830',cream='#f6f1e4',c0=team.c0,c1=team.c1,GL='#7ec3ea',ch=team.champ;
   pol(g,OUT,[[5,29],[121,29],[121,14],[127,14],[137,27],[137,54],[5,54]]);
   r(ch?BUSG[3]:cream,6,30,130,6);r(ch?BUSG[2]:'#ffffff',6,30,115,1);r(ch?BUSG[4]:dk(cream,.1),6,33,130,3);txt3(g,'#1c2a5a','CHAMPIONS',45,31,1);
   r(c1,6,36,130,4);if(ch){const stud=busStud(c1,c0);r(lt(c1,.25),6,36,130,1);for(let k=9;k<134;k+=6)r(stud,k,37,2,2)}   // challenge mode: the gold body and studded stripe of the champions' bus
@@ -3575,7 +3697,7 @@ const TAPP=700,PGAP=700,PW0=4.73*D+PGAP,PW1=5*D+PGAP,PT1=5,PVP=30,PWALL=.8,PCROW
 const PCN=340,PCF=Array.from({length:PCN},(_,i)=>{const z=h2(i,1,21),pp=.84+z*.7,st=i%6===0,c=st?(i%12?'#ffffff':'#f6f1e4'):PCONF[Math.floor(h2(i,7,21)*PCONF.length)];
   return{pp,st,c,c2:lt(c,.45),u:h2(i,3,21)*420,y0:h2(i,4,21)*780,vy:(st?34:52)+h2(i,5,21)*44+z*30,ph:h2(i,6,21)*6.28,sf:1.2+h2(i,8,21)*1.6,sw:4+z*8,ff:5+h2(i,9,21)*5,
     s:pp<.98?1:pp<1.26?2:3,len:7+Math.floor(z*9),fl:(pp<1?lerp(PGY+8,RY+26,(pp-.84)/.16):lerp(RY+40,SH+30,(pp-1)/.54))+h2(i,10,21)*14}});
-let PAR=null,par=null;
+let PAR=null,par=null,enc=null;
 // the middle row at the edge of town (v457): d, its left edge in camera px from where the city begins (on the way out, the same mirrored
 // after it ends); each sprite stands on APP_Y two px above its bottom. In front of the shops and flats, from APPF to 8 px into the city's
 // pavement, a car park: asphalt with white bays and a few cars (CARS: d of the car's middle, colour, facing), a strip of pavement along the
@@ -3628,7 +3750,7 @@ let cam=-.45*D,from=-.45,to=0,u=0,dur=3,dir=1,t=0,vel=0,mode='arrive',modeT=0,at
 const puffs=[],sparks=[];
 function paintBus(){const tm=TEAMS[teamI];busSpr={1:mk(BUSW,BUSH,g=>drawBus(g,1,tm)),[-1]:mk(BUSW,BUSH,g=>drawBus(g,-1,tm))}}
 paintBus();
-function drive(i,m){par=null;onw=null;arrived=false;from=cam/D;to=i;u=0;dur=Math.max(2.4,Math.abs(to-from)*4.4);dir=to>=from?1:-1;mode=m;modeT=0}
+function drive(i,m){enc=null;par=null;onw=null;arrived=false;from=cam/D;to=i;u=0;dur=Math.max(2.4,Math.abs(to-from)*4.4);dir=to>=from?1:-1;mode=m;modeT=0}
 const moving=()=>u<1;
 function win(){if(moving())return;if(at<4){at++;drive(at,'win');dur*=WINDUR/4.4}else{mode='champ';modeT=0}}
 /* v475, David: "We need to delay the "winning bus" song by about 750ms, it basically finishes playing before you see the venue. We could also speed up
@@ -3644,14 +3766,14 @@ function lose(){if(moving())return;if(at>0){at--;drive(at,'loss')}else{mode='ret
 function jump(i){at=i;cam=(i-.42)*D;puffs.length=0;drive(i,'arrive')}
 function nextTeam(){teamI=(teamI+1)%TEAMS.length;paintBus()}
 function team(tm){TEAMS[teamI=0]=tm;paintBus()}                                                                   // the game paints the bus in the player's own colours; tm.champ (challenge mode) makes it the champions' bus
-function place(i,d=1){par=null;onw=null;arrived=false;at=i;from=to=i;cam=i*D;u=1;vel=0;dir=d;mode='park';modeT=9;puffs.length=0;sparks.length=0}   // parked at a stop, no drive
-function lot(){par=null;onw=null;arrived=false;at=0;from=to=LOT;cam=LOT*D;u=1;vel=0;dir=1;mode='lot';modeT=9;puffs.length=0;sparks.length=0}          // parked outside the garage, before the first game
+function place(i,d=1){enc=null;par=null;onw=null;arrived=false;at=i;from=to=i;cam=i*D;u=1;vel=0;dir=d;mode='park';modeT=9;puffs.length=0;sparks.length=0}   // parked at a stop, no drive
+function lot(){enc=null;par=null;onw=null;arrived=false;at=0;from=to=LOT;cam=LOT*D;u=1;vel=0;dir=1;mode='lot';modeT=9;puffs.length=0;sparks.length=0}          // parked outside the garage, before the first game
 function start(){if(moving())return;at=0;drive(0,'start');dur=4.66}                                             // out of the lot to the first park, unhurried: it parks as the tune's last note starts to fade
 function skip(){if(onw){arrive();puffs.length=0;sparks.length=0;return}if(par){if(par.t<PT1){par.t=PT1;cam=PW1;vel=PVP}if(par.pop<0)pop();return}if(u<1){u=1;cam=to*D;vel=0}}                                                                      // cut the drive short
-function paradePrep(){const tm=TEAMS[teamI],key=tm.c0+tm.c1+tm.ab+(tm.champ?'*':'');if(PAR&&PAR.key===key)return;const T=pTeam(tm),wall=pWall(T);
+function paradePrep(){const tm=TEAMS[teamI],key=tm.c0+tm.c1+tm.ab+(tm.champ?'*':'')+(tm.chill?'~':'');if(PAR&&PAR.key===key)return;const T=pTeam(tm),wall=pWall(T);
   PAR={key,T,wall,P:wall.reduce((a,b)=>a+b.w,0),crowd:[pCrowd(T,0),pCrowd(T,1)],front:[pFront(T,0),pFront(T,1)],bus:mk(BUSW,BUSH,g=>drawBusOpen(g,tm)),
     top:mk(118,30,g=>g.drawImage(mk(BUSW,BUSH,gg=>drawBus(gg,1,tm,{empty:1})),-4,0))}}   // top: the roof and the window band, as they fly off
-function parade(){if(u<1)skip();paradePrep();onw=null;arrived=false;dir=1;mode='parade';modeT=0;par={t:0,pop:-1,c0:cam};sparks.length=0}
+function parade(){if(u<1)skip();paradePrep();enc=null;onw=null;arrived=false;dir=1;mode='parade';modeT=0;par={t:0,pop:-1,c0:cam};sparks.length=0}
 // on from the parade to the championship's own lot (only once the roof is off and the street is painted)
 // (the camera is first put on a whole pixel, forwards, less than two frames of walking pace: the drive then ends on a whole pixel too, and
 // nothing sits on a rounding edge when the second lot is swapped for the first)
@@ -3676,13 +3798,63 @@ function land(){onw.land=true;par=null;if(onw.k!=='champ')return;   // (home, ba
   const x0=busX()-BUSW/2,C=[BUSG[0],BUSG[2],'#ffffff',BUSG[3]];
   for(let i=0;i<80;i++){const a=-Math.PI*(.04+.92*Math.random()),sp=50+Math.random()*180;sparks.push({x:x0+8+Math.random()*118,y:RY+Math.random()*10,vx:Math.cos(a)*sp-60,vy:Math.sin(a)*sp,l:1+Math.random()*.5,c:C[i%4]})}}
 // stopped at the second lot: it becomes the first (see above)
-function arrive(){if(!onw.land)land();drift+=onw.W;const k=onw.k,i=onw.dest;onw=null;par=null;arrived=true;u=1;vel=0;modeT=9;
+function arrive(){enc=null;if(!onw.land)land();drift+=onw.W;const k=onw.k,i=onw.dest;onw=null;par=null;arrived=true;u=1;vel=0;modeT=9;
   if(k==='champ'){cam=LOT*D;at=0;from=to=LOT;dir=1;mode='lot'}else{cam=i*D;at=i;from=to=i;dir=k==='back'?-1:1;mode='park'}}   // (back: still facing the way it came)
+
+/* THE ENCORE (v491). For the championship's own parade only; the game asks for it (ROAD.encore) once the team is on its feet. Night falls
+   over the street (the parade's morning blended toward MVP's night, EN of the way), fireworks go up behind the towers (worked out from the
+   clock, like the paper: fwShell), a little cast joins the bus on the road, and the rooftop dog jumps aboard (EDOG) and is the team's from
+   then on (team.dog: he rides the roof on every drive). enc: {t, out, c0}; out: when the bus left for its next stop (the night lifts, the
+   cast stays behind). */
+const EN=.8,EDOG=11.5,EJUMP=.55,EFIN=21,FWC=['#ffd642','#ffffff','#ff5a4a','#7fd0ff','#5ee05e','#ff8ad0'];
+function encore(){if(!par||par.pop<0||enc)return;enc={t:0,out:-1,c0:0}}
+const sm=x=>x*x*(3-2*x),encN=()=>!enc?0:EN*sm(clamp(enc.t/3.5,0,1))*(enc.out<0?1:1-sm(clamp((enc.t-enc.out)/1.4,0,1)));
+/* shell n: when it is lit. The steady ones (every .66 s, slower once the show is over), and the finale's volley */
+const FW0=30,FW1=48,FWM=110,fwT=n=>n<FW0?1.6+n*.66+h2(n,1,77)*.3:n<FW1?EFIN+(n-FW0)*.15:25+(n-FW1)*1.6+h2(n,1,77)*.5;
+function fwN(){if(!enc)return 0;let c=0;for(let n=0;n<FWM;n++)if(fwT(n)+.5<=enc.t)c++;return c}
+function fwGlyph(s){const P=[];let ox=0;for(const ch of s){const w=F3W[ch],f=w||F3[ch]||F3[' '],n=w?5:3;for(let i=0;i<f.length;i++)if(f[i]==='1')P.push([ox+i%n,Math.floor(i/n)]);ox+=n+1}
+  const W=ox-1;return P.map(([x,y])=>[x-(W-1)/2,y-2])}
+function fwShell(ctx,n){const a=enc.t-fwT(n);if(a<0||a>2.3)return;const fin=n>=FW0&&n<FW1,x=Math.round(44+h2(n,2,77)*272),yA=Math.round(56+h2(n,3,77)*(fin?120:150)),R=40+h2(n,4,77)*40,
+    c=FWC[Math.floor(h2(n,5,77)*FWC.length)],c2=FWC[Math.floor(h2(n,6,77)*FWC.length)];
+  if(a<.5){const q=a/.5,y=Math.round(lerp(340,yA,1-(1-q)*(1-q)));for(let j=0;j<6;j++){ctx.globalAlpha=(1-j/6)*.9;fr(ctx,j?'#ffd98a':'#ffffff',x+(j&1),y+j*4,2,3)}ctx.globalAlpha=1;return}
+  const b=a-.5,k=1-Math.exp(-3.4*b),fade=clamp(1.55-b,0,1),drop=15*b*b,sp=n%7===5&&!fin?1+((n/7|0)&1):0;
+  if(b<.07){ctx.globalAlpha=.85;dsc(ctx,'#ffffff',x,yA,7);ctx.globalAlpha=1}
+  if(sp){const G=fwGlyph(sp===1?TEAMS[teamI].ab:'#1'),u=8*k,cc=sp===1?'#ffffff':'#ffd642';   /* a word in lights: the team's letters, or #1 */
+    for(let i=0;i<G.length;i++){if(b>1&&h2(i,Math.floor(enc.t*11),n)<.3)continue;ctx.globalAlpha=fade;fr(ctx,cc,Math.round(x+G[i][0]*u)-2,Math.round(yA+G[i][1]*u+drop*.5)-2,4,4)}ctx.globalAlpha=1;return}
+  const N=22+(n%3)*8,two=n%4===1;
+  for(let i=0;i<N;i++){if(b>.85&&h2(i,Math.floor(enc.t*12),n)<.35)continue;const an=i/N*6.2832+h2(n,7,77),rr=R*k*(two&&i&1?.55:1)*(.93+.14*h2(i,n,3));
+    ctx.globalAlpha=fade;fr(ctx,two&&i&1?c2:c,Math.round(x+Math.cos(an)*rr)-1,Math.round(yA+Math.sin(an)*rr+drop)-1,3,3);
+    if(b<.7){ctx.globalAlpha=fade*.5;fr(ctx,c,Math.round(x+Math.cos(an)*rr*.82),Math.round(yA+Math.sin(an)*rr*.82+drop),2,2);fr(ctx,c,Math.round(x+Math.cos(an)*rr*.64),Math.round(yA+Math.sin(an)*rr*.64+drop),1,1)}}
+  ctx.globalAlpha=1}
+function fireworks(ctx){if(!enc||enc.t<1.4)return;for(let n=0;n<FWM;n++)fwShell(ctx,n)}
+/* the rooftop dog, from the park's own pictures (PARK.dogRuns), one fine pixel a letter; y: his bottom row */
+function dogAt(G,k,x,y,f){if(typeof PARK==='undefined'||!PARK.dogRuns)return;const R=PARK.dogRuns(k,f);for(let i=0;i<R.length;i++){const q=R[i];fr(G,q[3],x+q[0],y+q[1],q[2],1)}}
+function dogNotes(G,x,y,a){for(const d of [0,.45]){const q=((a-d)%1.8)/1.1;if(a<d||q<0||q>1)continue;G.globalAlpha=Math.min(1,(1-q)*2);const nx=Math.round(x-3-q*9+Math.sin(q*9)*2),ny=Math.round(y-12-q*16);
+    fr(G,'#fffbe6',nx+1,ny,1,5);fr(G,'#fffbe6',nx+2,ny,1,2);fr(G,'#fffbe6',nx-1,ny+3,2,2)}G.globalAlpha=1}
+/* riding the roof (team.dog): lying up front with his nose to the wind; on the van he has the surfboard */
+function roofDog(G,X,Y){const tm=TEAMS[teamI],px=tm.chill?58:102,y=Y+(tm.chill?0:9),x=X+(dir>0?px:BUSW-px-20),mv=Math.abs(vel)>20;
+  dogAt(G,mv?(Math.floor(t*8)&1?'wag1':'wag2'):t%9>7.4?'look':'chill',x,y,dir>0?1:0)}
+/* the mascot, as ALL-STAR's lawn draws him, in fine px: k 0 walking · 1 dancing · 2 wings up, hopping */
+function chick(G,x,y,a,k){const hop=p=>-Math.round(3*Math.sin(Math.PI*((a/p)%1)));let ox=0,oy=0,wl='up',wr='down',kick=0;
+  if(k===2){wl=wr='up';oy=hop(.4)}else if(k===0){oy=-(Math.floor(a/.16)&1);kick=Math.floor(a/.16)&1?1:-1;wl=wr='down'}
+  else if(Math.floor(a/1.6)%2===0){wl=wr=Math.floor(a/.12)%2?'out':'down';oy=-(Math.floor(a/.24)%2)}
+  else{const s=Math.floor(a/.25)%2?1:-1;ox=s;kick=s;wl=s<0?'out':'up';wr=s<0?'up':'out'}
+  const f=(c,X,Y2,w,h)=>fr(G,c,X+ox,Y2+oy,w,h),Yc='#f2c21a',O='#e8762a',R='#c8322a',E='#22252e';
+  f(R,x-3,y-27,3,4);f(R,x,y-28,3,5);f(Yc,x-5,y-23,11,11);f('#ffe066',x-4,y-22,4,2);f('#ffffff',x-4,y-20,4,4);f('#ffffff',x+1,y-20,4,4);f(E,x-2,y-19,1,2);f(E,x+2,y-19,1,2);
+  f(O,x-2,y-16,5,3);f(R,x-6,y-12,13,8);f('#f6f1e4',x-1,y-11,3,4);
+  if(wl==='up')f(Yc,x-9,y-19,3,8);else if(wl==='down')f(Yc,x-9,y-12,3,6);else f(Yc,x-10,y-12,4,3);
+  if(wr==='up')f(Yc,x+7,y-19,3,8);else if(wr==='down')f(Yc,x+7,y-12,3,6);else f(Yc,x+7,y-12,4,3);
+  if(kick<0){f(Yc,x-7,y-5,4,2);f(O,x-10,y-6,3,2)}else{f(Yc,x-4,y-4,3,2);f(O,x-5,y-2,4,2)}
+  if(kick>0){f(Yc,x+4,y-5,4,2);f(O,x+8,y-6,3,2)}else{f(Yc,x+2,y-4,3,2);f(O,x+2,y-2,4,2)}}
+/* three old-timers from the farm walk ahead of the bus: the park's little figures at twice the size, painted once */
+let EGH=null;
+const ghostSpr=()=>EGH||(EGH=[0,1,2].map(i=>[0,1].map(st=>mk(12,17,g=>walker(g,5,17,'#cfcabb','#3c4252',1,st,SKN[[1,3,0][i]])))));
 // the roof comes off like a cork: paper bursts out of the bus and a few puffs of white are left where it sat
 function pop(){par.pop=0;const x0=busX()-BUSW/2,C=PCONF.concat(PAR.T.c1,PAR.T.shirt);
   for(let i=0;i<90;i++){const a=-Math.PI*(.12+.76*Math.random()),s=60+Math.random()*190;sparks.push({x:x0+12+Math.random()*100,y:RY+6+Math.random()*10,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1.3+Math.random()*.5,c:C[i%C.length]})}
   for(let i=0;i<5;i++)puffs.push({x:x0+14+i*24,y:RY+8,r:5,a:.75,g:245})}
 function step(dt){t+=dt;modeT+=dt;
+  if(enc){const t0=enc.t;enc.t+=dt;if(onw&&enc.out<0){enc.out=enc.t;enc.c0=cam}if(t0<EDOG+EJUMP&&enc.t>=EDOG+EJUMP)TEAMS[teamI].dog=1}
   if(onw){const c0=cam;onw.t+=dt;let x;
     if(onw.k==='back'){const tt=Math.min(BSTOP,onw.t);x=clamp((onw.t-BGO)/BT,0,1);   // to a stop; then, with the roof on, round and back down the road
       cam=onw.t<BGO?onw.c0+PVP*(tt-tt*tt/(2*BSTOP)):onw.c1-(onw.c1-onw.dest*D-onw.W)*(x*x*x*(x*(6*x-15)+10));if(onw.t>=BGO)dir=-1}
@@ -3710,7 +3882,7 @@ const busX=()=>180+dir*20*Math.min(1,Math.abs(vel)/420);
 /* sky */
 const skyCv=mk(SW/2,HZ/2),skyG=skyCv.getContext('2d'),skyImg=skyG.createImageData(SW/2,HZ/2);let skyKey=-9;
 const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
-function paintSky(p){if(Math.abs(p-skyKey)<1e-4)return;skyKey=p;const i0=Math.floor(p),i1=Math.min(5,i0+1),f=p-i0,w=SW/2,h=HZ/2,NB=22,d=skyImg.data;
+function paintSky(p,j=-1){const key=j<0?p:p+50;if(Math.abs(key-skyKey)<1e-4)return;skyKey=key;const i0=Math.floor(p),i1=j<0?Math.min(5,i0+1):j,f=p-i0,w=SW/2,h=HZ/2,NB=22,d=skyImg.data;
   const st=SKY[i0].map((c,k)=>c.map((v,j)=>v+(SKY[i1][k][j]-v)*f));
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const tq=y/(h-1)*NB+(BAYER[(y&3)*4+(x&3)]/16-.5)*.95,b=clamp(Math.round(tq),0,NB)/NB*4,k=Math.min(3,Math.floor(b)),ff=b-k,o=(y*w+x)*4;
     d[o]=st[k][0]+(st[k+1][0]-st[k][0])*ff;d[o+1]=st[k][1]+(st[k+1][1]-st[k][1])*ff;d[o+2]=st[k][2]+(st[k+1][2]-st[k][2])*ff;d[o+3]=255}
@@ -3729,13 +3901,13 @@ function litLayer(i,champ,t){const s=vspr(i,champ);if(!LITL)LITL=mk(s.width,s.he
   g.clearRect(0,0,LITL.width,LITL.height);g.drawImage(s,0,0);venueMove(i,g,VM,0,t);return LITL}
 const VSPRC=[],vspr=(i,champ)=>champ&&(i===2||i===3)?VSPRC[i]||(VSPRC[i]=mk(VSPR[i].width,VSPR[i].height,g=>{g.drawImage(VSPR[i],0,0);venueChamp(i,g,VM,0)})):VSPR[i];
 function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clamp((onw.t-BGO)/BT,0,1):0,   // bk: driving back to the farm · fw: on out of town to the right (the championship's lot, or ROOKIE)
-    p=bk?5-bx0*bx0*bx0*(bx0*(6*bx0-15)+10):clamp(cam/D,0,5),i0=Math.floor(p),ow=fw?Math.min(1,onw.t/onw.T):0,i1=fw?0:Math.min(5,i0+1),f=fw?ow*ow*(3-2*ow):p-i0,   // on the way to the second lot the parade's morning becomes the first lot's noon (the same sky; the sun crosses it); on the way back to the farm it turns back into first light, in step with the road
+    p=bk?5-bx0*bx0*bx0*(bx0*(6*bx0-15)+10):clamp(cam/D,0,5),en=encN(),i0=en>0?5:Math.floor(p),ow=fw?Math.min(1,onw.t/onw.T):0,i1=en>0?3:fw?0:Math.min(5,i0+1),f=en>0?en:fw?ow*ow*(3-2*ow):p-i0,   /* en: the encore's night (v491) */   // on the way to the second lot the parade's morning becomes the first lot's noon (the same sky; the sun crosses it); on the way back to the farm it turns back into first light, in step with the road
     L=a=>lerp(a[i0],a[i1],f),night=L(NIGHT),lit=L(LIT),dc=cam+drift,                                                              // dc: the camera for what is only decoration
     xr=pp=>fw?Math.round(180+(onw.e-cam)*pp):1e6,champ=!!TEAMS[teamI].champ,                                                                              // xr: where the parade's city ends on the screen, at each depth
     cs=bk?onw.e0:PW0,cr=bk?cam-onw.W:cam,WS=bk?[cam-onw.W]:onw?[cam,cam-onw.W]:[cam];   // cs: where the city begins (as a camera position) · cr: the camera for the farm's side of the world · WS: the camera of each world whose places may be in view
   ctx.imageSmoothingEnabled=false;
   /* --- sky, sun, moon, stars, clouds (straight onto the screen) --- */
-  paintSky(p);ctx.drawImage(skyCv,0,0,SW,HZ);
+  if(en>0)paintSky(5+en*.999,3);else paintSky(p);ctx.drawImage(skyCv,0,0,SW,HZ);
   if(night>.02)for(const [x,y,ph] of STARS){ctx.globalAlpha=night*(.45+.55*Math.abs(Math.sin(t*1.3+ph*40)));fr(ctx,'#ffffff',x,y,ph>.8?2:1,ph>.8?2:1)}ctx.globalAlpha=1;
   const ma=L(MOON);if(ma>.02){ctx.globalAlpha=ma;dsc(ctx,'#eef2ff',40,50,11);dsc(ctx,'#c9d2ee',37,47,3);dsc(ctx,'#c9d2ee',44,54,2);dsc(ctx,'#c9d2ee',38,56,1);ctx.globalAlpha=1}
   {const a=SUN[i0],b=SUN[i1],x=Math.round(lerp(a[0],b[0],f)),y=Math.round(lerp(a[1],b[1],f)),r=Math.round(lerp(a[2],b[2],f)),c=mix(a[3],b[3],f);
@@ -3785,7 +3957,7 @@ function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clam
     for(let y=y0;y<y1;y++){const q=(y-y0)/(y1-y0),sh=dwx*lerp(PV,1,q),fl=q>.7?Math.round(18*((q-.7)/.3)**2):0,l=Math.round(lerp(16,2,q)-fl-sh),r=Math.round(lerp(64,72,q)+fl-sh);
       if(r>0&&l<SW){fr(g,'#5d616d',l,y,r-l,1);fr(g,'#8a8478',l,y,1,1);fr(g,'#8a8478',r-1,y,1,1)}if(y===y1-1)mouth=[l,r]}}
   // the parade's street: pavement, the wall of buildings with fans waving at the windows and on the roofs, the crowd on the far kerb
-  const pe=pp=>Math.round(180+(cs-cam)*pp),pon=PAR&&pe(PFRONT)<SW&&xr(PWALL)>-12;   // pe: where the city begins on the screen, at each depth (xr: where it ends)
+  const pe=pp=>Math.round(180+(cs-cam)*pp),pon=PAR&&pe(PFRONT)<SW&&xr(PWALL)>-12;let street=null;   // pe: where the city begins on the screen, at each depth (xr: where it ends)
   // the middle row at the edge of town, and its forecourt (c0: where the city begins, s=1, or ends, s=−1, as a camera position)
   {const row=(c0,s)=>{const X=(d,pp)=>180+(c0+s*d-cam)*pp,lo=Math.min(X(-700,APP_PP),X(8,APP_PP)),hi=Math.max(X(-700,APP_PP),X(8,APP_PP));if(hi<-8||lo>SW+8)return;
       const R=(d,pp)=>Math.round(X(d,pp)),PB=.915;   // PB: the depth of the car park's front edge, at the roadside pavement (RY−15)
@@ -3797,12 +3969,13 @@ function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clam
    row(cs,1);if(fw)row(onw.e,-1)}
   if(pon){const o=(cam-PW0)*PWALL,TM=[PAR.T.c0,PAR.T.c1];
     pol(g,'#c2bba8',[[pe(PWALL),PGY-2],[fw?xr(PWALL):SW,PGY-2],[fw?xr(1):SW,RY-3],[pe(1),RY-3]]);
-    for(let n=Math.max(0,Math.floor((o-180)/PAR.P));n*PAR.P<o+180;n++)for(const b of PAR.wall){const sx=Math.round(180+n*PAR.P+b.x-o)-4,oy=PGY-b.h;if(sx>=SW||sx+b.w+8<=0||fw&&n*PAR.P+b.x+b.w>onw.E||bk&&n*PAR.P+b.x<onw.E0)continue;
+    street=g=>{for(let n=Math.max(0,Math.floor((o-180)/PAR.P));n*PAR.P<o+180;n++)for(const b of PAR.wall){const sx=Math.round(180+n*PAR.P+b.x-o)-4,oy=PGY-b.h;if(sx>=SW||sx+b.w+8<=0||fw&&n*PAR.P+b.x+b.w>onw.E||bk&&n*PAR.P+b.x<onw.E0)continue;
       g.drawImage(b.c,sx,oy);
       for(const f of b.fans){const X=sx+f.x,Y=oy+f.y;if(Y<-6||X<-5||X>SW+5)continue;const up=Math.sin(t*(5+f.ph*5)+f.ph*40)>0;fr(g,f.sk,X-2,up?Y-3:Y,1,3);fr(g,f.sk,X+2,up?Y-3:Y,1,3);if(f.pen&&up)fr(g,f.pen,X+3,Y-5,3,2)}
       for(const f of b.flags)flag(g,sx+f.x,oy+f.y,t,TM,12,8)}
     const C=PAR.crowd[Math.floor(t*3.3)&1],W=C.width,oc=(cam-PW0)*PCROWD,cl=Math.max(0,pe(PCROWD));g.save();g.beginPath();g.rect(cl,0,Math.max(0,Math.min(SW,xr(PCROWD))-cl),SH);g.clip();
-    for(let x=-(((oc%W)+W)%W);x<SW;x+=W)g.drawImage(C,Math.round(x),PGY+32-C.height);g.restore();
+    for(let x=-(((oc%W)+W)%W);x<SW;x+=W)g.drawImage(C,Math.round(x),PGY+32-C.height);g.restore()};   /* (a function since v491: the encore lays it over the night a second time, lit) */
+    street(g);
     const a=Math.max(0,pe(1)),a2=Math.min(SW,xr(1)),os=((cam%26)+26)%26;if(a2>a)fr(g,'#aaa28e',a,RY-4,a2-a,1);for(let x=-os;x<a2;x+=26)if(x>=a)fr(g,'#aaa28e',Math.round(x),RY-12,1,8)}
   // roadside: a sidewalk through town, poles and wires in the country, street lamps in the city
   for(const [w0,w1] of [[1.45*D,3.45*D],[cs-TAPP,cs+1]].concat(fw?[[onw.e-1,onw.e+TAPP]]:[])){const a=clamp(Math.round(180+w0-cam),0,SW),b=clamp(Math.round(180+w1-cam),0,SW);   // (and from the shops into the parade's city, and out of it: v457)
@@ -3847,21 +4020,32 @@ function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clam
   const bx=Math.round(busX()-BUSW/2),bob=(Math.abs(vel)>20?Math.round(Math.sin(t*22)*.9):(Math.sin(t*9)>.72?1:0))+(onw&&onw.land&&onw.t-onw.landT<.09?2:0),by=RY-8,shake=mode==='retry'&&modeT<1?Math.round(Math.sin(t*50)*1.5):0;
   g.globalAlpha=.3;elp(g,'#000000',bx+(BUSW>>1)+shake,RY+58,64,4);g.globalAlpha=1;
   if(!champ||par)for(const p2 of puffs){g.globalAlpha=Math.max(0,p2.a);dsc(g,rgb(p2.g,p2.g,p2.g+8),Math.round(p2.x),Math.round(p2.y),Math.round(p2.r))}g.globalAlpha=1;
+  let party=null;const dogIn=!!TEAMS[teamI].dog||!!enc&&enc.t>=EDOG+EJUMP,ex=enc&&enc.out>=0?-(cam-enc.c0):0,EY=RY+46;
+  /* the encore's cast on the road (before the bus: they walk the far lane): the mascot behind the bus, dancing; the dog trotting beside him until he jumps */
+  const cast=g=>{if(!enc)return;const a=enc.t,cx0=Math.round(lerp(-24,58,sm(clamp((a-2)/2.4,0,1)))+ex);if(cx0>-20&&cx0<SW+20)chick(g,cx0,EY,a,enc.out>=0?2:a<4.4?0:1);
+    if(a<EDOG){const dx=Math.round(lerp(-60,84,sm(clamp((a-2.6)/2.2,0,1))));dogAt(g,Math.floor(t*7)&1?'walk1':'walk2',dx,EY,1)}};
+  cast(g);
   if(par&&par.pop>=0){const q=par.pop,s=clamp((q-.12)/.38,0,1)-1,up=Math.round(13*-(2.2*s*s*s+1.2*s*s)),X=bx+shake,Y=by+bob,   // the roof is off: the team stands up (a little too far, then settles)
       sit=onw?clamp((onw.t-onw.duck)/.28,0,1):0,dn=Math.round(36*sit*sit);                                                   // (on the way out of town it sits down again, out of sight)
-    fr(g,'#b9b2a2',X+6,Y+27,115,2);
+    party=g=>{fr(g,'#b9b2a2',X+6,Y+27,115,2);
     if(sit<1)for(let i=0;i<5;i++)pChamp(g,X+17+i*21,Y+30+dn+(q<.62?up:Math.sin(t*6+i*1.7)>.55?-1:0),i,q<.5?0:Math.floor(t*(i===2?2:3)+i*.37)&1,PAR.T);
+    if(dogIn&&sit<1){const a=enc?enc.t-EDOG-EJUMP:-1,hw=a>=0&&(a<2.4||enc.t>EFIN&&enc.t<EFIN+3.2||a>8&&a%11<1.9);   /* the dog at the back rail, looking back at the show: wagging, and howling now and then */
+      dogAt(g,hw?(Math.floor(t*3)&1?'howl1':'howl0'):Math.floor(t*8)&1?'wag1':'wag2',X-2,Y+31+dn,0);if(hw)dogNotes(g,X-2,Y+31,a<2.4?a:t%1.8)}
     g.drawImage(PAR.bus,X,Y);
-    if(!sit&&q>.7&&Math.floor(t*4)%3===0){fr(g,'#ffffff',X+52,Y-3,5,1);fr(g,'#ffffff',X+54,Y-5,1,5)}
+    if(!sit&&q>.7&&Math.floor(t*4)%3===0){fr(g,'#ffffff',X+52,Y-3,5,1);fr(g,'#ffffff',X+54,Y-5,1,5)}};
+    party(g);
     const ty=-(1000*q-300*q*q);if(q<1&&ty>-640){g.save();g.translate(X+63,Y+15+ty);g.rotate(-.55*q);g.drawImage(PAR.top,-59,-15);g.restore()}
     if(onw&&onw.t>=onw.drop){const qd=.85*clamp((onw.landT-onw.t)/(onw.landT-onw.drop),0,1),ty2=-(1000*qd-300*qd*qd);   // ...and a roof comes down the way the old one went up: a gold one with the trophy and the pennant riding on it, or (home, back) the bus's own
       g.save();g.translate(X+63,Y+15+ty2);g.rotate(-.55*qd);g.drawImage(onw.top,-59,-15);if(onw.fc){busFlag(g,-63,-15);busCup(g,1,-19)}g.restore()}}
-  else{g.drawImage(busSpr[dir],bx+shake,by+bob);
+  else{g.drawImage(busSpr[dir],bx+shake,by+bob);if(TEAMS[teamI].dog)roofDog(g,bx+shake,by+bob);
     if(champ){const X=bx+shake,Y=by+bob;   // on the roof rack: the trophy, and the team's pennant on a staff at the back, streaming behind
       busFlag(g,X,Y);
       busCup(g,X+(dir>0?64:BUSW-65),Y-4)}
     if(onw&&onw.white&&onw.land&&onw.t-OLAND<OFLK&&Math.floor((onw.t-OLAND)/.06)%2===0)g.drawImage(onw.white,bx+shake,by+bob)}   // the roof has landed: the bus flickers white as the gold takes
-  wheel(g,bx+shake+(dir>0?28:BUSW-28),by+57,dir*dc/9,champ);wheel(g,bx+shake+(dir>0?116:BUSW-116),by+57,dir*dc/9+.5,champ);   // 34 and 110 until v436
+  {const ww=!!TEAMS[teamI].chill;wheel(g,bx+shake+(dir>0?28:BUSW-28),by+57,dir*dc/9,champ,ww);wheel(g,bx+shake+(dir>0?116:BUSW-116),by+57,dir*dc/9+.5,champ,ww)}   // 34 and 110 until v436; ww: the chill van's whitewalls (v487)
+  const leap=g=>{if(!enc||enc.t<EDOG||enc.t>=EDOG+EJUMP||!(par&&par.pop>=0))return;const q=(enc.t-EDOG)/EJUMP,x0=84,x1=bx-2,y1=by+31;   /* up and over the back rail */
+    dogAt(g,'stand',Math.round(lerp(x0,x1,q)),Math.round(lerp(EY,y1,q)-34*q*(1-q)*4*.5),q<.6?1:0)};
+  leap(g);
   paper(true);
   // verge in front of the road (moves fastest); corn crowds in near the farm
   {const top=RY+RH,off=dc*1.6;fr(g,'#2f9a32',0,top,SW,SH-top);fr(g,'#46b043',0,top,SW,3);fr(g,'#237a28',0,SH-16,SW,16);
@@ -3874,6 +4058,12 @@ function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clam
      for(let x=-(((of%W)+W)%W);x<SW;x+=W)g.drawImage(F,Math.round(x),top-24);g.restore()}}
 
   flush();
+  if(en>.03){   /* the encore after dark: the street, then the bus and the cast, laid over the night once more at part strength (as the big parks are floodlit) */
+    if(pon&&street){street(g);ctx.globalAlpha=en*.34;ctx.drawImage(S0,0,0);g.clearRect(0,0,SW,SH)}
+    cast(g);if(party)party(g);leap(g);ctx.globalAlpha=en*.6;ctx.drawImage(S0,0,0);ctx.globalAlpha=1;g.clearRect(0,0,SW,SH)}
+  if(enc&&enc.t>2.8){const a=enc.t,S=ghostSpr(),al=clamp((a-2.8)/2.2,0,1)*(enc.out>=0?clamp(1-(a-enc.out)/1.2,0,1):1);   /* the old-timers, see-through, ahead of the bus */
+    for(let i=0;i<3;i++){const gx=Math.round(272+i*28+ex),bobg=Math.floor(t*4+i*.4)&1;ctx.globalAlpha=al*(.66+.1*Math.sin(t*1.1+i*2));ctx.drawImage(S[i][bobg],gx,EY-34-(bobg&&i!==1?1:0),24,34)}ctx.globalAlpha=1}
+  fireworks(ctx);   /* over the street: the wall of buildings leaves little sky to see them in */
 
   /* --- everything near that gives off light --- */
   if(night>.05){ctx.globalAlpha=night;
@@ -3882,7 +4072,8 @@ function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clam
     ctx.globalAlpha=1;for(const sx of lamps){glow(ctx,sx+9,RY-71,24,'#ffe9b0',night);fr(ctx,'#fff8d8',sx+7,RY-72,4,2)}
     // headlights, tail light, cabin lights
     const fx=bx+shake+(dir>0?BUSW-8:8);ctx.globalAlpha=night*.2;pol(ctx,'#fff3b0',[[fx,by+41],[fx+dir*120,by+26],[fx+dir*120,by+62],[fx,by+46]]);
-    ctx.globalAlpha=night*.3;for(let i=0;i<6;i++)fr(ctx,'#ffe9b0',bx+shake+(dir>0?12+i*16:BUSW-25-i*16),by+bob+17,13,13);ctx.globalAlpha=1;
+    ctx.globalAlpha=night*.3;if(TEAMS[teamI].chill)for(const [wx,wy,ww,wh] of VAN_WIN)fr(ctx,'#ffe9b0',bx+shake+(dir>0?wx:BUSW-wx-ww),by+bob+wy,ww,wh);   // the van's own windows (v487)
+    else for(let i=0;i<6;i++)fr(ctx,'#ffe9b0',bx+shake+(dir>0?12+i*16:BUSW-25-i*16),by+bob+17,13,13);ctx.globalAlpha=1;
     glow(ctx,fx,by+43,9,'#fff3b0',night);glow(ctx,bx+shake+(dir>0?7:BUSW-7),by+44,6,'#ff4030',night)}
   for(const c of WS)for(let i=0;i<5;i++){const sx=Math.round(180+i*VS-c*PV-VW/2);if(sx<SW+VM&&sx>-VW-VM){
     if(i===2||i===3){ctx.globalAlpha=lit*(i===3?.5:.2);ctx.drawImage(litLayer(i,champ,t),sx-VM,VY-VB);ctx.globalAlpha=1}   // floodlit: the park itself stays bright after dark
@@ -3905,7 +4096,7 @@ function draw(ctx,o={}){const bk=!!onw&&onw.k==='back',fw=!!onw&&!bk,bx0=bk?clam
   else if(moving()&&mode==='win'){label(ctx,'NEXT STOP',84,16,'#ffffff');label(ctx,NAMES[to],110,32,GOLD)}
   else if(moving()&&mode==='loss'){label(ctx,'BACK TO',84,16,'#ffb9a8');label(ctx,NAMES[to],110,32,'#ffffff')}
   else{label(ctx,mode==='retry'&&modeT<2?'TRY AGAIN':'LEVEL '+(at+1)+' OF 5',84,16,'#ffffff');label(ctx,NAMES[at],110,32,GOLD);label(ctx,TGT[at]+' RUNS TO WIN',154,16,'#ffffff')}}
-return{step,draw,win,lose,jump,place,lot,start,skip,nextTeam,team,moving,parade,paradePrep,onward,home,back,PT1,get pstage(){return!par?-1:par.pop<0?0:par.pop<.62?1:2},
+return{step,draw,win,lose,jump,place,lot,start,skip,nextTeam,team,moving,parade,paradePrep,onward,home,back,PT1,encore,get enc(){return!enc?null:{t:enc.t,dog:enc.t>=EDOG+EJUMP,fw:fwN(),fin:enc.t>=EFIN}},get pstage(){return!par?-1:par.pop<0?0:par.pop<.62?1:2},
   get ostage(){return onw?(onw.land?1:0):arrived?2:-1},   // on to the championship: 0 leaving town · 1 the gold roof is on · 2 stopped at the lot (−1: not on that road)
   get at(){return at},get mode(){return mode},NAMES,TGT}})();
 /* ===== THE FIVE PARKS (the game's module; made once from the mock's park_body.js by mk_park_game.py, edited here since) =====
@@ -4350,7 +4541,8 @@ function wear(fc,T){const G=hex2(T.inGrass),Wn=hex2(GP[1][2]),img=fc.getImageDat
   fc.putImageData(img,0,0)}
 
 
-/* ---------- scoreboards (field pixels, like the game's). T = {name,sup,tgt,tgtOn,hi,hiLive}; D = {inn,cur,runs,outs,radar,flip,was,wasRuns,msg} (msg: MVP's ribbon) ---------- */
+/* ---------- scoreboards (field pixels, like the game's). T = {name,sup,peace,tgt,tgtOn,hi,hiLive}; D = {inn,cur,runs,outs,radar,chill,strikes,flip,was,wasRuns,msg} (msg: MVP's ribbon)
+   v487 CHILL MODE (D.chill): no speed; three yellow strike lamps right above the out lamps (D.strikes lit), S and O beside the rows; T.peace: a little ✌ after the name ---------- */
 const BXY=()=>({bx:Math.round((W-132)/2),by:SB_Y,bw:132,bh:37});   // (by was WALL_T-37-12 until the wall moved down, v458: the boards stay where they were on the screen)
 // ALL-STAR: the game's own board, hung in a green steel frame with the park's name over it
 function frameAllStar(cx){const {bx,by,bw,bh}=BXY(),G1='#2c6b4f',C='#f0e2c0',s='ALL-STAR PARK',w=txt3w(s),x0=Math.round(90-w/2);
@@ -4380,6 +4572,7 @@ function boardManual(cx,v,T,D){const {bx,by,bw,bh}=BXY(),S=MAN[v],X=x=>bx+x,Y=y=
   // top row: level name, target, high score
   if(v===1){cx.font='6px "Press Start 2P",monospace';cx.textBaseline='alphabetic';cx.textAlign='left';cx.fillStyle=S.name;cx.fillText(T.name,X(5),Y(10))}else txt3(cx,S.name,T.name,X(5),Y(3),1.5);
   if(T.sup)drawTrophy(cx,TROPHY12,X(5)+T.name.length*6+1,v===1?Y(4):Y(3.75),.5);                 // challenge mode: the little trophy after the name
+  if(T.peace)drawPeace(cx,X(5)+T.name.length*6+1,v===1?Y(3):Y(2.75),.5);                         // chill mode: a little ✌ (a pixel taller than the trophy, bottoms level)
   let xl=cards(X(126),Y(1.5),T.hi,T.hiLive?S.hi:undefined);txt3(cx,S.ink,'HI',xl-9,Y(4));xl=cards(xl-17,Y(1.5),T.tgt,T.tgtOn?S.tg:undefined);txt3(cx,S.ink,'TGT',xl-13,Y(4));
   // innings and runs
   ['1','2','3','R'].forEach((h,i)=>{const cx0=X(i<3?13+i*14:60);{const on=i===D.cur-1;   // the inning being played. v441: at the sandlot a bright yellow number with a dark shadow (it was pale yellow on the cream lettering; v440's red tag was not wanted)
@@ -4398,6 +4591,11 @@ function boardManual(cx,v,T,D){const {bx,by,bw,bh}=BXY(),S=MAN[v],X=x=>bx+x,Y=y=
     if(v===0){dsc(cx,'#8d6030',lx,ly,4);if(i<D.outs){dsc(cx,'#c8322a',lx,ly,3.6);fr(cx,'#e86a5a',lx-2,ly-2.5,2,1)}fr(cx,'#5a4636',lx-.5,ly-4,1,1)}
     else{cx.fillStyle=v===4?'#e9dfc4':'#0c0f18';cx.beginPath();cx.arc(lx,ly,4.4,0,6.3);cx.fill();cx.fillStyle=i<D.outs?'#ee2222':'#3a1414';cx.beginPath();cx.arc(lx,ly,3.5,0,6.3);cx.fill();
       if(i<D.outs){cx.fillStyle='rgba(255,60,50,.3)';cx.beginPath();cx.arc(lx,ly,5.5,0,6.3);cx.fill()}}}
+  if(D.chill){for(let i=0;i<3;i++){const lx=X(88+i*13),ly=Y(17.5),on=i<D.strikes;   // CHILL MODE: the strike lamps, where the speed (or the sandlot's OUTS) was
+      if(v===0){dsc(cx,'#8d6030',lx,ly,3.6);if(on){dsc(cx,'#f2c21a',lx,ly,3.2);fr(cx,'#fff09a',lx-2,ly-2,2,1)}fr(cx,'#5a4636',lx-.5,ly-3.6,1,1)}
+      else{cx.fillStyle=v===4?'#e9dfc4':'#0c0f18';cx.beginPath();cx.arc(lx,ly,4,0,6.3);cx.fill();cx.fillStyle=on?'#ffd21f':'#3a300c';cx.beginPath();cx.arc(lx,ly,3.1,0,6.3);cx.fill();
+        if(on){cx.fillStyle='rgba(255,214,40,.3)';cx.beginPath();cx.arc(lx,ly,5,0,6.3);cx.fill()}}}
+    txt3(cx,S.ink,'S',X(79),Y(15.5));txt3(cx,S.ink,'O',X(79),Y(24.5));return}
   if(v===0){txt3(cx,S.ink,'OUTS',X(101)-txt3w('OUTS')/2,Y(14.5));return}      // the sandlot has no speed gun (David: "it doesn't fit the vibe"): the word is painted where the other parks hang the readout
   fr(cx,S.slot,X(78),Y(13.5),46,7.5);
   if(D.radar){const s=D.radar+' MPH';txt3(cx,v===1?'#ffa940':'#ffffff',s,X(101)-txt3w(s)/2,Y(15))}}
@@ -4429,18 +4627,21 @@ function ledBody(g,T,D){const {bx,by,bw,bh}=BXY(),top=by-10;
   const led=(s,x,y,c,al='left')=>{g.textAlign=al;g.shadowColor=c;g.fillStyle=c;g.fillText(s,x,y)};
   const r1=by+10,r2=by+22,r3=by+32,L=bx+13;
   led(T.name,bx+8,r1,'#ffe066');if(T.sup){g.shadowBlur=0;drawTrophy(g,TROPHY12,bx+8+T.name.length*6+1,r1-6,.5);g.shadowBlur=3}
+  if(T.peace){g.shadowBlur=0;drawPeace(g,bx+8+T.name.length*6+1,r1-7,.5);g.shadowBlur=3}
   led('TGT',bx+44,r1,'#a9cbff');led(''+T.tgt,bx+65,r1,T.tgtOn?'#5eff7a':'#ffffff');led('HI',bx+92,r1,'#a9cbff');led(''+T.hi,bx+107,r1,T.hiLive?'#ffe066':'#d6e2ff');
   ['1','2','3','R'].forEach((h,i)=>{const cxm=L+i*14+6.5,cur=i===D.cur-1;g.shadowBlur=0;fr(g,cur?'#1d2f66':'#0e1530',L+i*14,r3-9,13,10);g.shadowBlur=3;
     led(h,cxm,r2-1,cur?'#ffe066':i===3?'#ffffff':'#7f9ae0','center');const val=i<3?D.inn[i]:D.runs;led(i<3&&(i>D.cur-1||(cur&&val===0))?'-':''+val,cxm,r3,cur?'#ffe066':i===3?'#ffffff':'#d6e2ff','center')});
   const areaC=(L+56+bx+bw-3)/2+2;
   for(let i=0;i<3;i++){const lx=areaC-14+i*14,ly=r3-4,on=i<D.outs;g.shadowColor='#ff3020';g.shadowBlur=on?8:0;g.fillStyle=on?'#ff3a2a':'#431519';g.beginPath();g.arc(lx,ly,3.8,0,6.3);g.fill()}
+  if(D.chill){for(let i=0;i<3;i++){const lx=areaC-14+i*14,ly=by+18.5,on=i<D.strikes;g.shadowColor='#ffd020';g.shadowBlur=on?8:0;g.fillStyle=on?'#ffd21f':'#3d3210';g.beginPath();g.arc(lx,ly,3.3,0,6.3);g.fill()}   // CHILL MODE: the strike lamps in the speed's place
+    g.shadowBlur=3;led('S',areaC-24,by+21.5,'#a9cbff','center');led('O',areaC-24,r3-1,'#a9cbff','center')}
   g.shadowBlur=0;g.restore();
   const xc=Math.round(areaC),y0=by+13,y1=by+23;   /* the grid everywhere but over the speed's place (48 x 10 about xc): boardLED lays it there each frame, over the speed */
   ledGrid(g,bx,top,bw,y0-top);ledGrid(g,bx,y1,bw,top+bh+10-y1);ledGrid(g,bx,y0,xc-24-bx,y1-y0);ledGrid(g,xc+24,y0,bx+bw-xc-24,y1-y0)}
 function boardLED(cx,T,D,t){const F=FIELDS.get(3);if(cx.canvas!==cv||!F){boardLEDOld(cx,T,D,t);return}
   const {bx,by,bw}=BXY(),top=by-10,GOLD='#ffd642',ok=ledOk(),K=F._led||(F._led={});
-  if(K.ok!==ok||K.n!==T.name||K.s!==T.sup||K.t!==T.tgt||K.to!==T.tgtOn||K.h!==T.hi||K.hl!==T.hiLive||K.c!==D.cur||K.i0!==D.inn[0]||K.i1!==D.inn[1]||K.i2!==D.inn[2]||K.r!==D.runs||K.o!==D.outs){
-    K.ok=ok;K.n=T.name;K.s=T.sup;K.t=T.tgt;K.to=T.tgtOn;K.h=T.hi;K.hl=T.hiLive;K.c=D.cur;K.i0=D.inn[0];K.i1=D.inn[1];K.i2=D.inn[2];K.r=D.runs;K.o=D.outs;
+  if(K.ok!==ok||K.n!==T.name||K.s!==T.sup||K.pz!==T.peace||K.t!==T.tgt||K.to!==T.tgtOn||K.h!==T.hi||K.hl!==T.hiLive||K.c!==D.cur||K.i0!==D.inn[0]||K.i1!==D.inn[1]||K.i2!==D.inn[2]||K.r!==D.runs||K.o!==D.outs||K.z!==D.chill||K.k!==D.strikes){
+    K.ok=ok;K.n=T.name;K.s=T.sup;K.pz=T.peace;K.t=T.tgt;K.to=T.tgtOn;K.h=T.hi;K.hl=T.hiLive;K.c=D.cur;K.i0=D.inn[0];K.i1=D.inn[1];K.i2=D.inn[2];K.r=D.runs;K.o=D.outs;K.z=D.chill;K.k=D.strikes;
     const fg=F.getContext('2d');fg.save();fg.setTransform(RS,0,0,RS,0,0);ledBody(fg,T,D);fg.restore();ledBody(cx,T,D)}
   // ribbon. D.msg = {s, fx, c, c2, pop, t0} comes from the game: fx 'scroll' = the looping ticker; 'flash' = centred, swapping between
   // c and c2 about four times a second; 'hold' = centred and steady; pop = reverse video (dark letters on c) blinking for its first .66 s.
@@ -4474,11 +4675,14 @@ function boardLEDOld(cx,T,D,t){const {bx,by,bw,bh}=BXY(),top=by-10,GOLD='#ffd642
   cx.shadowBlur=0;fr(cx,'#3c4466',bx,top+9,bw,.5);cx.shadowBlur=3;
   const r1=by+10,r2=by+22,r3=by+32,L=bx+13;
   led(T.name,bx+8,r1,'#ffe066');if(T.sup){cx.shadowBlur=0;drawTrophy(cx,TROPHY12,bx+8+T.name.length*6+1,r1-6,.5);cx.shadowBlur=3}
+  if(T.peace){cx.shadowBlur=0;drawPeace(cx,bx+8+T.name.length*6+1,r1-7,.5);cx.shadowBlur=3}
   led('TGT',bx+44,r1,'#a9cbff');led(''+T.tgt,bx+65,r1,T.tgtOn?'#5eff7a':'#ffffff');led('HI',bx+92,r1,'#a9cbff');led(''+T.hi,bx+107,r1,T.hiLive?'#ffe066':'#d6e2ff');
   ['1','2','3','R'].forEach((h,i)=>{const cxm=L+i*14+6.5,cur=i===D.cur-1;cx.shadowBlur=0;fr(cx,cur?'#1d2f66':'#0e1530',L+i*14,r3-9,13,10);cx.shadowBlur=3;
     led(h,cxm,r2-1,cur?'#ffe066':i===3?'#ffffff':'#7f9ae0','center');const val=i<3?D.inn[i]:D.runs;led(i<3&&(i>D.cur-1||(cur&&val===0))?'-':''+val,cxm,r3,cur?'#ffe066':i===3?'#ffffff':'#d6e2ff','center')});
   const areaC=(L+56+bx+bw-3)/2+2;
   for(let i=0;i<3;i++){const lx=areaC-14+i*14,ly=r3-4,on=i<D.outs;cx.shadowColor='#ff3020';cx.shadowBlur=on?8:0;cx.fillStyle=on?'#ff3a2a':'#431519';cx.beginPath();cx.arc(lx,ly,3.8,0,6.3);cx.fill()}
+  if(D.chill){for(let i=0;i<3;i++){const lx=areaC-14+i*14,ly=by+18.5,on=i<D.strikes;cx.shadowColor='#ffd020';cx.shadowBlur=on?8:0;cx.fillStyle=on?'#ffd21f':'#3d3210';cx.beginPath();cx.arc(lx,ly,3.3,0,6.3);cx.fill()}
+    cx.shadowBlur=3;led('S',areaC-24,by+21.5,'#a9cbff','center');led('O',areaC-24,r3-1,'#a9cbff','center')}
   cx.shadowBlur=3;if(D.radar)led(D.radar+' MPH',Math.round(areaC),r2-1,'#ffa940','center');
   cx.shadowBlur=0;cx.restore();
   // the LED grid: a dark line between every lamp
@@ -4518,7 +4722,7 @@ function fx(cx,v,t){
      on legend for scoring plays are weird, let's change those back to how they were before"). LEGEND's crowd shows a run or a homer by the ghosts' bob. */
   if(v===4)for(let i=0;i<16;i++){const ph=t*.5+i*1.9,x=((i*47+Math.sin(ph)*9)%176+176)%176+2,y=60+(i*29%80)+Math.cos(ph*1.3)*4,on=Math.sin(t*2.2+i*2.4);
     if(on>.2&&!(x>22&&x<158&&y<54)){cx.globalAlpha=Math.min(1,(on-.2)*2);fr(cx,'#f6ff9a',Math.round(x*2)/2,Math.round(y*2)/2,1,1);cx.globalAlpha*=.3;fr(cx,'#f6ff9a',Math.round(x*2)/2-.5,Math.round(y*2)/2-.5,2,2);cx.globalAlpha=1}}}
-return{field:fieldFor,frame:frameAllStar,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,live:LIVE,ch:CH,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
+return{field:fieldFor,frame:frameAllStar,dogRuns,ledMode:'new',fresh(v){FIELDS.delete(v)},mascot,live:LIVE,ch:CH,board(cx,v,T,D,t){if(v===3){if(this.ledMode==='old')boardLEDOld(cx,T,D,t);else boardLED(cx,T,D,t)}else boardManual(cx,v,T,D)},fx,cheer,TH}})();
 return ROAD})();
 /*ROAD:END*/
 /*TUNE:BEGIN*/
@@ -4655,11 +4859,11 @@ const sbF={cur:0,inn:0,runs:0,was:0,wasRuns:0,t0:-1e9};
 function parkBoard(){const now=performance.now(),iv=innScores[inning-1]||0;
   if(inning!==sbF.cur){sbF.cur=inning;sbF.inn=iv;sbF.runs=runs;sbF.t0=-1e9}                                   // a new inning or a new game: nothing to flip
   else if(iv!==sbF.inn||runs!==sbF.runs){sbF.was=sbF.inn;sbF.wasRuns=sbF.runs;sbF.inn=iv;sbF.runs=runs;sbF.t0=now}
-  const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),hiLive=!exhibitionMode&&runs>hiScores[round];
+  const rnm=RD(round).name,sup=rnm.endsWith('\u1D9C'),pz=rnm.endsWith(PEACE),hiLive=!exhibitionMode&&runs>hiScores[round];
   if(DEV&&venue===3){if(devLED==='off')return;PARK.ledMode=devLED}
-  PARK.board(cx,venue,{name:sup?rnm.slice(0,-1):rnm,sup,tgt:target,hi:hiLive?runs:hiScores[round],hiLive,
+  PARK.board(cx,venue,{name:sup?rnm.slice(0,-1):pz?rnm.slice(0,-PEACE.length):rnm,sup,peace:pz,tgt:target,hi:hiLive?runs:hiScores[round],hiLive,
       tgtOn:!(runs<target||(tgtFlash>0&&Math.floor((5*TGT_PH-tgtFlash)/TGT_PH)%2===1))},
-    {inn:innScores,cur:Math.min(inning,MAX_INN),done:inning>MAX_INN,runs,outs:innOuts,radar,flip:Math.min(1,(now-sbF.t0)/370),was:sbF.was,wasRuns:sbF.wasRuns,msg:venue===3?marqNow(now):null},now/1000)}
+    {inn:innScores,cur:Math.min(inning,MAX_INN),done:inning>MAX_INN,runs,outs:innOuts,radar:chill?0:radar,chill,strikes,flip:Math.min(1,(now-sbF.t0)/370),was:sbF.was,wasRuns:sbF.wasRuns,msg:venue===3?marqNow(now):null},now/1000)}
 /* MVP's ribbon board talks about the game (venue 3 only). David, v421: "This should display messages related to the game. Like MAKE SOME
    NOISE!! when the winning run is on base or up to bat. HOME RUN!!! after homers. Etc, have some fun with it".
    Three layers; the first with something to say has the ribbon:
@@ -4679,6 +4883,8 @@ const MQ_SAY={
   'TRIPLE!':['TRIPLE!!!',2400,3,'g'],'DOUBLE!':['DOUBLE!!',2200,3,'g'],'SINGLE!':['BASE HIT!',2000,2,'g'],
   'WALK!':['TAKE YOUR BASE',2000,2,'n'],'ERROR!':["WE'LL TAKE IT!",2200,2,'g'],'BUNT!':['SMALL BALL!',1800,2,'n'],'SAC FLY!':['SAC FLY!',2000,2,'n'],
   'STOLEN BASE!':['STOLEN BASE!',2200,3,'g'],'DOUBLE STEAL!':['DOUBLE STEAL!!',2400,3,'g'],'CAUGHT STEALING!':['CAUGHT STEALING',2000,2,'b'],
+  'STRIKE ONE!':['STRIKE ONE',1200,0,'n'],'STRIKE TWO!':['STRIKE TWO',1200,0,'n'],'FOUL BALL!':['FOUL BALL',1200,0,'n'],   // CHILL MODE's count
+  'STRIKE THREE!':['STRUCK OUT',1800,1,'b'],'FOULED OUT!':['FOULED OUT',1800,1,'b'],
   'STRIKE!':['STRUCK OUT',1800,1,'b'],'STRIKEOUT!':['STRUCK OUT',1800,1,'b'],'FLYOUT!':['CAN OF CORN',1800,1,'b'],'FOUL!':['FOULED OUT',1800,1,'b'],
   'GROUNDOUT!':[mqOuts,1800,1,'b'],'OUT!':[mqOuts,1800,1,'b'],"FIELDER'S CHOICE":["FIELDER'S CHOICE",2000,1,'n'],'DOUBLE PLAY!':['DOUBLE PLAY. OUCH.',2400,2,'b'],
   'WAVED HOME!':['GO! GO! GO!',1500,3,'g','u'],'RUNNER SENT!':['GO! GO! GO!',1500,3,'g','u'],   // u = urgent: he is running now
@@ -4737,7 +4943,7 @@ const FIN_GUARD=600,DRIVE_GUARD=450,PICK_GUARD=400,PARADE_LOOK=1100;   // taps i
 function roadShow(on){roadCv.classList.toggle('show',on);if(on){if(!roadOn||roadOffAt){roadSince=performance.now();FPS.rn=FPS.rlate=0}roadOn=true;roadOffAt=0;roadLast=0}else if(roadOn&&!roadOffAt)roadOffAt=performance.now()+420}   // keeps drawing while it fades out
 const roadCovers=()=>roadOn&&!roadOffAt&&performance.now()-roadSince>450;   // faded all the way in: the field underneath need not be drawn
 // the bus wears your team: the cap colour below the stripe, the club's other colour as the stripe
-function busPaint(){const t=TM[myTeam],u=t.u[myPick]||t.u[0],c0=u[2],c1=(t.c||[]).find(c=>c.toLowerCase()!==c0.toLowerCase())||'#f6f1e4';ROAD.team({c0,c1,ab:t.ab||t.id,champ:challenge})}   // champ: challenge mode rides the champions' bus (gold, a trophy on the roof), with bunting along the road
+function busPaint(){const t=TM[myTeam],u=t.u[myPick]||t.u[0],c0=u[2],c1=(t.c||[]).find(c=>c.toLowerCase()!==c0.toLowerCase())||'#f6f1e4';ROAD.team({c0,c1,ab:t.ab||t.id,champ:challenge,chill,dog:dogOn})}   // (v487: chill rides the van)   // champ: challenge mode rides the champions' bus (gold, a trophy on the roof), with bunting along the road
 function titleRoad(){busPaint();ROAD.lot();roadShow(true)}   // behind the title: the bus waits outside its garage, nothing moving
 // 0 · the opening: a tap on the title lifts its veil and the bus pulls out of the lot for the first park, where the sign waits for the
 //     tap that starts the game (state is still 'title' until then). The bus honks twice and whistles the first seven notes of the title song.
@@ -4748,13 +4954,44 @@ function roadFrame(ts){if(!roadOn)return;if(roadOffAt&&performance.now()>roadOff
   if(trip&&trip.ph==='road'&&ROAD.moving()!==trip.mv){trip.mv=ROAD.moving();tripPaint()}
   if(trip&&trip.par){const s=ROAD.pstage,now=performance.now();   // the parade: 0 driving in · 1 the roof has come off · 2 the team is on its feet
     if(s>=1&&trip.par<2){trip.par=2;if(devOldParade)sfx.ooh(ROARS.h4);else crowdBig()}            // the grand-slam roar as the roof goes (straight to the sound: roar() stays silent after a quiet last out)
-    if(s>=2&&trip.par<3&&(trip.skip||now>=(trip.chT||(trip.chT=now+PARADE_LOOK)))){trip.par=3;trip.at=now;TUNE.stop(.2);musicPlay();tripPaint()}}   // a look at the champions, then the choices, to the title song
+    if(s>=2&&trip.par<3&&!trip.enc&&(trip.skip||now>=(trip.chT||(trip.chT=now+PARADE_LOOK)))){if(challenge&&!chill&&!devDemo)encBegin(now);else{trip.par=3;trip.at=now;TUNE.stop(.2);musicPlay();tripPaint()}}
+    if(trip.enc&&trip.par<3)encFrame(now)}   // a look at the champions, then the choices, to the title song
   if(trip&&trip.par===4){const s=ROAD.ostage;                     // on to the championship: 0 leaving town · 1 the gold roof is on · 2 stopped at its lot
     if(s===1&&!trip.bz){trip.bz=true;sfx.bling()}
     if(s===2&&!menuOpen())tripLand()}
   if(trip&&trip.par>=5){const s=ROAD.ostage;                      // v454: back to LEGEND (5) or ROOKIE (6): the roof goes back on with a thud; parked, it is the usual LEVEL n OF 5 and TAP TO PLAY
     if(s===1&&!trip.bz){trip.bz=true;sfx.thud()}
     if(s===2){trip.par=0;trip.champ=false;trip.won=true;trip.open=false;trip.mv=false;tripPaint();const me=trip;setTimeout(()=>{if(trip===me)PARK.field(nextRound)},120)}}}
+/* THE ENCORE (v491). David: "I want you to build a special surprise/ reward for beating championship all the way through. I'm not expecting
+   you to replace the parade, but something fun that differentiates the ending from the classic win scene ... I don't want to know what it
+   is." So: after a real win at LEGEND in CHAMPIONSHIP MODE (not the DEV panel's SHOW PARADE), once the team is on its feet, the parade runs
+   on into the night (ROAD.encore): fireworks, the title song, the mascot and three old-timers marching with the bus, and the credits roll
+   over the sky (ENC_ROLL). Halfway through, the rooftop dog jumps aboard; from then on he rides the bus roof in every mode (dogOn, bbDog;
+   RESET ALL takes him away again). Then the usual choices. A tap skips the rest once the dog is aboard. */
+const ENC_T0=2.2,ENC_T1=23.2,ENC_END=24;
+function encLines(){const t=TM[myTeam],ab=(t.ab||t.id||'').toUpperCase(),H=s=>'<div class="eH">'+s+'</div>',D=s=>'<div class="eD">'+s+'</div>',L=s=>'<div>'+s+'</div>';
+  return '<div class="eT">BASEBALL</div>'+D('THE CHAMPIONSHIP CUT')+
+    H('STARRING')+L('THE '+ab+' NINE')+
+    H('AND INTRODUCING')+L('THE ROOFTOP DOG')+D('DOES HIS OWN HOWLS')+
+    H('THE CAST')+L('THE CHICKEN')+D('STILL DANCING')+L('THE OLD-TIMERS')+D('61% SOLID')+L('THE BUS DRIVER')+D('NOW IN A SHIRT')+L('THE K BOX')+D('STILL AN OUT :)')+
+    H('NOT APPEARING')+L('THE BIJOU')+L('THE POOL TABLES')+L('THE SEAGULLS')+L('THE BUNNY')+D('(IT WAS A PEACE SIGN)')+
+    H('HONKS')+L('20% LONGER')+
+    H('TA-DA')+L('150 MS LATER. AGAIN.')+
+    H('FIELD TESTED ON')+L('ONE PIXEL 9A')+
+    H('DIRECTED BY')+L('TWITCHDODGE')+
+    H('PIXELS AND TUNES')+L('CLAUDE')+
+    '<div class="eP eD">NO GHOSTS WERE HARMED</div>'+
+    '<div class="eT eP">THANKS FOR<br>PLAYING!</div>'}
+function encBegin(now){const W=document.getElementById('encW'),R=document.getElementById('encR');trip.enc={at:now,fw:0,first:!dogOn,H:0,h:0};
+  ROAD.encore();TUNE.stop(.2);musicPlay();dogOn=true;try{localStorage.setItem('bbDog','1')}catch(e){}
+  R.innerHTML=encLines();W.style.display='block';trip.enc.H=W.clientHeight;trip.enc.h=R.offsetHeight;R.style.transform='translateY('+trip.enc.H+'px)';document.getElementById('tripScr').classList.add('enc')}
+function encFrame(now){const E=trip.enc,a=(now-E.at)/1000,S=ROAD.enc;
+  document.getElementById('encR').style.transform='translateY('+(E.H-(E.H+E.h)*Math.max(0,Math.min(1,(a-ENC_T0)/(ENC_T1-ENC_T0)))).toFixed(1)+'px)';
+  if(S){if(S.fw>E.fw){if(S.fw-E.fw<4)sfx.fwk(S.fw%3===0);E.fw=S.fw}
+    if(S.dog&&!E.dog){E.dog=true;sfx.howl();sfx.thud()}
+    if(S.fin&&!E.fin){E.fin=true;sfx.howl()}}
+  if(a>=ENC_END||E.skip&&E.dog)encDone(now)}
+function encDone(now){document.getElementById('encW').style.display='none';document.getElementById('tripScr').classList.remove('enc');trip.par=3;trip.at=now;tripPaint()}
 // 1 · the finish, on the field: the result in big letters, the score, the summary stats the result card used to show, and the win or
 //     lose sound doInnBreak() has just played. It stays until a tap (David, v421: "You should have to tap to get to the cut screen")
 function tripBegin(r){roadShow(false);trip={ph:'fin',at:performance.now(),mv:false,...r};
@@ -4796,9 +5033,10 @@ function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('
   A.style.color='';N.style.color='';B.className='tpB';go.style.display='';go.textContent='TAP TO PLAY';el('tpCh').style.display='none';el('tpMenu').style.display=trip.par>=4?'none':'';
   if(trip.par===4){A.textContent='NEXT STOP';N.textContent='CHAMPIONSHIP MODE';B.textContent='';go.style.display='none'}
   else if(trip.par>=5){A.textContent='BACK TO';N.innerHTML=nm;B.textContent='';go.style.display='none'}   // v454: on the way back to LEGEND or ROOKIE (a tap starts the game, as on any drive)   // on the way to its lot (no menu for these few seconds: the bus changes on the way)
-  else if(trip.champ){A.textContent='YOU BEAT';N.textContent=challenge?'CHAMPIONSHIP MODE!':'THE GAME!';
+  else if(trip.champ){A.textContent='YOU BEAT';if(chill)N.innerHTML=nmHTML('CHILL MODE'+PEACE);else N.textContent=challenge?'CHAMPIONSHIP MODE!':'THE GAME!';
     B.innerHTML=trip.unlock?'CHAMPIONSHIP MODE<br>UNLOCKED!!':'';if(trip.unlock)B.className='tpB chalTxt';go.style.display='none';
-    if(trip.par===3){const n=ROUNDS.length-1;el('tpCh').style.display='';el('tpC0').style.display=challenge?'none':'';   // challenge mode is offered after a classic win
+    if(trip.enc&&trip.par===3&&trip.enc.first){B.innerHTML='THE ROOFTOP DOG<br>JOINED THE TEAM!';B.className='tpB encB'}   /* v491 */
+    if(trip.par===3){const n=ROUNDS.length-1;el('tpCh').style.display='';el('tpC0').style.display=challenge||chill?'none':'';   // challenge mode is offered after a classic win
       el('tpC1').innerHTML='PLAY '+nmHTML(RD(n).name)+' AGAIN';el('tpC2').innerHTML='BACK TO '+nmHTML(RD(0).name)}}
   else if(trip.mv){A.textContent=trip.open?'FIRST STOP':trip.won?'NEXT STOP':'BACK TO';if(!trip.won){A.style.color='#ffb9a8';N.style.color='#fff'}N.innerHTML=nm;B.textContent='';go.style.display='none'}
   else{A.textContent=!trip.won&&round===0?'TRY AGAIN':'LEVEL '+(nextRound+1)+' OF '+ROUNDS.length;N.innerHTML=nm;B.textContent=RD(nextRound).target+(RD(nextRound).target===1?' RUN':' RUNS')+' TO WIN'}
@@ -4807,6 +5045,7 @@ function tripPaint(){const el=id=>document.getElementById(id),A=el('tpA'),N=el('
 function tripTap(){const dt=performance.now()-trip.at;if(trip.ph==='fin'){if(dt>FIN_GUARD)tripDrive()}
   else if(trip.par===4){if(!trip.skip2&&dt>DRIVE_GUARD){trip.skip2=true;ROAD.skip()}}          // on the way to the championship's lot: a tap cuts to the lot
   else if(trip.par>=5){if(dt>DRIVE_GUARD)startGame()}                                          // on the way back to LEGEND or ROOKIE: a tap starts the game, as on any drive
+  else if(trip.enc&&trip.par<3){if(trip.enc.dog)trip.enc.skip=true}                                             /* the encore: a tap ends it once the dog is aboard (encFrame) */
   else if(trip.par){if(trip.par<3&&!trip.skip&&dt>DRIVE_GUARD){trip.skip=true;ROAD.skip()}}   // the parade: a tap hurries it along to the choices; then it takes a button
   else if(dt>DRIVE_GUARD)startGame()}
 // 4 · the end of the parade: 0 try championship mode · 1 LEGEND again · 2 back to ROOKIE, in the mode just played. 1 and 2 start the game.
@@ -4819,7 +5058,7 @@ function tripPick(k){if(!trip||trip.par!==3||performance.now()-trip.at<PICK_GUAR
   if(k===0){trip.par=4;trip.at=performance.now();ROAD.onward();tripPaint();return}
   nextRound=k===1?ROUNDS.length-1:0;trip.par=k===1?5:6;trip.at=performance.now();if(k===1)ROAD.back();else ROAD.home();tripPaint()}   // v454: the bus drives there (5: turns round, back to LEGEND · 6: on out of town, past the lot to ROOKIE)
 function tripLand(){setChallenge(true);toMenu(true)}   // the mode goes on as the bus arrives (it is already the champions' bus on the screen); the title song, if it is still playing, plays on
-function tripEnd(){if(!trip)return;trip=null;hide('finScr');hide('tripScr');TUNE.stop()}
+function tripEnd(){if(!trip)return;trip=null;hide('finScr');hide('tripScr');TUNE.stop();document.getElementById('encW').style.display='none';document.getElementById('tripScr').classList.remove('enc')}
 tap('tpMenu',()=>openMenu('tripScr'));[0,1,2].forEach(k=>tap('tpC'+k,()=>tripPick(k)));
 roadCv.classList.add('now');titleRoad();roadSince=-1e9;requestAnimationFrame(()=>requestAnimationFrame(()=>roadCv.classList.remove('now')));   // first load: no fade, nothing to see underneath
 
@@ -4848,7 +5087,7 @@ function fpsTick(ts,ms,work){const gap=FPS.last?ts-FPS.last:0,pw=FPS.pw;FPS.last
   const dm=FPS.d.length?FPS.d.reduce((a,b)=>a+b,0)/FPS.d.length:0,SN={ready:'rdy',windup:'wnd',pitch:'pit',hitfly:'fly',result:'res',innbreak:'brk',gameover:'end'},
     when=Object.entries(FPS.by).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>(SN[k]||k)+' '+v).join(' · ');
   if(!FPS.el){FPS.el=document.createElement('div');FPS.el.id='fpsLbl';document.getElementById('stage').appendChild(FPS.el)}
-  FPS.el.textContent=Math.round(1000/FPS.med)+' Hz · draw '+dm.toFixed(1)+' · max '+FPS.wmax.toFixed(0)+'\n'+RD(round).name.replace('\u1D9C','')+' game: late '+FPS.late+'/'+FPS.n
+  FPS.el.textContent=Math.round(1000/FPS.med)+' Hz · draw '+dm.toFixed(1)+' · max '+FPS.wmax.toFixed(0)+'\n'+RD(round).name.replace('\u1D9C','').replace(PEACE,'')+' game: late '+FPS.late+'/'+FPS.n
     +'\npitches: '+FPS.plate+'/'+FPS.pn+' · worst '+FPS.worst.toFixed(0)+(FPS.late?'\nlate@ '+when+' · ours '+FPS.ours:'')+'\nroad: late '+FPS.rlate+'/'+FPS.rn}
 let last=0,acc=0;const TK=1000/60;
 function loop(ts){if(!last)last=ts;const w0=devFps?performance.now():0;let dms=-1;
